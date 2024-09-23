@@ -189,4 +189,4 @@ For major changes, please open an issue first to discuss what you would like to 
 
 ## Contact
 
-For support, inquiries, or collaboration opportunities, reach out to us at: support@giditransport.com
+For support, inquiries, or collaboration opportunities, reach out at: 
