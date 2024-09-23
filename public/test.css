@@ -1,0 +1,16 @@
+/* Simple CSS for testing */
+body {
+    background-color: red;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    color: #3498db;
+    text-align: center;
+}
+
+p {
+    color: #2c3e50;
+    font-size: 18px;
+    text-align: center;
+}

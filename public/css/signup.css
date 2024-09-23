@@ -1,0 +1,87 @@
+.form-control {
+    background-color: #f8f9fa;
+    border: 1px solid #d1e7dd;
+    border-radius: 10px;
+}
+
+.form-label {
+    font-weight: bold;
+}
+
+.form-container {
+    max-width: 600px;
+    margin: auto;
+}
+
+.input-group .form-control,
+.form-select {
+    border-radius: 10px;
+}
+
+.eye-icon {
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.flag-icon {
+    width: 30px;
+    height: 20px;
+}
+
+.divider {
+    text-align: center;
+    position: relative;
+    margin-top: 20px;
+}
+
+.divider:before, .divider:after {
+    content: "";
+    position: absolute;
+    width: 45%;
+    height: 1px;
+    background-color: #d1e7dd;
+    top: 50%;
+}
+
+.divider:before {
+    left: 0;
+}
+
+.divider:after {
+    right: 0;
+}
+
+.divider span {
+    padding: 0 10px;
+    background-color: #fff;
+}
+
+/* Disabled button */
+.disabled-btn {
+    background-color: #696969 !important;
+    border-color: #696969 !important;
+    color: #fff !important;
+    pointer-events: none;
+}
+
+.error-message {
+    color: red;
+    font-size: 0.9rem;
+    display: none;
+}
+
+/* Logo area background color */
+.logo-area {
+    background-color: #f0f0f0; /* Change this color to whatever you want */
+    padding: 20px 0;
+    border-radius: 8px;
+}
+
+
+@media (max-width: 768px) {
+.logo {
+    width: 100%;
+    height: 55px;
+}
+}
+

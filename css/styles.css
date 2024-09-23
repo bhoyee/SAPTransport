@@ -1,0 +1,606 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    max-width: 1200px; /* Set a maximum width for the container */
+    margin: 0 auto; /* Center the container */
+    padding: 0 15px; /* Add some padding for better spacing */
+}
+
+
+.logo {
+    width: 320px; /* Adjust the width as needed */
+    height: auto; /* Maintain aspect ratio */
+}
+.navbar-brand {
+    font-weight: bold;
+}
+
+.navbar-nav .btn {
+    margin-left: 10px;
+}
+
+.hero {
+    position: relative;
+    background-image: url('../img/banner.jpeg');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    text-align: center;
+    padding: 3rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+    z-index: 1;
+}
+
+.hero .container {
+    position: relative;
+    z-index: 2;
+}
+
+
+
+footer {
+    background-color: #f8f9fa;
+    padding: 10px 0;
+}
+
+.nav-tabs {
+    position: relative;
+    z-index: 3;
+    background-color: rgba(244, 245, 247, 0.5); /* Thicker transparent background for tab column */
+    padding: 1rem; /* Add padding for better spacing */
+    border-radius: 5px 5px 0 0; /* Curved top, flat bottom */
+    border-bottom: none; /* Remove bottom border */
+}
+
+.nav-tabs .nav-link {
+    margin-right: 5px; /* Space between tabs */
+    color: white; /* Make tab text color white */
+    border: none; /* Remove any default border */
+}
+
+.nav-tabs .nav-link.active {
+    color: white; /* Keep the text color white for active tab */
+    background-color: transparent; /* No background color */
+    border-bottom: 3px solid #007bff; /* Add a thick blue underline */
+    border-radius: 0; /* No border-radius to keep the underline effect clean */
+    font-weight: bold; /* Optional: make the text bold */
+}
+
+.nav-tabs .nav-link:hover {
+    color: white; /* Ensure the hover effect keeps the text white */
+}
+
+.tab-pane {
+    text-align: left;
+}
+
+
+.tab-content {
+    background-color: rgba(244, 245, 247, 0.3); /* More transparent background for tab content */
+    padding: 1rem; /* Add padding for better spacing */
+    border-radius: 0 0 5px 5px; /* Flat top, curved bottom */
+}
+
+.button-group {
+    display: flex !important;
+    gap: 10px !important;
+    margin-bottom: 1rem !important;
+    justify-content: flex-start !important;
+}
+
+
+.form-group {
+    margin-bottom: 1rem;
+    text-align: left; /* Ensure labels and inputs are left-aligned */
+}
+
+.form-group label {
+    text-align: left; /* Align labels to the left */
+    display: block; /* Ensure block display */
+}
+
+.btn-group .btn.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+
+/* Center text in the second column */
+.second-column {
+    display: flex;
+    justify-content: center; /* Horizontally center */
+    align-items: center; /* Vertically center */
+    height: 100%; /* Ensure it takes full height */
+    padding: 2rem; /* Add padding for better spacing */
+}
+
+
+    #services {
+        background-color: #f8f9fa;
+    }
+    .service-icon img {
+        max-width: 50px;
+    }
+    .service-icon img.service-img {
+        max-width: 65px; /* Increase the size as needed */
+    }
+    .card {
+        border: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s;
+    }
+    .card:hover {
+        transform: translateY(-10px);
+    }
+
+
+
+    #about-us {
+        background: linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.9)), url('../img/44.png') no-repeat center center;
+        background-size: cover;
+        position: relative;
+    }
+    #about-us::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4); /* Darker overlay */
+        z-index: 1;
+    }
+    #about-us .container {
+        position: relative;
+        z-index: 2;
+    }
+    #about-us h1, #about-us p, #about-us .features-list, #about-us .btn {
+        color: white;
+    }
+    .features-list {
+        list-style: none;
+        padding: 0;
+        font-weight: bold; /* Bold list items */
+    }
+    .features-list li {
+        margin-bottom: 10px;
+    }
+    .features-list li i {
+        color: #28a745;
+        margin-right: 10px;
+    }
+
+
+
+    
+    
+
+
+    #carousel-section {
+        background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)), url('../img/sectionBG.png') no-repeat center center;
+        background-size: cover;
+        position: relative;
+        padding-top: 20px; /* Adjust this to move the entire section up */
+        padding-bottom: 20px; /* Adjust this to reduce space below the section */
+    }
+    
+    .carousel-content {
+        padding: 10px 20px; /* Reduce padding to bring the content closer to the image */
+    }
+    
+    .carousel-content h3 {
+        font-weight: bold;
+        margin-top: 20px; /* Reduced margin to bring heading closer to top */
+        font-size: 2rem;
+    }
+    
+    .carousel-content h4 {
+        font-weight: bold;
+        color: #00aaff;
+        margin-top: 15px; /* Reduced margin to bring heading closer to top */
+        font-size: 1.5rem; /* Reduced font size */
+    }
+    
+    .carousel-content span {
+        font-weight: bold;
+        font-size: 1.2rem; /* Adjusted font size for better balance */
+    }
+    
+    .facilities span {
+        font-weight: bold;
+    }
+    
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        background-color: rgba(0, 0, 255, 0.5); /* Blue background */
+        border-radius: 50%;
+        padding: 10px; /* Slightly reduced padding to decrease the size */
+    }
+    
+    .img-custom-size {
+        max-width: 90%; /* Increase size slightly and move image up */
+        height: auto;
+        margin-top: -40px; /* Move image up */
+        margin-bottom: -130px;
+    }
+
+    .img-custom-size2 {
+        max-width: 90%; /* Increase size slightly and move image up */
+        height: auto;
+        margin-top: -100px; /* Move image up */
+    }
+    
+
+
+    
+    .footer-section {
+        background-color: #2d3e50; /* Matching the background color */
+        color: white;
+    }
+    .footer-section h3 {
+        margin-bottom: 20px;
+    }
+    .footer-section p, .footer-section ul {
+        margin-bottom: 20px;
+    }
+    .footer-section .social-icons a {
+        font-size: 1.2rem;
+        margin-right: 10px;
+    }
+    .footer-section .list-unstyled li {
+        margin-bottom: 10px;
+    }
+    .footer-bottom {
+        border-top: 1px solid #495057;
+        padding-top: 20px;
+    }
+    .footer-bottom .payment-icons i {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+
+
+
+
+@media (max-width: 768px) {
+
+    .logo {
+        width: 300px; /* Adjust the width for mobile view */
+        height: auto; /* Maintain aspect ratio */
+    }
+    .form-row .col-md-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    .carousel-content  h3 {
+        font-size: 1.5rem; /* Font size for mobile view */
+    }
+    .carousel-content h4 {
+        font-size: 1.5rem; /* Font size for mobile view */
+    }
+    .carousel-content span {
+        font-size: 0.9rem; /* Font size for mobile view */
+    }
+}
+
+/* About us page */
+
+/* About Us Banner Section */
+.about-us-banner {
+    background-color: #0d1b2a; /* Dark blue background color */
+    border-radius: 10px; /* Rounded corners */
+    margin-top: 20px; /* Add margin to create spacing from the top */
+}
+
+.about-us-banner h1 {
+    color: #fff;
+    font-size: 2rem; /* Adjust font size for readability */
+}
+#about-info {
+    background: url('../img/sectionBG.png') no-repeat center center;
+    padding: 50px 0;
+}
+
+#about-info h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    
+}
+
+#about-info p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #333;
+}
+
+#about-info ul li {
+    margin-bottom: 10px;
+}
+
+#about-info ul li i {
+    margin-right: 10px;
+    color: #00aaff;
+}
+
+#about-info h3 {
+    margin-top: 20px;
+    font-size: 1.5rem;
+    color: #00aaff;
+}
+
+/* services section in about us page */
+
+#services {
+    background-color: #f8f9fa; /* Light background color */
+}
+
+.service-box {
+    background-color: #ffffff; /* White background for service boxes */
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.service-box:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-10px); /* Slight lift effect on hover */
+}
+
+.service-title {
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333; /* Darker text color */
+}
+
+.service-description {
+    font-size: 0.9rem;
+}
+
+
+.contact-us {
+    background-color: #122344; /* Background color for contact info */
+    color: white;
+    padding: 30px;
+    border-radius: 8px;
+    position: relative;
+}
+
+.contact-us .contact-info {
+    margin-left: -50px;
+}
+
+.contact-us::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -25px;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 100px;
+    background-color: #122344;
+    border-radius: 0 8px 8px 0;
+}
+
+.form-container {
+    padding: 30px;
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+    background-color: #122344;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.form-control {
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.btn-submit {
+    background-color: #122344;
+    color: white;
+    border-radius: 5px;
+    padding: 10px 20px;
+}
+
+.btn-submit:hover {
+    background-color: #0b1c3b;
+}
+
+.contact-us i {
+    font-size: 1.2rem;
+    margin-right: 10px;
+}
+
+/* whatApp chat */
+.whatsapp-widget {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 300px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: none; /* Hidden by default */
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+  }
+  
+  .whatsapp-header {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    position: relative;
+  }
+  
+  .whatsapp-header .user-img {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+  }
+  
+  .whatsapp-header .user-info {
+    flex-grow: 1;
+  }
+  
+  .whatsapp-header h4 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+  
+  .whatsapp-header p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  
+  .whatsapp-header .close-widget {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  
+  .whatsapp-body {
+    padding: 10px;
+    font-size: 0.9rem;
+    color: #333;
+  }
+  
+  .whatsapp-footer {
+    padding: 10px;
+    text-align: center;
+  }
+  
+  .whatsapp-footer .whatsapp-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  .whatsapp-footer .whatsapp-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .whatsapp-launcher {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: #007bff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+  }
+  
+  .whatsapp-launcher img {
+    width: 35px;
+    height: 35px;
+  }
+  
+
+/* Apply background color and style to the FAQ toggle buttons */
+.faq-toggle {
+    font-weight: bold
+}
+
+.faq-toggle:hover {
+    background-color: #76B3D0; /* Darker shade of sky blue on hover */
+    color: #fff;
+    font-weight: bolder;
+    
+}
+
+/* Style the expanded section to have a consistent look */
+.faq-section .collapse.show {
+    margin-top: 10px;
+    background-color: #f8f9fa; /* Light background for content */
+    padding: 10px;
+    border-radius: 5px;
+}
+
+
+  /* FAQ Section */
+#faq {
+    background: url('../img/sectionBG.png') no-repeat center center;
+  }
+.faq-section {
+    padding: 20px;
+}
+
+.faq-item {
+    margin-bottom: 10px;
+}
+
+.faq-title {
+    font-size: 1.2rem;
+    cursor: pointer;
+    background-color: #122344;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.faq-content {
+    display: none;
+    padding: 10px;
+    border: 1px solid #122344;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+}
+
+/* Show content on mobile when active */
+@media (max-width: 768px) {
+    .faq-content.show {
+        display: block;
+    }
+}
+
+
+.g-recaptcha {
+    margin-bottom: 15px;
+}
