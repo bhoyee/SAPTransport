@@ -1,66 +1,192 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# GidiTransport - Web-Based Transport Booking System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Project Overview
 
-## About Laravel
+**GidiTransport** is a web-based platform designed to provide easy and efficient booking services for various transport options, such as airport pickups, drop-offs, charters, and haulage services. Targeted specifically for Lagos, Nigeria, GidiTransport allows users to book rides, track bookings, manage payments, and customize their experiences via a user-friendly dashboard.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+The application caters to both passengers and operators, with features designed to simplify the booking process and ensure a seamless experience.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Table of Contents
+1. [Project Overview](#project-overview)
+2. [Features](#features)
+3. [Technology Stack](#technology-stack)
+4. [Setup & Installation](#setup--installation)
+5. [Usage](#usage)
+6. [API Endpoints](#api-endpoints)
+7. [License](#license)
+8. [Contributing](#contributing)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Features
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- **User Authentication**: Secure login and signup functionality for passengers.
+- **Transport Bookings**: Book transport services for airport pickups, charters, and more.
+- **Payment System**: Track and manage payments with a detailed payment history and real-time updates.
+- **User Dashboard**: View trip summaries, track recent bookings, manage upcoming trips, and view cancellations.
+- **Support & Help**: Contact customer support through a simple and effective communication channel.
+- **Customizable Settings**: Manage personal settings for a personalized experience.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Technology Stack
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+The project uses a combination of modern web technologies to provide a scalable and user-friendly application:
 
-### Premium Partners
+### Frontend:
+- **HTML5, CSS3**: For the structure and styling of the web pages.
+- **JavaScript**: Interactivity and real-time updates using JavaScript and AJAX.
+- **Bootstrap 5**: For responsive design and layout, ensuring mobile and desktop compatibility.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### Backend:
+- **PHP (Laravel 8)**: The core framework for handling backend logic and RESTful APIs.
+- **MySQL**: Database management for storing user information, booking data, and payment records.
+- **AJAX**: For asynchronous data fetching and real-time updates without page reloads.
 
-## Contributing
+### Tools & Services:
+- **Git**: For version control and collaboration.
+- **GitHub**: Repository hosting and project tracking.
+- **Composer**: PHP package manager for managing dependencies.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## Setup & Installation
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Prerequisites
 
-## Security Vulnerabilities
+Ensure you have the following installed before setting up the project:
+- PHP 8.x
+- Composer
+- MySQL
+- Node.js & NPM
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Install Dependencies
+
+Use Composer to install PHP dependencies and NPM for frontend dependencies:
+
+```bash
+composer install
+npm install
+```
+
+### Set Up Environment Variables
+
+Copy `.env.example` to `.env` and update the necessary database and app credentials:
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Update the `.env` file with your database credentials and app URL.
+
+### Run Migrations
+
+Set up the database schema using Laravel's migrations:
+
+```bash
+php artisan migrate
+```
+
+### Start the Application
+
+Run the local server:
+
+```bash
+php artisan serve
+```
+
+### Compile Assets
+
+If using Laravel Mix for asset compilation (JS/CSS), run:
+
+```bash
+npm run dev
+```
+
+Your project should now be running on [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+---
+
+## Usage
+
+### Passenger Dashboard
+
+Once logged in, passengers can:
+- Book new trips
+- View recent and upcoming bookings
+- Track payment history
+- Customize personal settings
+
+### Admin Dashboard
+
+For operators and admins:
+- Manage bookings across multiple services
+- View real-time payment and booking status
+- Access support requests and customer inquiries
+
+---
+
+## API Endpoints
+
+The following are key API endpoints in the project. These can be accessed by technical users for integration purposes.
+
+### Login
+
+`POST /api/login`  
+Description: Allows users to authenticate and log in to the system.
+
+### Booking a Trip
+
+`POST /api/book`  
+Description: Creates a new booking for the logged-in user.
+
+### Fetch Payment History
+
+`GET /api/payment-history`  
+Description: Fetches all payments made by the logged-in user.
+
+### Cancel Booking
+
+`POST /api/booking/cancel`  
+Description: Allows the user to cancel an upcoming booking.
+
+For a complete list of API endpoints and their descriptions, visit the API documentation (if available).
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+## Contributing
+
+We welcome contributions from the community to improve the project. Here’s how you can contribute:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix:
+
+```bash
+git checkout -b feature-branch
+```
+
+3. Commit your changes and push to your fork:
+
+```bash
+git commit -m "Add your message here"
+git push origin feature-branch
+```
+
+4. Open a pull request to the main repository.
+
+For major changes, please open an issue first to discuss what you would like to change.
+
+---
+
+## Contact
+
+For support, inquiries, or collaboration opportunities, reach out at: 
