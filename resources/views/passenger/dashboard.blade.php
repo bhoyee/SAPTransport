@@ -356,13 +356,32 @@
 	
 				</div>
 
+
+			<!-- Modal for Booking Cancellation -->
+			<div class="modal fade" id="cancelBookingModal" tabindex="-1" role="dialog" aria-labelledby="cancelBookingModalLabel" aria-hidden="true">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="cancelBookingModalLabel">Confirm Cancellation</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> <!-- Updated the close button -->
+						</div>
+						<div class="modal-body">
+							Are you sure you want to cancel this booking?
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button> <!-- Updated the "No" button -->
+							<button type="button" id="confirmCancelButton" class="btn btn-danger">Yes, Cancel Booking</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+
+
 	<!-- Custom CSS for Mobile-Friendly Table -->
 <style>
 	/* Default table style */
-/* Default table style */
-/* Default table style */
-/* Default table style */
-/* Default table style */
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -458,6 +477,14 @@ td[data-label="Service Type"], td[data-label="Booking Date"] {
 
 
 </style>
+
+
+
+<!-- Bootstrap JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.0/js/bootstrap.min.js"></script>
+
+
 	<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     
     <!-- Bootstrap JS -->
@@ -490,10 +517,10 @@ td[data-label="Service Type"], td[data-label="Booking Date"] {
         fixedHeader: true
     });
     </script>
-
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    let bookingIdToCancel = null; // Store the booking ID for cancellation
+    const confirmCancelButton = document.getElementById('confirmCancelButton'); // "Yes, Cancel Booking" button
 
     // Function to fetch recent bookings
     function fetchRecentBookings() {
@@ -516,20 +543,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRF-TOKEN': csrfToken // Ensure CSRF token is included
             }
         })
-        .then(response => {
-            console.log('Response received:', response); // Log the response object
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log('Data received:', data); // Log the data received from the server
+            console.log('Data received:', data);
             updateBookingsTable(data);
         })
         .catch(error => {
-            console.error('Error fetching recent bookings:', error); // Log any errors
+            console.error('Error fetching recent bookings:', error);
         });
     }
 
-    // Function to update the bookings table
     // Function to update the bookings table
     function updateBookingsTable(bookings) {
         const tableBody = document.querySelector('#recent-bookings tbody');
@@ -539,7 +562,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         console.log('Updating bookings table with data:', bookings);
-
         tableBody.innerHTML = '';  // Clear previous table rows
 
         if (bookings.length === 0) {
@@ -548,11 +570,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         bookings.forEach(booking => {
-            // Extract just the date from the created_at field
             const bookingDate = new Date(booking.created_at).toLocaleDateString(); // Format the date
 
             // Check if the Edit button should be disabled based on the status
             const isEditable = booking.status.toLowerCase() === 'pending';
+            const isCancelable = booking.status.toLowerCase() === 'pending';
 
             const row = `
                 <tr>
@@ -560,85 +582,125 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td data-label="Booking Date">${bookingDate}</td>
                     <td data-label="Service Type">${booking.service_type}</td>
                     <td data-label="Status"><span class="badge ${getStatusClass(booking.status)}">${booking.status}</span></td>
-                    <td data-label="" class="button-group">
+                    <td data-label="Actions" class="button-group">
                         <a class="btn btn-warning btn-sm ${!isEditable ? 'disabled' : ''}" href="/booking/${booking.id}/edit" ${!isEditable ? 'aria-disabled="true"' : ''}>Edit</a>
-                        <a class="btn btn-danger btn-sm" href="/booking/${booking.id}/cancel">Cancel</a>
+                        <button class="btn btn-danger btn-sm ${!isCancelable ? 'disabled' : ''}" data-id="${booking.id}" type="button">Cancel</button>
                         <a class="btn btn-primary btn-sm" href="/booking/${booking.id}/view">View</a>
                     </td>
                 </tr>
             `;
             tableBody.innerHTML += row;
         });
+
+        // Attach click event for cancel buttons
+        document.querySelectorAll('.btn-danger').forEach(button => {
+            button.addEventListener('click', function() {
+                bookingIdToCancel = this.getAttribute('data-id');
+                $('#cancelBookingModal').modal('show'); // Trigger modal on click
+            });
+        });
     }
+
+    // Function to handle booking cancellation with spinner
+    confirmCancelButton.addEventListener('click', function() {
+        if (bookingIdToCancel) {
+            // Show spinner and disable button
+            confirmCancelButton.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Cancelling...";
+            confirmCancelButton.disabled = true;
+
+            fetch(`/booking/cancel/${bookingIdToCancel}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $('#cancelBookingModal').modal('hide');
+                    fetchRecentBookings(); // Refresh bookings list after cancellation
+                } else {
+                    alert('Failed to cancel booking. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error cancelling booking:', error);
+            })
+            .finally(() => {
+                // Reset button state after request completes
+                confirmCancelButton.innerHTML = "Yes, Cancel Booking";
+                confirmCancelButton.disabled = false;
+            });
+        }
+    });
+
     // Function to fetch dashboard data
     function fetchDashboardData() {
-        console.log('Fetching dashboard data...'); // Log when fetching starts
+        console.log('Fetching dashboard data...');
         fetch('{{ route('passenger.dashboard.data') }}')
             .then(response => response.json())
             .then(data => {
-                console.log('Dashboard data received:', data);
                 document.getElementById('total-trips').innerText = data.totalTrips || 0;
                 document.getElementById('cancelled-trips').innerText = data.cancelledTrips || 0;
                 document.getElementById('upcoming-trips').innerText = data.upcomingTrips || 0;
-				document.getElementById('total-payment').innerText = data.totalAmountPaid || 0;
+                document.getElementById('total-payment').innerText = data.totalAmountPaid || 0;
             })
             .catch(error => console.error('Error fetching dashboard data:', error));
     }
 
     // Function to fetch payment history
-// Function to fetch payment history
-function fetchPaymentHistory() {
-    const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
-    const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
-    
-    console.log('Fetching payment history...');
+    function fetchPaymentHistory() {
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+        
+        console.log('Fetching payment history...');
 
-    fetch('/passenger/payment-history', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken  // Ensure CSRF token is included for authenticated requests
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.statusText);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Payment history received:', data);
-        updatePaymentTable(data);
-    })
-    .catch(error => {
-        console.error('Error fetching payment history:', error);
-    });
-}
-
-    // Function to update the payments table
-	function updatePaymentTable(payments) {
-    const tableBody = document.querySelector('#payment-history tbody');
-    tableBody.innerHTML = '';  // Clear previous table rows
-
-    if (payments.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No payment history found.</td></tr>';
-        return;
+        fetch('/passenger/payment-history', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Payment history received:', data);
+            updatePaymentTable(data);
+        })
+        .catch(error => {
+            console.error('Error fetching payment history:', error);
+        });
     }
 
-    payments.forEach(payment => {
-        const paymentDate = new Date(payment.payment_date).toLocaleDateString();
-        const row = `
-            <tr>
-                <td data-label="Booking Ref">${payment.booking.booking_reference}</td>
-                
-                <td data-label="Payment Date">${paymentDate}</td>
-                <td data-label="Amount Paid">${payment.amount}</td>
-                <td data-label="Payment Status"><span class="badge ${getStatusClass(payment.status)}">${payment.status}</span></td>
-            </tr>
-        `;
-        tableBody.innerHTML += row;
-    });
-}
+    // Function to update the payments table
+    function updatePaymentTable(payments) {
+        const tableBody = document.querySelector('#payment-history tbody');
+        tableBody.innerHTML = '';  // Clear previous table rows
+
+        if (payments.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No payment history found.</td></tr>';
+            return;
+        }
+
+        payments.forEach(payment => {
+            const paymentDate = new Date(payment.payment_date).toLocaleDateString();
+            const row = `
+                <tr>
+                    <td data-label="Booking Ref">${payment.booking.booking_reference}</td>
+                    <td data-label="Payment Date">${paymentDate}</td>
+                    <td data-label="Amount Paid">${payment.amount}</td>
+                    <td data-label="Payment Status"><span class="badge ${getStatusClass(payment.status)}">${payment.status}</span></td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+    }
 
     // Function to get the correct class for payment status
     function getStatusClass(status) {
@@ -647,17 +709,16 @@ function fetchPaymentHistory() {
                 return 'bg-success';
             case 'unpaid':
                 return 'bg-warning';
-			case 'completed':
-					return 'bg-success';
-			case 'pending':
-						return 'bg-warning';
+            case 'completed':
+                return 'bg-success';
+            case 'pending':
+                return 'bg-warning';
             case 'refunded':
                 return 'bg-danger';
-			case 'cancelled':
+            case 'cancelled':
                 return 'bg-danger';
-			case 'confirmed':
-					return 'bg-info';
-
+            case 'confirmed':
+                return 'bg-info';
             default:
                 return 'bg-secondary';
         }
@@ -665,7 +726,6 @@ function fetchPaymentHistory() {
 
     // Poll the recent bookings, dashboard data, and payment history every 10 seconds
     setInterval(() => {
-        console.log('Polling for new bookings, dashboard data, and payment history...');
         fetchRecentBookings();
         fetchDashboardData();
         fetchPaymentHistory();
