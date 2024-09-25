@@ -17,7 +17,7 @@
 							        <div>Ready to plan your next trip? Book your transport easily and get on the road!</div>
 							    </div><!--//col-->
 							    <div class="col-12 col-lg-3">
-								    <a class="btn btn-primary" href="{{ url('/') }}"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-file-earmark-arrow-down me-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+								    <a class="btn btn-primary" href=""><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-file-earmark-arrow-down me-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M4 0h5.5v1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h1V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2z"/>
   <path d="M9.5 3V0L14 4.5h-3A1.5 1.5 0 0 1 9.5 3z"/>
   <path fill-rule="evenodd" d="M8 6a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 10.293V6.5A.5.5 0 0 1 8 6z"/>
@@ -135,115 +135,55 @@
 			    
 
 			    <div class="row g-4 mb-4">
+				<!-- Responsive Recent Bookings Table -->
 
-				    <div class="col-12 col-lg-7">
-
-				        <div class="app-card app-card-progress-list h-100 shadow-sm">
-
-					        <div class="app-card-header p-3">
-
-						        <div class="row justify-content-between align-items-center">
-
-							        <div class="col-auto">
-
-						                <h4 class="app-card-title">Recent Booking</h4>
-
-							        </div><!--//col-->
-
-							        <div class="col-auto">
-
-								        <!-- <div class="card-header-action">
-
-									        <a href="#">All projects</a>
-
-								        </div> -->
-
-							        </div><!--//col-->
-
-						        </div><!--//row-->
-
-					        </div><!--//app-card-header-->
-
-			
-
-							<div class="container">
-
-									<table id="recent-bookings">
-										<thead>
-											<tr>
-												<th>Booking Ref</th>
-												<th>Booking Date</th>
-												<th>Service Type</th>
-												<th>Status</th>
-												<th></th>
-												<th></th>
-												<th></th>
-											
-											</tr>
-										</thead>
-										<tbody>
-								
-											<!-- Add more rows as needed -->
-										</tbody>
-									</table>
-
-
-									
+				<div class="col-12 col-lg-7">
+						<div class="app-card app-card-progress-list h-100 shadow-sm">
+							<div class="app-card-header p-3">
+								<h4 class="app-card-title">Recent Booking</h4>
 							</div>
+							<div class="container">
+								<table id="recent-bookings" class="table table-striped table-bordered table-responsive">
+									<thead>
+										<tr>
+											<th>Booking Ref</th>
+											<th>Booking Date</th>
+											<th>Service Type</th>
+											<th>Status</th>
+											<th>Actions</th>
+										</tr>
+									</thead>
+									<tbody>
+										<!-- Booking data will be injected here -->
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
 
-
-				        </div><!--//app-card-->
-
-			        </div><!--//col-->
-
-			        <div class="col-12 col-lg-5">
-
-				        <div class="app-card app-card-stats-table h-100 shadow-sm">
-
-					        <div class="app-card-header p-3">
-
-						        <div class="row justify-content-between align-items-center">
-
-							        <div class="col-auto">
-
-						                <h4 class="app-card-title">Payment History</h4>
-
-							        </div><!--//col-->
-
-
-
-						        </div><!--//row-->
-
-					        </div><!--//app-card-header-->
-
-					        <div class="app-card-body p-3 p-lg-4">
-
-						     
-
-							
-							<table id="payment-history">
-        <thead>
-            <tr>
-                <th>Booking Ref</th>
-             
-                <th>Payment Date</th>
-                <th>Amount Paid</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Payment data will be injected here by JavaScript -->
-        </tbody>
-    </table>
-
-
-						        </div><!--//table-responsive-->
-
-					    
-
-				        </div><!--//app-card-->
-
-			        </div><!--//col-->
+					<!-- Responsive Payment History Table -->
+					<div class="col-12 col-lg-5">
+						<div class="app-card app-card-stats-table h-100 shadow-sm">
+							<div class="app-card-header p-3">
+								<h4 class="app-card-title">Payment History</h4>
+							</div>
+							<div class="container">
+								<table id="payment-history" class="table table-striped table-bordered table-responsive">
+									<thead>
+										<tr>
+											<th>Booking Ref</th>
+											<th>Payment Date</th>
+											<th>Amount Paid</th>
+											<th>Status</th>
+										</tr>
+									</thead>
+									<tbody>
+										<!-- Payment data will be injected here -->
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
 
 			    </div><!--//row-->
 
@@ -416,7 +356,109 @@
 	
 				</div>
 
-				<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+	<!-- Custom CSS for Mobile-Friendly Table -->
+<style>
+	/* Default table style */
+/* Default table style */
+/* Default table style */
+/* Default table style */
+/* Default table style */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+    white-space: nowrap; /* Prevent wrapping */
+}
+
+/* Adjust the width of the "Actions" column and "Service Type" column for desktop */
+td.button-group {
+    width: 200px; /* Set a fixed width for the Actions column */
+    text-align: left; /* Align buttons to the left */
+}
+
+td[data-label="Service Type"], td[data-label="Booking Date"] {
+    width: 150px; /* Set fixed width for Service Type and Booking Date columns */
+}
+
+/* Button group adjustments */
+.button-group {
+    display: flex;
+    justify-content: flex-start;
+    gap: 5px; /* Reduce the gap between the buttons */
+}
+
+/* Smaller button styling */
+.button-group .btn {
+    padding: 5px 8px;
+    font-size: 12px;
+}
+
+/* Mobile view styling */
+@media (max-width: 768px) {
+    table thead {
+        display: none; /* Hide the table headers */
+    }
+
+    table tbody tr {
+        display: block;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 15px;
+    }
+
+    table tbody tr td {
+        display: flex;
+        justify-content: space-between; /* Space between label and value */
+        align-items: center; /* Align vertically */
+        padding: 8px 10px;
+        border-bottom: 1px solid #ddd;
+        position: relative;
+    }
+
+    table tbody tr td:before {
+        content: attr(data-label);
+        flex-basis: 40%; /* Label takes 40% of the row */
+        font-weight: bold;
+        white-space: nowrap; /* Prevent wrapping of the labels */
+    }
+
+    table tbody tr td:last-child {
+        border-bottom: 0;
+    }
+
+    /* Ensure Booking Date displays fully on mobile */
+    td[data-label="Booking Date"] {
+        text-align: right; /* Align the date value to the right */
+        padding-right: 10px; /* Add space between text and the edge */
+        white-space: nowrap; /* Prevent wrapping */
+    }
+
+    /* Adjust buttons for mobile */
+    .button-group {
+        justify-content: space-between;
+        gap: 5px;
+    }
+
+    .button-group .btn {
+        flex: 1 1 45%;
+        margin-bottom: 5px;
+    }
+
+    /* Mobile does not use fixed width for Actions or Service Type */
+    td.button-group, td[data-label="Service Type"], td[data-label="Booking Date"] {
+        width: auto; /* Reset width for mobile */
+    }
+}
+
+
+
+</style>
+	<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
@@ -429,18 +471,24 @@
 
     <script>
         // Initialize the DataTable without search, pagination, and length change
-        new DataTable('#recent-bookings', {
-            responsive: true,
-            searching: false, // Disable search bar
-            paging: false,
-                // Disable pagination
-            lengthChange: false, // Disable the entries per page dropdown
-            bInfo : false,
-            fixedHeader: {
-                header: true,
-                footer: true
-            }
-        });
+		new DataTable('#recent-bookings', {
+        responsive: true,
+        searching: false,
+        paging: false,
+        lengthChange: false,
+        bInfo: false,
+        fixedHeader: true
+    });
+
+    // Initialize DataTable for payment history
+    new DataTable('#payment-history', {
+        responsive: true,
+        searching: false,
+        paging: false,
+        lengthChange: false,
+        bInfo: false,
+        fixedHeader: true
+    });
     </script>
 
 
@@ -482,6 +530,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Function to update the bookings table
+    // Function to update the bookings table
     function updateBookingsTable(bookings) {
         const tableBody = document.querySelector('#recent-bookings tbody');
         if (!tableBody) {
@@ -502,14 +551,17 @@ document.addEventListener('DOMContentLoaded', function() {
             // Extract just the date from the created_at field
             const bookingDate = new Date(booking.created_at).toLocaleDateString(); // Format the date
 
+            // Check if the Edit button should be disabled based on the status
+            const isEditable = booking.status.toLowerCase() === 'pending';
+
             const row = `
                 <tr>
                     <td data-label="Booking Ref">${booking.booking_reference}</td>
                     <td data-label="Booking Date">${bookingDate}</td>
                     <td data-label="Service Type">${booking.service_type}</td>
                     <td data-label="Status"><span class="badge ${getStatusClass(booking.status)}">${booking.status}</span></td>
-                    <td class="button-group">
-                        <a class="btn btn-warning btn-sm" href="/booking/${booking.id}/edit">Edit</a>
+                    <td data-label="" class="button-group">
+                        <a class="btn btn-warning btn-sm ${!isEditable ? 'disabled' : ''}" href="/booking/${booking.id}/edit" ${!isEditable ? 'aria-disabled="true"' : ''}>Edit</a>
                         <a class="btn btn-danger btn-sm" href="/booking/${booking.id}/cancel">Cancel</a>
                         <a class="btn btn-primary btn-sm" href="/booking/${booking.id}/view">View</a>
                     </td>
@@ -518,23 +570,6 @@ document.addEventListener('DOMContentLoaded', function() {
             tableBody.innerHTML += row;
         });
     }
-
-    // Function to get the correct class for booking status
-    function getStatusClass(status) {
-        console.log('Determining status class for:', status); // Log the status being processed
-        
-        switch (status) {
-            case 'Confirmed':
-                return 'bg-success';
-            case 'Pending':
-                return 'bg-warning';
-            case 'Cancelled':
-                return 'bg-danger';
-            default:
-                return 'bg-secondary';
-        }
-    }
-
     // Function to fetch dashboard data
     function fetchDashboardData() {
         console.log('Fetching dashboard data...'); // Log when fetching starts
@@ -612,8 +647,17 @@ function fetchPaymentHistory() {
                 return 'bg-success';
             case 'unpaid':
                 return 'bg-warning';
+			case 'completed':
+					return 'bg-success';
+			case 'pending':
+						return 'bg-warning';
             case 'refunded':
                 return 'bg-danger';
+			case 'cancelled':
+                return 'bg-danger';
+			case 'confirmed':
+					return 'bg-info';
+
             default:
                 return 'bg-secondary';
         }

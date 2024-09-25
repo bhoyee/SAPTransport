@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Dashboard</title>
+    <title>Project Dashboard with Countdown Timer</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     
@@ -54,7 +54,6 @@
         .pending {
             color: #dc3545;
         }
-
         /* Styling for "New" badge */
         .new-badge {
             background-color: #28a745;
@@ -64,7 +63,6 @@
             border-radius: 12px;
             margin-left: 10px;
         }
-
         /* Styling for "Maintenance" badge */
         .maintenance-badge {
             background-color: #dc3545;
@@ -74,7 +72,6 @@
             border-radius: 12px;
             margin-left: 10px;
         }
-
         /* Flexbox Header Styling */
         .dashboard-header {
             display: flex;
@@ -94,6 +91,14 @@
             color: #343a40;
             font-weight: bold;
             margin-bottom: 20px;
+        }
+        /* Countdown Timer Styling */
+        .countdown {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #dc3545; /* Bold red color for the countdown */
+            margin-bottom: 30px;
         }
         /* Mobile Responsiveness */
         @media (max-width: 575.98px) {
@@ -116,6 +121,10 @@
         <!-- Last Updated Date -->
         <div class="last-updated">
             Last Updated: September 20, 2024
+        </div>
+        <!-- Countdown Timer -->
+        <div class="countdown" id="countdown-timer">
+            Countdown: 00d 00h 00m 00s
         </div>
 
         <!-- Header and Project Timeline -->
@@ -317,7 +326,50 @@
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS and dependencies -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+
+<!-- Countdown Timer JavaScript -->
+<script>
+        function startCountdown() {
+            // Set the start date to 15 days ago
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 15);
+
+            // Set the end date to 3 months from the start date
+            const endDate = new Date(startDate);
+            endDate.setMonth(startDate.getMonth() + 3);
+
+            // Function to update the countdown
+            function updateCountdown() {
+                const now = new Date().getTime();
+                const timeLeft = endDate - now;
+
+                // Calculate time left
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+                // Display the countdown
+                document.getElementById("countdown-timer").innerHTML = `Countdown: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+                // If the countdown is over, display EXPIRED
+                if (timeLeft < 0) {
+                    clearInterval(timerInterval); // Stop the countdown
+                    document.getElementById("countdown-timer").innerHTML = "Countdown: EXPIRED";
+                }
+            }
+
+            // Update countdown every second
+            const timerInterval = setInterval(updateCountdown, 1000);
+
+            // Run the function once immediately
+            updateCountdown();
+        }
+
+        // Start the countdown when the page loads
+        window.onload = startCountdown;
+    </script>
+
 </body>
 </html>
