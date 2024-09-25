@@ -41,7 +41,7 @@ class PassengerHomeController extends Controller
             // Fetch totals, and if no data is found, it will return 0
             $totalTrips = Booking::where('user_id', $userId)->count() ?? 0;
             $cancelledTrips = Booking::where('user_id', $userId)
-                                     ->where('status', 'Cancelled')
+                                     ->where('status', 'cancelled')
                                      ->count() ?? 0;
             $upcomingTrips = Booking::where('user_id', $userId)
                                     ->whereIn('status', ['pending', 'confirmed'])  // Only Pending or Confirmed

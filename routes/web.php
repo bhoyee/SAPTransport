@@ -211,3 +211,5 @@ Route::post('/check-booking-status', [BookingController::class, 'checkStatus'])-
 
 Route::get('/passenger/payment-history', [PaymentController::class, 'getPaymentHistory']);
 
+// Route for cancelling a booking
+Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking'])->middleware('auth');
