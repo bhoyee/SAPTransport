@@ -9,7 +9,7 @@
 @if (session('success'))
 <div class="alert alert-success alert-dismissible fade show" role="alert">
     {{ session('success') }}
-    <a href="{{ route('passenger.dashboard') }}" class="btn btn-sm btn-light">Go to Dashboard</a>
+    <a href="{{ route('passenger.dashboard') }}" class="btn btn-sm btn-primary">Go to Dashboard</a>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 @endif
@@ -33,7 +33,7 @@
 <div class="app-card app-card-notification shadow-sm mb-4">
     <div class="app-card-body p-4">
         <div class="notification-content">
-            <form action="{{ route('booking.update', $booking->id) }}" method="POST">
+            <form id="edit-Form" action="{{ route('booking.update', $booking->id) }}" method="POST">
                 @csrf
                 @method('PUT')
 
@@ -122,7 +122,10 @@
                 </div>
 
                 <!-- Submit Button -->
-                <button type="submit" class="btn btn-primary">Update Booking</button>
+                <button type="submit" class="btn btn-primary" id="update-button">
+                    <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    <span id="button-text">Update Booking</span>
+                </button>
                 <a href="{{ route('passenger.dashboard') }}" class="btn btn-secondary">Cancel</a>
             </form>
         </div>
@@ -164,7 +167,21 @@
 </style>
 <script>
 
+
 document.addEventListener('DOMContentLoaded', function() {
+
+    const form = document.getElementById('edit-Form');
+    const submitButton = document.getElementById('update-button');
+    const spinner = document.getElementById('spinner');
+    const buttonText = document.getElementById('button-text');
+
+    form.addEventListener('submit', function(event) {
+        // Show the spinner and disable the button
+        spinner.classList.remove('d-none');
+        buttonText.classList.add('d-none');  // Hide the button text while spinning
+        submitButton.disabled = true;  // Disable the button to prevent multiple clicks
+    });
+    
     const bookingData = @json($booking);
     console.log("Booking data from the server:", bookingData);
 
