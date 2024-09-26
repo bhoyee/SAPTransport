@@ -21,7 +21,7 @@ class PassengerHomeController extends Controller
             // Fetch recent bookings for the logged-in user
             $bookings = Booking::where('user_id', auth()->id())
                 ->orderBy('created_at', 'desc')
-                ->take(10) // Limit the number of recent bookings fetched
+                ->take(4) // Limit the number of recent bookings fetched
                 ->get();
     
             // Check if any bookings need to be marked as expired

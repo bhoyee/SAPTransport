@@ -3,7 +3,6 @@
 @section('title', 'Passenger Dashboard')
 
 @section('content')
-
  
 			    <h1 class="app-page-title">Overview</h1>
 			    
@@ -480,21 +479,7 @@ td[data-label="Service Type"], td[data-label="Booking Date"] {
 
 
 
-<!-- Bootstrap JavaScript -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.0/js/bootstrap.min.js"></script>
 
-
-	<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/2.1.6/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/2.1.6/js/dataTables.bootstrap5.js"></script>
-    <script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.js"></script>
-    <script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.bootstrap5.js"></script>
 
     <script>
         // Initialize the DataTable without search, pagination, and length change
