@@ -26,6 +26,9 @@ use App\Http\Controllers\PassengerHomeController;
 
 use App\Http\Controllers\PaymentController;
 
+use App\Http\Controllers\BookingEditController;
+
+
 
 
 // Public Routes
@@ -188,7 +191,7 @@ Route::get('/clear-cache', function() {
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::get('/passenger/dashboard', [PassengerController::class, 'dashboard'])->name('passenger.dashboard'); });
+Route::get('/passenger/dashboard', [PassengerController::class, 'dashboard'])->name('passenger.dashboard'); });
 
     
 
@@ -200,16 +203,21 @@ Route::post('/check-booking-status', [BookingController::class, 'checkStatus'])-
 
 
     // Route to fetch recent bookings
-    Route::get('/passenger/recent-bookings', [PassengerHomeController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
+Route::get('/passenger/recent-bookings', [PassengerHomeController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
 
-    Route::get('/passenger/dashboard-data', [PassengerHomeController::class, 'fetchDashboardData'])->name('passenger.dashboard.data');
+Route::get('/passenger/dashboard-data', [PassengerHomeController::class, 'fetchDashboardData'])->name('passenger.dashboard.data');
 
-
-
-
-    
-
+   
 Route::get('/passenger/payment-history', [PaymentController::class, 'getPaymentHistory']);
 
 // Route for cancelling a booking
 Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking'])->middleware('auth');
+
+
+
+// Route for editing a booking
+Route::get('/booking/{id}/edit', [BookingEditController::class, 'edit'])->name('booking.edit');
+
+// Route for updating the booking
+Route::put('/booking/{id}', [BookingEditController::class, 'update'])->name('booking.update');
+

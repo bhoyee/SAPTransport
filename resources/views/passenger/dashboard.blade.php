@@ -17,7 +17,7 @@
 							        <div>Ready to plan your next trip? Book your transport easily and get on the road!</div>
 							    </div><!--//col-->
 							    <div class="col-12 col-lg-3">
-								    <a class="btn btn-primary" href=""><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-file-earmark-arrow-down me-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+								    <a class="btn btn-primary" href="{{ url('/') }}"><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-file-earmark-arrow-down me-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="M4 0h5.5v1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h1V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2z"/>
   <path d="M9.5 3V0L14 4.5h-3A1.5 1.5 0 0 1 9.5 3z"/>
   <path fill-rule="evenodd" d="M8 6a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7.5 10.293V6.5A.5.5 0 0 1 8 6z"/>
@@ -576,6 +576,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const isEditable = booking.status.toLowerCase() === 'pending';
             const isCancelable = booking.status.toLowerCase() === 'pending';
 
+            const isExpired = booking.status.toLowerCase() === 'expired';
+
             const row = `
                 <tr>
                     <td data-label="Booking Ref">${booking.booking_reference}</td>
@@ -583,8 +585,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td data-label="Service Type">${booking.service_type}</td>
                     <td data-label="Status"><span class="badge ${getStatusClass(booking.status)}">${booking.status}</span></td>
                     <td data-label="Actions" class="button-group">
-                        <a class="btn btn-warning btn-sm ${!isEditable ? 'disabled' : ''}" href="/booking/${booking.id}/edit" ${!isEditable ? 'aria-disabled="true"' : ''}>Edit</a>
-                        <button class="btn btn-danger btn-sm ${!isCancelable ? 'disabled' : ''}" data-id="${booking.id}" type="button">Cancel</button>
+						<a class="btn btn-warning btn-sm ${!isEditable ? 'disabled' : ''}" href="/booking/${booking.id}/edit" ${!isEditable ? 'aria-disabled="true"' : ''}>Edit</a>
+                        <button class="btn btn-danger btn-sm ${(!isCancelable || isExpired) ? 'disabled' : ''}" data-id="${booking.id}" type="button">Cancel</button>
                         <a class="btn btn-primary btn-sm" href="/booking/${booking.id}/view">View</a>
                     </td>
                 </tr>

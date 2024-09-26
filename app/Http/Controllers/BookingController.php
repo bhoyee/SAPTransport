@@ -230,24 +230,24 @@ class BookingController extends Controller
 
     }
 
-public function getRecentBookings()
-{
-    try {
-        // Fetch recent bookings for the logged-in user
-        $bookings = Booking::where('user_id', auth()->id())
-            ->orderBy('created_at', 'desc')
-            ->take(10) // Limit the number of recent bookings fetched
-            ->get();
+// public function getRecentBookings()
+// {
+//     try {
+//         // Fetch recent bookings for the logged-in user
+//         $bookings = Booking::where('user_id', auth()->id())
+//             ->orderBy('created_at', 'desc')
+//             ->take(10) // Limit the number of recent bookings fetched
+//             ->get();
 
-        return response()->json($bookings);
-    } catch (\Exception $e) {
-        // Log the error
-        \Log::error('Error fetching recent bookings: ' . $e->getMessage());
+//         return response()->json($bookings);
+//     } catch (\Exception $e) {
+//         // Log the error
+//         \Log::error('Error fetching recent bookings: ' . $e->getMessage());
         
-        // Return a 500 response with error message
-        return response()->json(['error' => 'An error occurred while fetching recent bookings.'], 500);
-    }
-}
+//         // Return a 500 response with error message
+//         return response()->json(['error' => 'An error occurred while fetching recent bookings.'], 500);
+//     }
+// }
 
 public function cancelBooking(Request $request, $id)
 {

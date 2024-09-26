@@ -120,7 +120,7 @@
     <div class="container">
         <!-- Last Updated Date -->
         <div class="last-updated">
-            Last Updated: September 20, 2024
+            Last Updated: September 25, 2024
         </div>
         <!-- Countdown Timer -->
         <div class="countdown" id="countdown-timer">
@@ -151,7 +151,7 @@
                             <li class="list-group-item">
                                 <span class="task">Web-based Transport Booking Platform:</span>
                                 <ul>
-                                    <li>A fully functional platform that allows users to book airport pickups/drop-offs, charter services, and haulage services.</li>
+                                    <li>A fully functional platform that allows users to book airport pickups/drop-offs and charter services</li>
                                     <li>Accessible to passengers, admins, and consultants, each with appropriate functionalities.</li>
                                 </ul>
                             </li>
@@ -225,14 +225,15 @@
                         <h2 class="section-title">Daily Log</h2>
                         <ul class="list-group">
                             <li class="list-group-item">
-                                Sign-up page currently under maintenance 
+                                Email verification entering spam folder
                                 <span class="maintenance-badge">Maintenance</span>
-                                <span class="status">23/09/2024 at 06:45</span>
+                                <span class="status">25/09/2024 at 06:45</span>
                             </li>
+
                             <li class="list-group-item">
-                                New API endpoint deployed for user profile management 
+                               Recent Booking and Payment History tables on Passanger Dashboad responsiveness fixed
                                 <span class="new-badge">New</span>
-                                <span class="status">23/09/2024 at 10:30</span>
+                                <span class="status">25/09/2024 at 11:30</span>
                             </li>
                         </ul>
                     </div>
@@ -253,15 +254,24 @@
                                     <li>Login API <span class="status completed">Completed</span><span class="new-badge">New</span></li>
                                     <li>Registration API <span class="status completed">Completed</span><span class="new-badge">New</span></li>
                                     <li>Payment Gateway Integration <span class="status in-progress">In Progress</span></li>
-                                    <li>Booking API <span class="status pending">Pending</span></li>
+                                    <!-- <li>Booking API <span class="status pending">Pending</span></li> -->
+                                    <li>Booking API <span class="status completed">Completed</span><span class="new-badge">New</span></li>
+
                                 </ul>
                             </li>
                             <li class="list-group-item">
                                 <span class="task">Frontend Integration:</span>
                                 <ul>
                                     <li>Passenger Dashboard UI <span class="status completed">Completed</span></li>
-                                    <li>Booking Form Integration <span class="status in-progress">In Progress</span></li>
-                                    <li>Payment Form Integration <span class="status pending">Pending</span></li>
+                                    <li>PassengerBooking Form Integration <span class="status completed">Completed</span></li>
+                                    <li>Booking Confirmation Page <span class="status completed">Completed</span></li>
+
+                                    <li>Passenger: Payment Form Integration  <span class="status in-progress">In Progress</span></li>
+                                    <li>Passenger: My Trip / Bookings <span class="status pending">Pending</span></li>
+                                    <li>Passenger: Invoices / Receipts<span class="status pending">Pending</span></li>
+                                    <li>Passenger: Support / Ticket<span class="status pending">Pending</span></li>
+                                    <li>Passenger: Help<span class="status pending">Pending</span></li>
+                                    <li>Passenger: Settings<span class="status pending">Pending</span></li>
                                 </ul>
                             </li>
                             <li class="list-group-item">
@@ -288,7 +298,8 @@
                                 <span class="task">Complete Frontend Integration:</span>
                                 <ul>
                                     <li>Payment Form Integration <span class="status pending">Pending</span></li>
-                                    <li>Booking Confirmation Page <span class="status pending">Pending</span></li>
+                                    <li>Admin Portal <span class="status pending">Pending</span></li>
+                                    <li>Staff Portal <span class="status pending">Pending</span></li>
                                 </ul>
                             </li>
                             <li class="list-group-item">
