@@ -563,19 +563,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const isExpired = booking.status.toLowerCase() === 'expired';
 
-            const row = `
-                <tr>
-                    <td data-label="Booking Ref">${booking.booking_reference}</td>
-                    <td data-label="Booking Date">${bookingDate}</td>
-                    <td data-label="Service Type">${booking.service_type}</td>
-                    <td data-label="Status"><span class="badge ${getStatusClass(booking.status)}">${booking.status}</span></td>
-                    <td data-label="Actions" class="button-group">
-						<a class="btn btn-warning btn-sm ${!isEditable ? 'disabled' : ''}" href="/booking/${booking.id}/edit" ${!isEditable ? 'aria-disabled="true"' : ''}>Edit</a>
-                        <button class="btn btn-danger btn-sm ${(!isCancelable || isExpired) ? 'disabled' : ''}" data-id="${booking.id}" type="button">Cancel</button>
-                        <a class="btn btn-primary btn-sm" href="/booking/${booking.id}/view">View</a>
-                    </td>
-                </tr>
-            `;
+			const bookingUrl = `/booking/${booking.id}/view`;
+			const editUrl = `/booking/${booking.id}/edit`;
+
+			const row = `
+				<tr>
+					<td data-label="Booking Ref">${booking.booking_reference}</td>
+					<td data-label="Booking Date">${bookingDate}</td>
+					<td data-label="Service Type">${booking.service_type}</td>
+					<td data-label="Status"><span class="badge ${getStatusClass(booking.status)}">${booking.status}</span></td>
+					<td data-label="Actions" class="button-group">
+						<a class="btn btn-warning btn-sm ${!isEditable ? 'disabled' : ''}" href="${editUrl}" ${!isEditable ? 'aria-disabled="true"' : ''}>Edit</a>
+						<button class="btn btn-danger btn-sm ${(!isCancelable || isExpired) ? 'disabled' : ''}" data-id="${booking.id}" type="button">Cancel</button>
+						<a class="btn btn-primary btn-sm" href="${bookingUrl}">View</a>
+					</td>
+				</tr>
+			`;
+
             tableBody.innerHTML += row;
         });
 

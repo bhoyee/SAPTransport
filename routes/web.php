@@ -221,3 +221,7 @@ Route::get('/booking/{id}/edit', [BookingEditController::class, 'edit'])->name('
 // Route for updating the booking
 Route::put('/booking/{id}', [BookingEditController::class, 'update'])->name('booking.update');
 
+// Rote for viewing details of booking
+Route::get('/booking/{id}/view', [BookingEditController::class, 'show'])->name('booking.view');
+
+
