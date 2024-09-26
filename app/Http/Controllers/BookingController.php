@@ -249,27 +249,29 @@ class BookingController extends Controller
 //     }
 // }
 
-public function cancelBooking(Request $request, $id)
-{
-    try {
-        // Find the booking by its ID
-        $booking = Booking::findOrFail($id);
+    public function cancelBooking(Request $request, $id)
+    {
+        try {
+            // Find the booking by its ID
+            $booking = Booking::findOrFail($id);
 
-        // Check if the booking is cancelable (only pending status can be cancelled)
-        if ($booking->status !== 'pending') {
-            return response()->json(['error' => 'Booking cannot be cancelled.'], 400);
+            // Check if the booking is cancelable (only pending status can be cancelled)
+            if ($booking->status !== 'pending') {
+                return response()->json(['error' => 'Booking cannot be cancelled.'], 400);
+            }
+
+            // Update the booking status to cancelled
+            $booking->update(['status' => 'cancelled']);
+
+            return response()->json(['success' => true, 'message' => 'Booking cancelled successfully.']);
+        } catch (\Exception $e) {
+            \Log::error('Error cancelling booking: ' . $e->getMessage());
+            return response()->json(['error' => 'An error occurred while cancelling the booking.'], 500);
         }
-
-        // Update the booking status to cancelled
-        $booking->update(['status' => 'cancelled']);
-
-        return response()->json(['success' => true, 'message' => 'Booking cancelled successfully.']);
-    } catch (\Exception $e) {
-        \Log::error('Error cancelling booking: ' . $e->getMessage());
-        return response()->json(['error' => 'An error occurred while cancelling the booking.'], 500);
     }
-}
 
+
+ 
 
 
 
