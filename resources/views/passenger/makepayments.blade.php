@@ -29,8 +29,8 @@
                     <td>₦{{ number_format($payment->amount, 2) }}</td>
                     <td><span class="badge bg-warning">{{ ucfirst($payment->status) }}</span></td>
                     <td>
-                        <a href="{{ route('booking.view', $payment->booking->id) }}" class="btn btn-primary btn-sm">View</a>
-                        <a href="{{ route('payment.pay', $payment->id) }}" class="btn btn-success btn-sm">Pay Now</a>
+                    <a href="{{ route('booking.view', ['id' => $payment->booking->id, 'from' => 'makepayments']) }}" class="btn btn-primary btn-sm">View</a>
+                    <a href="{{ route('payment.pay', $payment->id) }}" class="btn btn-success btn-sm">Pay Now</a>
                     </td>
                 </tr>
                 @endforeach
