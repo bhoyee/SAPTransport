@@ -120,11 +120,14 @@ class BookingEditController extends Controller
 
        // show booking details
 
-       public function show($id)
-       {
-           $booking = Booking::findOrFail($id); // Fetch the booking based on the ID
-           return view('passenger.details', compact('booking')); // Return the view with booking details
-       }
+       public function show($id, Request $request)
+        {
+            $booking = Booking::findOrFail($id); // Fetch the booking based on the ID
+            $from = $request->query('from', null); // Check if the 'from' parameter is set
+            
+            return view('passenger.details', compact('booking', 'from')); // Pass 'from' to the view
+        }
+
    
 
 }
