@@ -124,7 +124,8 @@ class Booking extends Model
     }
 
 
-
+   
+    
 
     // Accessor for Trip Type
 
