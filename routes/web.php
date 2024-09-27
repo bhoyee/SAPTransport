@@ -225,3 +225,7 @@ Route::put('/booking/{id}', [BookingEditController::class, 'update'])->name('boo
 Route::get('/booking/{id}/view', [BookingEditController::class, 'show'])->name('booking.view');
 
 
+// route to the payment page and the "Pay Now" action
+Route::get('/passenger/makepayments', [PaymentController::class, 'unpaidPayments'])->name('passenger.makepayments');
+Route::get('/payment/{id}/pay', [PaymentController::class, 'pay'])->name('payment.pay'); // You can handle the payment logic in the 'pay' method.
+
