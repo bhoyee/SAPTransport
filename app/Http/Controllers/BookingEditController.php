@@ -131,6 +131,8 @@ class BookingEditController extends Controller
            // Pass the 'booking' and 'from' parameters to the view
            return view('passenger.details', compact('booking', 'from'));
        }
+
+
        
    
 
