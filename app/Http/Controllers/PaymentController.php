@@ -31,6 +31,7 @@ class PaymentController extends Controller
             return response()->json(['error' => 'Unable to fetch payment history'], 500);
         }
     }
+    
     public function unpaidPayments()
     {
         // Fetch all unpaid bookings for the logged-in user

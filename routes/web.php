@@ -202,13 +202,14 @@ Route::post('/check-booking-status', [BookingController::class, 'checkStatus'])-
 // Route::get('/passenger/recent-bookings', [BookingController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
 
 
-    // Route to fetch recent bookings
+// Route to fetch recent bookings
 Route::get('/passenger/recent-bookings', [PassengerHomeController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
 
 Route::get('/passenger/dashboard-data', [PassengerHomeController::class, 'fetchDashboardData'])->name('passenger.dashboard.data');
 
+// Route to fetch recent Payment history
+Route::get('/passenger/payment-history', [PassengerHomeController::class, 'getPaymentHistory']);
    
-Route::get('/passenger/payment-history', [PaymentController::class, 'getPaymentHistory']);
 
 // Route for cancelling a booking
 Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking'])->middleware('auth');
