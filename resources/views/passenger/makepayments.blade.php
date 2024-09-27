@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="app-page-title">
-    <h1>Unpaid Invoices</h1>
+    <h1>Unpaid Payments</h1>
 </div>
 
 <div class="app-card shadow-sm mb-4">
@@ -29,7 +29,7 @@
                     <td>{{ \Carbon\Carbon::parse($invoice->booking->created_at)->format('d M, Y') }}</td>
                     <td>{{ $invoice->booking->service_type }}</td>
                     <td>₦{{ number_format($invoice->amount, 2) }}</td>
-                    <td><span class="badge bg-warning">{{ ucfirst($invoice->status) }}</span></td>
+                    <td><span class="badge bg-danger">{{ ucfirst($invoice->status) }}</span></td>
                     <td>
                         <a href="{{ route('booking.view', ['id' => $invoice->booking->id, 'from' => 'makepayments']) }}" class="btn btn-primary btn-sm">View</a>
                         <a href="{{ route('payment.pay', $invoice->id) }}" class="btn btn-success btn-sm">Pay Now</a>
