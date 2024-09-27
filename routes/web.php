@@ -28,6 +28,9 @@ use App\Http\Controllers\PaymentController;
 
 use App\Http\Controllers\BookingEditController;
 
+use App\Http\Controllers\InvoiceController;
+
+
 
 
 
@@ -209,6 +212,7 @@ Route::get('/passenger/dashboard-data', [PassengerHomeController::class, 'fetchD
 
 // Route to fetch recent Payment history
 Route::get('/passenger/payment-history', [PassengerHomeController::class, 'getPaymentHistory']);
+
    
 
 // Route for cancelling a booking
@@ -227,6 +231,6 @@ Route::get('/booking/{id}/view', [BookingEditController::class, 'show'])->name('
 
 
 // route to the payment page and the "Pay Now" action
-Route::get('/passenger/makepayments', [PaymentController::class, 'unpaidPayments'])->name('passenger.makepayments');
+Route::get('/passenger/makepayments', [InvoiceController::class, 'unpaidPayments'])->name('passenger.makepayments');
 Route::get('/payment/{id}/pay', [PaymentController::class, 'pay'])->name('payment.pay'); // You can handle the payment logic in the 'pay' method.
 
