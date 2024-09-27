@@ -23,4 +23,21 @@ class InvoiceController extends Controller
         // Return the view with unpaid invoices
         return view('passenger.makepayments', compact('unpaidInvoices'));
     }
+
+    public function showInvoice($id)
+    {
+        $user = Auth::user();  // Fetch the logged-in user
+        $invoice = Invoice::with('booking')->findOrFail($id);  // Fetch the invoice along with booking details
+
+        // Check if the invoice belongs to the logged-in user (optional)
+        if ($invoice->booking->user_id !== $user->id) {
+            return redirect()->route('passenger.makepayments')->with('error', 'Unauthorized access to invoice.');
+        }
+
+        $booking = $invoice->booking;  // Get the related booking
+
+        // Return the invoice view
+        return view('passenger.invoice', compact('user', 'invoice', 'booking'));
+    }
+
 }
