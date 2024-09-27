@@ -234,3 +234,7 @@ Route::get('/booking/{id}/view', [BookingEditController::class, 'show'])->name('
 Route::get('/passenger/makepayments', [InvoiceController::class, 'unpaidPayments'])->name('passenger.makepayments');
 Route::get('/payment/{id}/pay', [PaymentController::class, 'pay'])->name('payment.pay'); // You can handle the payment logic in the 'pay' method.
 
+// Route to display a specific invoice by ID
+Route::get('/passenger/invoice/{id}', [InvoiceController::class, 'showInvoice'])->name('passenger.invoice');
+
+

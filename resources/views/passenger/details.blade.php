@@ -117,14 +117,12 @@
                 <!-- More fields can be added in the same manner -->
             </div>
 
- 
-         
             <div class="row gx-5 gy-3">
                 <!-- Existing Booking Details -->
 
                 <!-- Invoice Details -->
                 @if ($booking->invoice)
-                <h3 class="mb-3">Payment Information</h3>
+                    <h3 class="mb-3">Payment Information</h3>
                     <div class="col-md-6">
                         <strong>Invoice Number:</strong>
                         <p>{{ $booking->invoice->invoice_number }}</p>
@@ -140,18 +138,21 @@
                 @endif
             </div>
 
-               <div class="mt-4">
-                    @if ($from === 'makepayments')
-
-                        <a href="{{ route('payment.pay', $booking->payments()->where('status', 'unpaid')->first()->id) }}" class="btn btn-success">Pay Now</a>
-                        <a href="{{ route('passenger.makepayments') }}" class="btn btn-info">View Invoice</a>
-
-                        <a href="{{ route('passenger.makepayments') }}" class="btn btn-secondary">Close</a>
-                    @else
-                        <a href="{{ route('booking.edit', $booking->id) }}" class="btn btn-warning">Edit Booking</a>
-                        <a href="{{ route('passenger.dashboard') }}" class="btn btn-secondary">Close</a>
+            <div class="mt-4">
+                @if ($from === 'makepayments')
+                    <!-- Use the invoice for Pay Now button -->
+                    @if ($booking->invoice)
+                        <a href="{{ route('payment.pay', $booking->invoice->id) }}" class="btn btn-success">Pay Now</a>
+                        <a href="{{ route('passenger.invoice', $booking->invoice->id) }}" class="btn btn-info">View Invoice</a>
                     @endif
-                </div>
+
+                    <a href="{{ route('passenger.makepayments') }}" class="btn btn-secondary">Close</a>
+                @else
+                    <a href="{{ route('booking.edit', $booking->id) }}" class="btn btn-warning">Edit Booking</a>
+                    <a href="{{ route('passenger.dashboard') }}" class="btn btn-secondary">Close</a>
+                @endif
+            </div>
+
         </div>
     </div>
 @endsection
