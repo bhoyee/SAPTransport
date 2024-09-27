@@ -117,10 +117,15 @@
                 <!-- More fields can be added in the same manner -->
             </div>
 
-            <div class="mt-4">
-                <a href="{{ route('booking.edit', $booking->id) }}" class="btn btn-warning">Edit Booking</a>
-                <a href="{{ route('passenger.dashboard') }}" class="btn btn-secondary">Close</a>
-            </div>
+               <div class="mt-4">
+                    @if ($from === 'makepayments')
+                        <a href="{{ route('payment.pay', $booking->payments()->where('status', 'unpaid')->first()->id) }}" class="btn btn-success">Pay Now</a>
+                        <a href="{{ route('passenger.makepayments') }}" class="btn btn-secondary">Close</a>
+                    @else
+                        <a href="{{ route('booking.edit', $booking->id) }}" class="btn btn-warning">Edit Booking</a>
+                        <a href="{{ route('passenger.dashboard') }}" class="btn btn-secondary">Close</a>
+                    @endif
+                </div>
         </div>
     </div>
 @endsection
