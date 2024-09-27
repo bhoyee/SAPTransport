@@ -171,8 +171,8 @@
 									<thead>
 										<tr>
 											<th>Booking Ref</th>
-											<th>Payment Date</th>
-											<th>Amount Paid</th>
+											<th>Invoice Num</th>
+											<th>Amount</th>
 											<th>Status</th>
 										</tr>
 									</thead>
@@ -670,28 +670,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Function to update the payments table
-    function updatePaymentTable(payments) {
-        const tableBody = document.querySelector('#payment-history tbody');
-        tableBody.innerHTML = '';  // Clear previous table rows
+function updatePaymentTable(payments) {
+    const tableBody = document.querySelector('#payment-history tbody');
+    tableBody.innerHTML = '';  // Clear previous table rows
 
-        if (payments.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No payment history found.</td></tr>';
-            return;
-        }
-
-        payments.forEach(payment => {
-            const paymentDate = new Date(payment.payment_date).toLocaleDateString();
-            const row = `
-                <tr>
-                    <td data-label="Booking Ref">${payment.booking.booking_reference}</td>
-                    <td data-label="Payment Date">${paymentDate}</td>
-                    <td data-label="Amount Paid">${payment.amount}</td>
-                    <td data-label="Payment Status"><span class="badge ${getStatusClass(payment.status)}">${payment.status}</span></td>
-                </tr>
-            `;
-            tableBody.innerHTML += row;
-        });
+    if (payments.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No payment history found.</td></tr>';
+        return;
     }
+
+    payments.forEach(payment => {
+        const invoiceDate = new Date(payment.invoice_date).toLocaleDateString(); // Format the invoice date
+
+        // Determine badge class based on status
+        const badgeClass = payment.status.toLowerCase() === 'paid' ? 'bg-success' : 'bg-danger';
+
+        const row = `
+            <tr>
+                <td data-label="Booking Ref">${payment.booking.booking_reference}</td>
+                <td data-label="Invoice Number">${payment.invoice_number}</td>
+                <td data-label="Amount">₦${payment.amount}</td>
+                <td data-label="Invoice Date">${invoiceDate}</td>
+                <td data-label="Payment Status">
+                    <span class="badge ${badgeClass}">${payment.status}</span>
+                </td>
+            </tr>
+        `;
+        tableBody.innerHTML += row;
+    });
+}
 
     // Function to get the correct class for payment status
     function getStatusClass(status) {
