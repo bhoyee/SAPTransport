@@ -102,9 +102,9 @@ class Booking extends Model
 
     // Define the relationship to the Payment model
     public function payments()
-        {
-            return $this->hasMany(Payment::class);
-        }
+    {
+        return $this->hasMany(Payment::class);
+    }
 
 
 
@@ -117,6 +117,12 @@ class Booking extends Model
         return $value === 'AirportTransfer' ? 'Airport Transfer' : 'Charter Service';
 
     }
+
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
 
 
 

@@ -6,7 +6,10 @@ use Illuminate\Http\Request;
 
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+
 
 
 
@@ -43,28 +46,28 @@ class PassengerHomeController extends Controller
         }
     }
 
-
     public function getPaymentHistory()
     {
         try {
             $userId = Auth::id();
-
-            // Fetch the last 4 'paid' payments with the associated booking for the logged-in user
-            $payments = Payment::with('booking')
-                            ->where('user_id', $userId)
-                            ->where('status', 'paid')  // Only 'paid' payments
-                            ->orderBy('payment_date', 'desc')
-                            ->limit(4)  // Limit the results to 4
-                            ->get();
-
-            // Log the payments for debugging
-            Log::info('Fetched payments:', $payments->toArray());
-
-            return response()->json($payments);
+    
+            // Fetch the last 4 'paid' invoices with the associated booking for the logged-in user
+            $invoices = Invoice::with('booking')
+                ->whereHas('booking', function($query) use ($userId) {
+                    $query->where('user_id', $userId);  // Filter by the user's bookings
+                })
+                ->orderBy('invoice_date', 'desc')
+                ->limit(4)  // Limit the results to 4
+                ->get();
+    
+            // Log the invoices for debugging
+            Log::info('Fetched invoices:', $invoices->toArray());
+    
+            return response()->json($invoices);
         } catch (\Exception $e) {
             // Log the error message
             Log::error('Error fetching payment history: ' . $e->getMessage());
-
+    
             return response()->json(['error' => 'Unable to fetch payment history'], 500);
         }
     }
