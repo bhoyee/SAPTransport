@@ -246,6 +246,8 @@ Route::get('/passenger/invoice/download/{id}', [InvoiceController::class, 'downl
 
 //paystack payment rouvte
 Route::get('/payments/unpaid', [PaymentController::class, 'unpaidPayments'])->name('payments.unpaid');
+
+// Route for payment initiation (already defined in your previous setup)
 Route::post('/pay', [PaymentController::class, 'pay'])->name('pay');
 
 Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
@@ -266,3 +268,16 @@ Route::get('/payments/history', [PaymentController::class, 'paymentHistory'])->n
 
 // Route to handle refund requests
 Route::post('/payments/refund', [PaymentController::class, 'requestRefund'])->name('payment.refund');
+
+
+// Route for viewing an invoice
+Route::get('/invoice/view/{id}', [InvoiceController::class, 'view'])->name('invoice.view');
+Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+Route::get('/invoice/pay/{id}', [InvoiceController::class, 'pay'])->name('invoice.pay');
+
+Route::post('/invoice/pay', [PaymentController::class, 'pay'])->name('invoice.pay');
+
+
+
+
+
