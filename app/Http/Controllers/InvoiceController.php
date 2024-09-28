@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; // <-- Add this line
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
@@ -39,5 +40,18 @@ class InvoiceController extends Controller
         // Return the invoice view
         return view('passenger.invoice', compact('user', 'invoice', 'booking'));
     }
+
+    
+
+    public function downloadInvoice($id)
+    {
+        $invoice = Invoice::findOrFail($id);
+        $booking = $invoice->booking;
+        $user = $booking->user;
+
+        $pdf = Pdf::loadView('passenger.invoice-pdf', compact('invoice', 'booking', 'user'));
+        return $pdf->download('invoice_'.$invoice->invoice_number.'.pdf');
+    }
+
 
 }
