@@ -120,7 +120,7 @@
     <div class="container">
         <!-- Last Updated Date -->
         <div class="last-updated">
-            Last Updated: September 25, 2024
+            Last Updated: September 28, 2024
         </div>
         <!-- Countdown Timer -->
         <div class="countdown" id="countdown-timer">
@@ -231,8 +231,8 @@
                             </li>
 
                             <li class="list-group-item">
-                               Recent Booking and Payment History tables on Passanger Dashboad responsiveness fixed
-                                <span class="new-badge">New</span>
+                               Recent Booking and Payment History tables on Passanger Dashboad responsiveness
+                                <span class="new-badge">fixed</span>
                                 <span class="status">25/09/2024 at 11:30</span>
                             </li>
                         </ul>
@@ -251,9 +251,12 @@
                             <li class="list-group-item">
                                 <span class="task">Backend API Development:</span>
                                 <ul>
-                                    <li>Login API <span class="status completed">Completed</span><span class="new-badge">New</span></li>
-                                    <li>Registration API <span class="status completed">Completed</span><span class="new-badge">New</span></li>
-                                    <li>Payment Gateway Integration <span class="status in-progress">In Progress</span></li>
+                                    <li>Login API <span class="status completed">Completed</span></li>
+                                    <li>Registration API <span class="status completed">Completed</span></li>
+                                    <li>Payment Gateway Integration <span class="status completed">Completed</span><span class="new-badge">New</span></li>
+                                    <li>PayStack Integration <span class="status completed">Completed</span><span class="new-badge">New</span></li>
+                                    <li>Payment History <span class="status in-progress">In Progress</span></li>
+                                    <!-- <li>Payment Gateway Integration <span class="status in-progress">In Progress</span></li> -->
                                     <!-- <li>Booking API <span class="status pending">Pending</span></li> -->
                                     <li>Booking API <span class="status completed">Completed</span><span class="new-badge">New</span></li>
 
@@ -266,7 +269,10 @@
                                     <li>PassengerBooking Form Integration <span class="status completed">Completed</span></li>
                                     <li>Booking Confirmation Page <span class="status completed">Completed</span></li>
 
-                                    <li>Passenger: Payment Form Integration  <span class="status in-progress">In Progress</span></li>
+                                    <li>PassengerBooking Payment Form Integration <span class="status completed">Completed</span><span class="new-badge">New</span></li>
+                                    <li>PassengerBooking Payment invoice <span class="status completed">Completed</span><span class="new-badge">New</span></li>
+
+                                    <!-- <li>Passenger: Payment Form Integration  <span class="status in-progress">In Progress</span></li> -->
                                     <li>Passenger: My Trip / Bookings <span class="status pending">Pending</span></li>
                                     <li>Passenger: Invoices / Receipts<span class="status pending">Pending</span></li>
                                     <li>Passenger: Support / Ticket<span class="status pending">Pending</span></li>
@@ -297,7 +303,8 @@
                             <li class="list-group-item">
                                 <span class="task">Complete Frontend Integration:</span>
                                 <ul>
-                                    <li>Payment Form Integration <span class="status pending">Pending</span></li>
+                                    <li>Payment Form Integration (PayStack Integration) <span class="status completed">Completed</span></li>
+                                    <li>Passenger Portal <span class="status in-progress">In Progress</span></li>
                                     <li>Admin Portal <span class="status pending">Pending</span></li>
                                     <li>Staff Portal <span class="status pending">Pending</span></li>
                                 </ul>
@@ -341,45 +348,45 @@
 
 <!-- Countdown Timer JavaScript -->
 <script>
-        function startCountdown() {
-            // Set the start date to 15 days ago
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - 15);
+      function startCountdown() {
+    // Set the fixed start date (when the countdown actually started)
+    const startDate = new Date('2024-09-10'); // Example: September 10, 2024
 
-            // Set the end date to 3 months from the start date
-            const endDate = new Date(startDate);
-            endDate.setMonth(startDate.getMonth() + 3);
+    // Set the end date to 3 months from the start date
+    const endDate = new Date(startDate);
+    endDate.setMonth(startDate.getMonth() + 3);
 
-            // Function to update the countdown
-            function updateCountdown() {
-                const now = new Date().getTime();
-                const timeLeft = endDate - now;
+    // Function to update the countdown
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const timeLeft = endDate - now;
 
-                // Calculate time left
-                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        // Calculate time left
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
-                // Display the countdown
-                document.getElementById("countdown-timer").innerHTML = `Countdown: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+        // Display the countdown
+        document.getElementById("countdown-timer").innerHTML = `Countdown: ${days}d ${hours}h ${minutes}m ${seconds}s`;
 
-                // If the countdown is over, display EXPIRED
-                if (timeLeft < 0) {
-                    clearInterval(timerInterval); // Stop the countdown
-                    document.getElementById("countdown-timer").innerHTML = "Countdown: EXPIRED";
-                }
-            }
-
-            // Update countdown every second
-            const timerInterval = setInterval(updateCountdown, 1000);
-
-            // Run the function once immediately
-            updateCountdown();
+        // If the countdown is over, display EXPIRED
+        if (timeLeft < 0) {
+            clearInterval(timerInterval); // Stop the countdown
+            document.getElementById("countdown-timer").innerHTML = "Countdown: EXPIRED";
         }
+    }
 
-        // Start the countdown when the page loads
-        window.onload = startCountdown;
+    // Update countdown every second
+    const timerInterval = setInterval(updateCountdown, 1000);
+
+    // Run the function once immediately
+    updateCountdown();
+}
+
+// Start the countdown when the page loads
+window.onload = startCountdown;
+
     </script>
 
 </body>
