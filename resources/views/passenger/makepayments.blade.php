@@ -32,7 +32,20 @@
                     <td><span class="badge bg-danger">{{ ucfirst($invoice->status) }}</span></td>
                     <td>
                         <a href="{{ route('booking.view', ['id' => $invoice->booking->id, 'from' => 'makepayments']) }}" class="btn btn-primary btn-sm">View</a>
-                        <a href="{{ route('payment.pay', $invoice->id) }}" class="btn btn-success btn-sm">Pay Now</a>
+
+                        <!-- Pay Now Button as a form -->
+                        <form method="POST" action="{{ route('pay') }}" class="d-inline-block">
+                            @csrf
+                            <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
+                            <input type="hidden" name="email" value="{{ $invoice->booking->user->email }}">
+                            <input type="hidden" name="amount" value="{{ $invoice->amount * 100 }}"> {{-- Amount in kobo --}}
+                            <input type="hidden" name="reference" value="{{ $invoice->invoice_number }}"> {{-- Invoice number as reference --}}
+                            <button class="btn btn-success" type="submit" value="Pay Now!">
+                                <i class="fa fa-plus-circle"></i> Pay Now!
+                            </button>
+                        </form>
+
+
                     </td>
                 </tr>
                 @endforeach

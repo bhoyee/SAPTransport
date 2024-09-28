@@ -34,6 +34,7 @@ use App\Http\Controllers\InvoiceController;
 
 
 
+
 // Public Routes
 
 Route::get('/', function () {
@@ -232,9 +233,31 @@ Route::get('/booking/{id}/view', [BookingEditController::class, 'show'])->name('
 
 // route to the payment page and the "Pay Now" action
 Route::get('/passenger/makepayments', [InvoiceController::class, 'unpaidPayments'])->name('passenger.makepayments');
-Route::get('/payment/{id}/pay', [PaymentController::class, 'pay'])->name('payment.pay'); // You can handle the payment logic in the 'pay' method.
+//Route::get('/payment/{id}/pay', [PaymentController::class, 'pay'])->name('payment.pay'); // You can handle the payment logic in the 'pay' method.
 
 // Route to display a specific invoice by ID
 Route::get('/passenger/invoice/{id}', [InvoiceController::class, 'showInvoice'])->name('passenger.invoice');
+
+// route to download unpaid invoice
+Route::get('/passenger/invoice/download/{id}', [InvoiceController::class, 'downloadInvoice'])->name('passenger.downloadInvoice');
+
+
+
+
+//paystack payment rouvte
+Route::get('/payments/unpaid', [PaymentController::class, 'unpaidPayments'])->name('payments.unpaid');
+Route::post('/pay', [PaymentController::class, 'pay'])->name('pay');
+
+Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
+
+// routes/web.php
+
+// Route to handle the failed payment
+Route::get('/invoice/failed', [PaymentController::class, 'failedInvoice'])->name('invoice.failed');
+
+Route::get('/invoice/paid/{invoice}', [PaymentController::class, 'paidInvoice'])->name('invoice.paid');
+
+
+
 
 

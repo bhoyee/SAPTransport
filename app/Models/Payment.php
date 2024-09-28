@@ -14,13 +14,15 @@ class Payment extends Model
 
     // Allow mass assignment of the following fields
     protected $fillable = [
-        'booking_id', 
-        'user_id', 
-        'amount', 
-        'status', 
-        'payment_date', 
+        'booking_id',
+        'user_id',
+        'amount',
+        'status',
         'payment_method',
+        'payment_reference',  // Ensure this field is included
+        'payment_date',
     ];
+    
 
     // Define the relationship to the User model
     public function user()

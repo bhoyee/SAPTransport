@@ -113,14 +113,10 @@
                         <p>{{ $booking->return_pickup_time }}</p>
                     </div>
                 @endif
-
-                <!-- More fields can be added in the same manner -->
             </div>
 
+            <!-- Invoice and Payment Details -->
             <div class="row gx-5 gy-3">
-                <!-- Existing Booking Details -->
-
-                <!-- Invoice Details -->
                 @if ($booking->invoice)
                     <h3 class="mb-3">Payment Information</h3>
                     <div class="col-md-6">
@@ -139,20 +135,25 @@
             </div>
 
             <div class="mt-4">
-                @if ($from === 'makepayments')
-                    <!-- Use the invoice for Pay Now button -->
-                    @if ($booking->invoice)
-                        <a href="{{ route('payment.pay', $booking->invoice->id) }}" class="btn btn-success">Pay Now</a>
-                        <a href="{{ route('passenger.invoice', $booking->invoice->id) }}" class="btn btn-info">View Invoice</a>
-                    @endif
+                @if ($from === 'makepayments' && $booking->invoice)
+                    <!-- Pay Now form for Paystack integration -->
+                    <form method="POST" action="{{ route('pay') }}" class="d-inline-block">
+                        @csrf
+                        <input type="hidden" name="email" value="{{ $booking->user->email }}">
+                        <input type="hidden" name="amount" value="{{ $booking->invoice->amount * 100 }}"> <!-- amount in kobo -->
+                        <input type="hidden" name="invoice_id" value="{{ $booking->invoice->id }}">
+                        <input type="hidden" name="reference" value="{{ Paystack::genTranxRef() }}"> <!-- unique reference -->
 
+                        <button type="submit" class="btn btn-success">Pay Now</button>
+                    </form>
+
+                    <a href="{{ route('passenger.invoice', $booking->invoice->id) }}" class="btn btn-info">View Invoice</a>
                     <a href="{{ route('passenger.makepayments') }}" class="btn btn-secondary">Close</a>
                 @else
                     <a href="{{ route('booking.edit', $booking->id) }}" class="btn btn-warning">Edit Booking</a>
                     <a href="{{ route('passenger.dashboard') }}" class="btn btn-secondary">Close</a>
                 @endif
             </div>
-
         </div>
     </div>
 @endsection

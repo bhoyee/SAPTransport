@@ -4,12 +4,18 @@
 
 @section('content')
 <div class="container mt-5">
-    <div class="card shadow-sm">
+    <div class="card shadow-sm invoice-card">
         <div class="card-body">
             <!-- Header Section -->
-            <div class="row">
+            <div class="row invoice-header">
+            @if(session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }}
+                </div>
+            @endif
+
                 <div class="col-md-6">
-                    <img src="{{ asset('path-to-logo/logo.png') }}" alt="Company Logo" width="150">
+                    <img src="{{ asset('img/logo.png') }}" alt="SAPTransport" class="img-fluid">
                 </div>
                 <div class="col-md-6 text-end">
                     <h4 class="fw-bold">Invoice</h4>
@@ -17,6 +23,18 @@
                     <p>Issue Date: {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d M Y') }}</p>
                     <p>Due Date: {{ \Carbon\Carbon::parse($invoice->due_date)->format('d M Y') }}</p>
                     <p>Due Amount: ₦{{ number_format($invoice->amount, 2) }}</p>
+
+                    <!-- Invoice Status -->
+                    <p>
+                        <strong>Status: 
+                            <span class="badge 
+                                @if($invoice->status === 'paid') bg-success 
+                                @else bg-danger 
+                                @endif">
+                                {{ ucfirst($invoice->status) }}
+                            </span>
+                        </strong>
+                    </p>
                 </div>
             </div>
 
@@ -32,9 +50,9 @@
                 </div>
                 <div class="col-md-6 text-end">
                     <h5 class="fw-bold">Invoice From</h5>
-                    <p>Company Name</p>
-                    <p>Address line 1</p>
-                    <p>Address line 2</p>
+                    <p>SAPTransport & Logistics</p>
+                    <p>10 Awolowo Road Ikoyi</p>
+                    <p>Lagos, Nigeria</p>
                 </div>
             </div>
 
@@ -80,6 +98,25 @@
                 </div>
             </div>
 
+            <!-- Pay Now Button (Paystack) -->
+            @if($invoice->status === 'unpaid')
+                <div class="text-end mt-4">
+                <form method="POST" action="{{ route('pay') }}" class="d-inline-block">
+                    @csrf
+                    <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
+                    <input type="hidden" name="email" value="{{ $invoice->booking->user->email }}">
+                    <input type="hidden" name="amount" value="{{ $invoice->amount * 100 }}"> {{-- Amount in kobo --}}
+                    <input type="hidden" name="reference" value="{{ $invoice->invoice_number }}"> {{-- Invoice number as reference --}}
+                    <button class="btn btn-success" type="submit" value="Pay Now!">
+                        <i class="fa fa-plus-circle"></i> Pay Now!
+                    </button>
+                </form>
+
+
+                    
+                </div>
+            @endif
+
             <!-- Notes and Signature -->
             <div class="row mt-4">
                 <div class="col-md-6">
@@ -88,51 +125,63 @@
                 </div>
                 <div class="col-md-6 text-end">
                     <p><strong>Authorized Signature</strong></p>
-                    <img src="{{ asset('path-to-signature/signature.png') }}" alt="Signature" width="100">
+                    <img src="{{ asset('path-to-signature/signature.png') }}" alt="Signature" class="img-fluid" width="100">
+                </div>
+            </div>
+
+            <!-- Back and Download Buttons -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <a href="{{ route('passenger.makepayments') }}" class="btn btn-secondary">Back to Payments</a>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="{{ route('passenger.downloadInvoice', $invoice->id) }}" class="btn btn-info">Download PDF</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Style adjustments for responsiveness -->
 <style>
     .invoice-card {
-    border: 1px solid #e5e5e5;
-    border-radius: 10px;
-    padding: 20px;
-    background-color: #fff;
-}
+        border: 1px solid #e5e5e5;
+        border-radius: 10px;
+        padding: 20px;
+        background-color: #fff;
+    }
 
-.invoice-header {
-    display: flex;
-    justify-content: space-between;
-}
-
-.invoice-header img {
-    max-width: 150px;
-}
-
-.table-responsive {
-    margin-top: 20px;
-}
-
-h5 {
-    font-size: 1.25rem;
-}
-
-@media (max-width: 768px) {
     .invoice-header {
-        flex-direction: column;
-        text-align: center;
+        display: flex;
+        justify-content: space-between;
     }
 
     .invoice-header img {
-        margin-bottom: 10px;
+        max-width: 350px;
     }
 
     .table-responsive {
-        font-size: 14px;
+        margin-top: 20px;
     }
-}
 
+    h5 {
+        font-size: 1.25rem;
+    }
+
+    @media (max-width: 768px) {
+        .invoice-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .invoice-header img {
+            margin-bottom: 10px;
+            max-width: 150px;
+        }
+
+        .table-responsive {
+            font-size: 14px;
+        }
+    }
 </style>
 @endsection
