@@ -22,7 +22,7 @@ class CreatePaymentsTable extends Migration
                   ->constrained('users')
                   ->onDelete('cascade');  // Cascade on delete
             $table->decimal('amount', 10, 2);  // Amount with precision (10,2)
-            $table->enum('status', ['paid', 'unpaid', 'refunded']);  // Payment status
+            $table->enum('status', ['paid', 'unpaid', 'refunded', 'refund-pending']);  // Payment status
             $table->timestamp('payment_date');  // Timestamp for payment date
             $table->enum('payment_method', ['credit_card', 'bank_transfer', 'cash']);  // Payment method
             $table->timestamps();  // Adds created_at and updated_at

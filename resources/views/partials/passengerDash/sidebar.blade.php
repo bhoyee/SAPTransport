@@ -139,7 +139,7 @@
 							
 							        <li class="submenu-item"><a class="submenu-link" href="{{ route('passenger.makepayments') }}">Make Payment</a></li>
 
-							        <li class="submenu-item"><a class="submenu-link" href="">Payment History</a></li>
+							        <li class="submenu-item"><a class="submenu-link" href="{{ route('payment.history') }}">Payment History</a></li>
 
 						        </ul>
 

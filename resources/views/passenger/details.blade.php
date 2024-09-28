@@ -150,10 +150,16 @@
                     <a href="{{ route('passenger.invoice', $booking->invoice->id) }}" class="btn btn-info">View Invoice</a>
                     <a href="{{ route('passenger.makepayments') }}" class="btn btn-secondary">Close</a>
                 @else
-                    <a href="{{ route('booking.edit', $booking->id) }}" class="btn btn-warning">Edit Booking</a>
+                    <!-- Disable Edit Button if booking status is 'cancelled', 'completed', or 'expired' -->
+                    @if (in_array($booking->status, ['cancelled', 'completed', 'expired']))
+                        <button class="btn btn-warning" disabled>Edit Booking</button>
+                    @else
+                        <a href="{{ route('booking.edit', $booking->id) }}" class="btn btn-warning">Edit Booking</a>
+                    @endif
                     <a href="{{ route('passenger.dashboard') }}" class="btn btn-secondary">Close</a>
                 @endif
             </div>
+
         </div>
     </div>
 @endsection
