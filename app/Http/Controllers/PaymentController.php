@@ -35,6 +35,39 @@ class PaymentController extends Controller
             return response()->json(['error' => 'Unable to fetch payment history'], 500);
         }
     }
+
+    public function paymentHistory()
+    {
+        $userId = Auth::id();
+
+        // Fetch all payments for the logged-in user with their associated booking
+        $payments = Payment::with('booking', 'booking.invoice') // Assuming you have a relationship to invoices
+            ->where('user_id', $userId)
+            ->orderBy('payment_date', 'desc')
+            ->paginate(10); // Paginate the results
+
+        return view('passenger.payment-history', compact('payments'));
+    }
+
+    public function requestRefund(Request $request)
+    {
+        $paymentId = $request->input('payment_id');
+        
+        // Find the payment record
+        $payment = Payment::find($paymentId);
+
+        if ($payment && $payment->status == 'paid') {
+            // Update payment status or create a refund request (based on your business logic)
+            $payment->status = 'refund-pending';  // Example of updating the status
+            $payment->save();
+
+            return redirect()->route('payment.history')->with('success', 'Refund requested successfully.');
+        }
+
+        return redirect()->route('payment.history')->with('error', 'Refund request failed.');
+    }
+
+
     
     public function unpaidPayments()
     {

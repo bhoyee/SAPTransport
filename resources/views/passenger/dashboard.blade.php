@@ -173,6 +173,7 @@
 											<th>Booking Ref</th>
 											<th>Invoice Num</th>
 											<th>Amount</th>
+											<th>Invoice Date</th>
 											<th>Status</th>
 										</tr>
 									</thead>

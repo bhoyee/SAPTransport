@@ -261,3 +261,8 @@ Route::get('/invoice/paid/{invoice}', [PaymentController::class, 'paidInvoice'])
 
 
 
+// Route to show payment history
+Route::get('/payments/history', [PaymentController::class, 'paymentHistory'])->name('payment.history');
+
+// Route to handle refund requests
+Route::post('/payments/refund', [PaymentController::class, 'requestRefund'])->name('payment.refund');
