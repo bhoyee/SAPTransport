@@ -25,16 +25,19 @@
                     <p>Due Amount: ₦{{ number_format($invoice->amount, 2) }}</p>
 
                     <!-- Invoice Status -->
+              
                     <p>
                         <strong>Status: 
-                            <span class="badge 
-                                @if($invoice->status === 'paid') bg-success 
-                                @else bg-danger 
-                                @endif">
-                                {{ ucfirst($invoice->status) }}
-                            </span>
+                        <span class="badge 
+                            @if(trim(strtolower($invoice->status)) === 'paid') bg-success 
+                            @else bg-danger 
+                            @endif fs-4">  <!-- Bootstrap's font-size utility class -->
+                            {{ ucfirst($invoice->status) }}
+                        </span>
+
                         </strong>
                     </p>
+
                 </div>
             </div>
 

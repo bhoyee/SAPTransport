@@ -153,7 +153,7 @@
 
 					        <!--//Bootstrap Icons: https://icons.getbootstrap.com/ -->
 
-					        <a class="nav-link" href="">
+					        <a class="nav-link" href="{{ route('invoices.index') }}">
 
 						        <span class="nav-icon">
 
