@@ -270,6 +270,19 @@ class BookingController extends Controller
         }
     }
 
+    public function myBookings()
+    {
+        $userId = auth()->id();
+    
+        // Fetch bookings and order by 'created_at' in descending order (most recent first)
+        $bookings = Booking::where('user_id', $userId)
+                    ->orderBy('created_at', 'desc') // Add the orderBy clause
+                    ->get();
+    
+        return view('passenger.my-bookings', compact('bookings'));
+    }
+    
+
 
  
 
