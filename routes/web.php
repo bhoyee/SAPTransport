@@ -278,6 +278,12 @@ Route::get('/invoice/pay/{id}', [InvoiceController::class, 'pay'])->name('invoic
 Route::post('/invoice/pay', [PaymentController::class, 'pay'])->name('invoice.pay');
 
 
+// route for my booking
+Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-bookings');
+// Route::post('/booking/cancel/{id}', [BookingController::class, 'cancel'])->name('booking.cancel');
+
+
+
 
 
 
