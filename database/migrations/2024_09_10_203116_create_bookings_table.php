@@ -20,7 +20,7 @@ class CreateBookingsTable extends Migration
                   ->onDelete('cascade');  // On delete, cascade
             $table->enum('service_type', ['AirportTransfer', 'Charter']);  // Service type
             $table->enum('trip_type', ['airport_pickup', 'airport_dropoff', 'oneway', 'round_trip']);  // Trip type
-            $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed']);  // Booking status
+            $table->enum('status', ['pending', 'confirmed', 'expired', 'cancelled', 'completed']);  // Booking status
             $table->string('airport_name')->nullable();  // Name of the airport (nullable)
             $table->string('vehicle_type', 100);  // Type of vehicle selected for the trip
             $table->string('pickup_address');  // Pickup address for the trip
@@ -31,7 +31,7 @@ class CreateBookingsTable extends Migration
             $table->integer('number_children')->nullable();  // Number of children (nullable)
             $table->timestamps();  // created_at and updated_at columns
         });
-    }
+    } 
 
     /**
      * Reverse the migrations.
