@@ -295,9 +295,9 @@
 
 						        <ul class="submenu-list list-unstyled">
 
-							        <li class="submenu-item"><a class="submenu-link" href="">Open Ticket</a></li>
+							        <li class="submenu-item"><a class="submenu-link" href="{{ route('passenger.open-ticket') }}">Open Ticket</a></li>
 
-							        <li class="submenu-item"><a class="submenu-link" href="">My Support Tickets</a></li>
+							        <li class="submenu-item"><a class="submenu-link" href="{{ route('passenger.my-tickets') }}">My Support Tickets</a></li>
 
 						        </ul>
 
