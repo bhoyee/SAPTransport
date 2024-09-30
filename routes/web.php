@@ -30,6 +30,8 @@ use App\Http\Controllers\BookingEditController;
 
 use App\Http\Controllers\InvoiceController;
 
+use App\Http\Controllers\ContactController;
+
 
 
 
@@ -283,6 +285,28 @@ Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-b
 // Route::post('/booking/cancel/{id}', [BookingController::class, 'cancel'])->name('booking.cancel');
 
 
+// Route for ticket
+Route::middleware(['auth'])->group(function () {
+    Route::get('/support/ticket', [ContactController::class, 'createTicketForm'])->name('passenger.open-ticket');
+    Route::post('/support/ticket', [ContactController::class, 'storeTicket'])->name('contact.store');
+});
+
+
+// Routes for Ticket Management
+Route::middleware(['auth'])->group(function () {
+    // Route to create a ticket
+    // Route::get('/passenger/support/ticket', [ContactController::class, 'createTicketForm'])->name('contact.create');
+    // Route::post('/passenger/support/ticket', [ContactController::class, 'storeTicket'])->name('contact.store');
+
+    // Route to view user's tickets
+    Route::get('/passenger/my-tickets', [ContactController::class, 'myTickets'])->name('passenger.my-tickets');
+
+    // Route to view a specific ticket
+    Route::get('/passenger/my-tickets/{id}', [ContactController::class, 'viewTicket'])->name('viewTicket');
+
+    // Route to reply to a specific ticket
+    Route::post('/passenger/my-tickets/{id}/reply', [ContactController::class, 'replyToTicket'])->name('replyTicket');
+});
 
 
 
