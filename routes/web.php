@@ -32,6 +32,9 @@ use App\Http\Controllers\InvoiceController;
 
 use App\Http\Controllers\ContactController;
 
+use App\Http\Controllers\SettingsController;
+
+use App\Http\Controllers\AccountController;
 
 
 
@@ -161,16 +164,139 @@ Route::get('/password/reset/success', function () {
 
 // Screen Locker Routes
 
-Route::get('/lock', [LockScreenController::class, 'show'])->name('lockscreen.show');
+// Route::get('/lock', [LockScreenController::class, 'show'])->name('lockscreen.show');
 
-Route::post('/unlock', [LockScreenController::class, 'unlock'])->name('lockscreen.unlock');
+// Route::post('/unlock', [LockScreenController::class, 'unlock'])->name('lockscreen.unlock');
+
+// Screen Locker Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/lock', [LockScreenController::class, 'show'])->name('lockscreen.show');
+    Route::post('/unlock', [LockScreenController::class, 'unlock'])->name('lockscreen.unlock');
+    
+    // Route for unlocking via Google social login
+    Route::get('/unlock/google', [SocialLoginController::class, 'redirectToGoogle'])->name('auth.google.unlock');
+    Route::get('/unlock/google/callback', [LockScreenController::class, 'handleGoogleUnlock']);
+});
 
 
 
-// Airport Transfer Booking Route
+    
 
-Route::post('/book-airport-transfer', [BookingController::class, 'store'])->name('booking.store');
+Route::post('/check-booking-status', [BookingController::class, 'checkStatus'])->name('booking.check-status');
 
+
+
+// Routes for Ticket Management
+Route::middleware(['auth'])->group(function () {
+    // Route to create a ticket
+    // Route::get('/passenger/support/ticket', [ContactController::class, 'createTicketForm'])->name('contact.create');
+    // Route::post('/passenger/support/ticket', [ContactController::class, 'storeTicket'])->name('contact.store');
+
+
+});
+
+
+
+
+Route::middleware(['auth', 'verified'])->group(function () {
+
+    // Airport Transfer Booking Route
+
+    Route::post('/book-airport-transfer', [BookingController::class, 'store'])->name('booking.store');
+
+    // Passenger Dashboard
+
+    Route::get('/passenger/dashboard', [PassengerController::class, 'dashboard'])->name('passenger.dashboard');
+
+    // Route to fetch recent bookings
+    Route::get('/passenger/recent-bookings', [PassengerHomeController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
+
+    Route::get('/passenger/dashboard-data', [PassengerHomeController::class, 'fetchDashboardData'])->name('passenger.dashboard.data');
+
+    // Route to fetch recent Payment history
+    Route::get('/passenger/payment-history', [PassengerHomeController::class, 'getPaymentHistory']);
+
+    // Route for cancelling a booking
+    Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking'])->middleware('auth');
+
+
+
+    // Route for editing a booking
+    Route::get('/booking/{id}/edit', [BookingEditController::class, 'edit'])->name('booking.edit');
+
+    // Route for updating the booking
+    Route::put('/booking/{id}', [BookingEditController::class, 'update'])->name('booking.update');
+
+    // Rote for viewing details of booking
+    Route::get('/booking/{id}/view', [BookingEditController::class, 'show'])->name('booking.view');
+
+
+    // route to the payment page and the "Pay Now" action
+    Route::get('/passenger/makepayments', [InvoiceController::class, 'unpaidPayments'])->name('passenger.makepayments');
+    //Route::get('/payment/{id}/pay', [PaymentController::class, 'pay'])->name('payment.pay'); // You can handle the payment logic in the 'pay' method.
+
+    // Route to display a specific invoice by ID
+    Route::get('/passenger/invoice/{id}', [InvoiceController::class, 'showInvoice'])->name('passenger.invoice');
+
+    // route to download unpaid invoice
+    Route::get('/passenger/invoice/download/{id}', [InvoiceController::class, 'downloadInvoice'])->name('passenger.downloadInvoice');
+
+    //paystack payment rouvte
+    Route::get('/payments/unpaid', [PaymentController::class, 'unpaidPayments'])->name('payments.unpaid');
+
+    // Route for payment initiation (already defined in your previous setup)
+    Route::post('/pay', [PaymentController::class, 'pay'])->name('pay');
+
+    Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
+
+    // Route to handle the failed payment
+    Route::get('/invoice/failed', [PaymentController::class, 'failedInvoice'])->name('invoice.failed');
+
+    Route::get('/invoice/paid/{invoice}', [PaymentController::class, 'paidInvoice'])->name('invoice.paid');
+
+
+    // Route to show payment history
+    Route::get('/payments/history', [PaymentController::class, 'paymentHistory'])->name('payment.history');
+
+    // Route to handle refund requests
+    Route::post('/payments/refund', [PaymentController::class, 'requestRefund'])->name('payment.refund');
+
+
+    // Route for viewing an invoice
+    Route::get('/invoice/view/{id}', [InvoiceController::class, 'view'])->name('invoice.view');
+    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('/invoice/pay/{id}', [InvoiceController::class, 'pay'])->name('invoice.pay');
+
+    Route::post('/invoice/pay', [PaymentController::class, 'pay'])->name('invoice.pay');
+
+    // route for my booking
+    Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-bookings');
+
+    // Route for ticket
+    Route::get('/support/ticket', [ContactController::class, 'createTicketForm'])->name('passenger.open-ticket');
+    Route::post('/support/ticket', [ContactController::class, 'storeTicket'])->name('contact.store');
+
+        // Route to view user's tickets
+    Route::get('/passenger/my-tickets', [ContactController::class, 'myTickets'])->name('passenger.my-tickets');
+
+        // Route to view a specific ticket
+    Route::get('/passenger/my-tickets/{id}', [ContactController::class, 'viewTicket'])->name('viewTicket');
+    
+        // Route to reply to a specific ticket
+    Route::post('/passenger/my-tickets/{id}/reply', [ContactController::class, 'replyToTicket'])->name('replyTicket');
+
+    //Routes for settings
+    Route::get('/passenger/settings', [SettingsController::class, 'showSettingsPage'])->name('passenger.settings');
+    Route::post('/passenger/change-password', [SettingsController::class, 'changePassword'])->name('passenger.change-password');
+
+// Routes for account management
+    Route::get('/passenger/account', [AccountController::class, 'showAccountPage'])->name('passenger.account');
+    Route::post('/passenger/account', [AccountController::class, 'updateAccount'])->name('passenger.update-account');
+
+    // routes to display passenger chart and activities
+    Route::get('/passenger/bookings/chart-data', [PassengerHomeController::class, 'getChartData'])->name('passenger.bookings.chartData');
+    Route::get('/passenger/activities', [PassengerHomeController::class, 'getUserActivities'])->name('passenger.activities');
+});
 
 
 // Clear Cache Route (for admin use)
@@ -188,126 +314,5 @@ Route::get('/clear-cache', function() {
     return "Caches cleared";
 
 });
-
-
-
-
-
-// Passenger Dashboard (protected by 'auth' and 'verified' middleware)
-
-Route::middleware(['auth', 'verified'])->group(function () {
-
-Route::get('/passenger/dashboard', [PassengerController::class, 'dashboard'])->name('passenger.dashboard'); });
-
-    
-
-Route::post('/check-booking-status', [BookingController::class, 'checkStatus'])->name('booking.check-status');
-
-
-
-// Route::get('/passenger/recent-bookings', [BookingController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
-
-
-// Route to fetch recent bookings
-Route::get('/passenger/recent-bookings', [PassengerHomeController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
-
-Route::get('/passenger/dashboard-data', [PassengerHomeController::class, 'fetchDashboardData'])->name('passenger.dashboard.data');
-
-// Route to fetch recent Payment history
-Route::get('/passenger/payment-history', [PassengerHomeController::class, 'getPaymentHistory']);
-
-   
-
-// Route for cancelling a booking
-Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking'])->middleware('auth');
-
-
-
-// Route for editing a booking
-Route::get('/booking/{id}/edit', [BookingEditController::class, 'edit'])->name('booking.edit');
-
-// Route for updating the booking
-Route::put('/booking/{id}', [BookingEditController::class, 'update'])->name('booking.update');
-
-// Rote for viewing details of booking
-Route::get('/booking/{id}/view', [BookingEditController::class, 'show'])->name('booking.view');
-
-
-// route to the payment page and the "Pay Now" action
-Route::get('/passenger/makepayments', [InvoiceController::class, 'unpaidPayments'])->name('passenger.makepayments');
-//Route::get('/payment/{id}/pay', [PaymentController::class, 'pay'])->name('payment.pay'); // You can handle the payment logic in the 'pay' method.
-
-// Route to display a specific invoice by ID
-Route::get('/passenger/invoice/{id}', [InvoiceController::class, 'showInvoice'])->name('passenger.invoice');
-
-// route to download unpaid invoice
-Route::get('/passenger/invoice/download/{id}', [InvoiceController::class, 'downloadInvoice'])->name('passenger.downloadInvoice');
-
-
-
-
-//paystack payment rouvte
-Route::get('/payments/unpaid', [PaymentController::class, 'unpaidPayments'])->name('payments.unpaid');
-
-// Route for payment initiation (already defined in your previous setup)
-Route::post('/pay', [PaymentController::class, 'pay'])->name('pay');
-
-Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
-
-// routes/web.php
-
-// Route to handle the failed payment
-Route::get('/invoice/failed', [PaymentController::class, 'failedInvoice'])->name('invoice.failed');
-
-Route::get('/invoice/paid/{invoice}', [PaymentController::class, 'paidInvoice'])->name('invoice.paid');
-
-
-
-
-
-// Route to show payment history
-Route::get('/payments/history', [PaymentController::class, 'paymentHistory'])->name('payment.history');
-
-// Route to handle refund requests
-Route::post('/payments/refund', [PaymentController::class, 'requestRefund'])->name('payment.refund');
-
-
-// Route for viewing an invoice
-Route::get('/invoice/view/{id}', [InvoiceController::class, 'view'])->name('invoice.view');
-Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-Route::get('/invoice/pay/{id}', [InvoiceController::class, 'pay'])->name('invoice.pay');
-
-Route::post('/invoice/pay', [PaymentController::class, 'pay'])->name('invoice.pay');
-
-
-// route for my booking
-Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-bookings');
-// Route::post('/booking/cancel/{id}', [BookingController::class, 'cancel'])->name('booking.cancel');
-
-
-// Route for ticket
-Route::middleware(['auth'])->group(function () {
-    Route::get('/support/ticket', [ContactController::class, 'createTicketForm'])->name('passenger.open-ticket');
-    Route::post('/support/ticket', [ContactController::class, 'storeTicket'])->name('contact.store');
-});
-
-
-// Routes for Ticket Management
-Route::middleware(['auth'])->group(function () {
-    // Route to create a ticket
-    // Route::get('/passenger/support/ticket', [ContactController::class, 'createTicketForm'])->name('contact.create');
-    // Route::post('/passenger/support/ticket', [ContactController::class, 'storeTicket'])->name('contact.store');
-
-    // Route to view user's tickets
-    Route::get('/passenger/my-tickets', [ContactController::class, 'myTickets'])->name('passenger.my-tickets');
-
-    // Route to view a specific ticket
-    Route::get('/passenger/my-tickets/{id}', [ContactController::class, 'viewTicket'])->name('viewTicket');
-
-    // Route to reply to a specific ticket
-    Route::post('/passenger/my-tickets/{id}/reply', [ContactController::class, 'replyToTicket'])->name('replyTicket');
-});
-
-
 
 
