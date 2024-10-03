@@ -56,6 +56,7 @@ class LoginController extends Controller
 
             // Set the session 'is_locked' to false after successful login
             session()->put('is_locked', false);
+            $request->session()->regenerate();
 
             // Redirect the user to the passenger dashboard if email is verified
             return redirect()->route('passenger.dashboard');
