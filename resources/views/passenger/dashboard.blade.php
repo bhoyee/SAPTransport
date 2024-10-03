@@ -130,38 +130,73 @@
                     </div>
                 </div>
 
+			    <div class="row g-4 mb-4">
+			        <div class="col-12 col-lg-6">
+				        <div class="app-card app-card-chart h-100 shadow-sm">
+					        <div class="app-card-header p-3">
+						        <div class="row justify-content-between align-items-center">
+							        <div class="col-auto">
+						                <h4 class="app-card-title">Booking Chart</h4>
+							        </div><!--//col-->
+							        <div class="col-auto">
+								        <div class="card-header-action">
+									        <a href="charts.html"></a>
+								        </div><!--//card-header-actions-->
+							        </div><!--//col-->
+						        </div><!--//row-->
+					        </div><!--//app-card-header-->
+					        <div class="app-card-body p-3 p-lg-4">
+							    <div class="mb-3 d-flex">   
+							        <select id="timeFilter" class="form-select form-select-sm ms-auto d-inline-flex w-auto">
+								
+                                        <option value="week">This Week</option>
+                                        <option value="month">This Month</option>
+                                        <option value="year">This Year</option>
+									</select>
+							    </div>
+						        <div class="chart-container">
+				                    <canvas id="completedBookingsChart" ></canvas>
+						        </div>
+					        </div><!--//app-card-body-->
+				        </div><!--//app-card-->
+			        </div><!--//col-->
 
+    <div class="col-12 col-lg-6">
+        <div class="app-card app-card-progress-list h-100 shadow-sm">
+            <div class="app-card-header p-3">
+                <h4 class="app-card-title">Recent Booking</h4>
+            </div>
+                  <table id="recent-bookings" class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th id="booking-ref-header">Booking Ref</th>
+                            <th id="booking-date-header">Booking Date</th>
+                            <th id="service-type-header">Service Type</th>
+                            <th id="status-header">Status</th>
+                            <th id="actions-header">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Booking data will be injected here -->
+                    </tbody>
+                </table>
+
+        </div>
+
+    </div>
+
+
+
+			        
+			    </div><!--//row-->
 			    
 
 			    <div class="row g-4 mb-4">
 				<!-- Responsive Recent Bookings Table -->
 
-				<div class="col-12 col-lg-7">
-						<div class="app-card app-card-progress-list h-100 shadow-sm">
-							<div class="app-card-header p-3">
-								<h4 class="app-card-title">Recent Booking</h4>
-							</div>
-							<div class="container">
-								<table id="recent-bookings" class="table table-striped table-bordered table-responsive">
-									<thead>
-										<tr>
-											<th>Booking Ref</th>
-											<th>Booking Date</th>
-											<th>Service Type</th>
-											<th>Status</th>
-											<th>Actions</th>
-										</tr>
-									</thead>
-									<tbody>
-										<!-- Booking data will be injected here -->
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
 
 					<!-- Responsive Payment History Table -->
-					<div class="col-12 col-lg-5">
+					<div class="col-12 col-lg-6">
 						<div class="app-card app-card-stats-table h-100 shadow-sm">
 							<div class="app-card-header p-3">
 								<h4 class="app-card-title">Payment History</h4>
@@ -184,6 +219,32 @@
 							</div>
 						</div>
 					</div>
+					
+					
+								<!-- RRecent Activity -->
+					<div class="col-12 col-lg-6">
+						<div class="app-card app-card-stats-table h-100 shadow-sm">
+							<div class="app-card-header p-3">
+								<h4 class="app-card-title">Recent Activity</h4>
+							</div>
+							<div class="container">
+							    
+							                <ul id="userActivityList" class="list-group">
+                <!-- User activity items will be appended here -->
+            </ul>
+
+            <!-- Pagination Buttons -->
+            <div class="d-flex justify-content-between mt-3">
+                <button id="previousPageBtn" class="btn btn-secondary btn-sm" disabled>Previous</button>
+                <button id="nextPageBtn" class="btn btn-secondary btn-sm">Next</button>
+            </div>
+		
+							</div>
+						</div>
+					</div>
+					
+					
+
 
 			    </div><!--//row-->
 
@@ -381,46 +442,68 @@
 	<!-- Custom CSS for Mobile-Friendly Table -->
 <style>
 	/* Default table style */
-
+/* Default table style for desktop */
 table {
     width: 100%;
     border-collapse: collapse;
+    font-size: 12px; /* Adjust the base font size for the table on larger screens */
 }
 
 th, td {
-    padding: 10px;
+    padding: 8px; /* Reduced padding for a more compact table */
     border: 1px solid #ddd;
     text-align: left;
-    white-space: nowrap; /* Prevent wrapping */
+    white-space: nowrap;
 }
 
-/* Adjust the width of the "Actions" column and "Service Type" column for desktop */
-td.button-group {
-    width: 200px; /* Set a fixed width for the Actions column */
-    text-align: left; /* Align buttons to the left */
+/* Adjust column width based on unique IDs */
+
+/* Booking Ref Column */
+#booking-ref-header, td[data-label="Booking Ref"] {
+    width: 80px; /* Adjust width for Booking Ref */
+    font-size: 12px;
 }
 
-td[data-label="Service Type"], td[data-label="Booking Date"] {
-    width: 150px; /* Set fixed width for Service Type and Booking Date columns */
+/* Booking Date Column */
+#booking-date-header, td[data-label="Booking Date"] {
+    width: 100px; /* Adjust width for Booking Date */
+    font-size: 12px;
 }
 
-/* Button group adjustments */
+/* Service Type Column */
+#service-type-header, td[data-label="Service Type"] {
+    width: 120px; /* Adjust width for Service Type */
+    font-size: 12px;
+}
+
+/* Status Column */
+#status-header, td[data-label="Status"] {
+    width: 90px; /* Adjust width for Status */
+    font-size: 12px;
+}
+
+/* Actions Column */
+#actions-header, td.button-group {
+    width: 150px; /* Adjust width for Actions */
+    text-align: left;
+}
+
+/* Adjust button group styling */
 .button-group {
     display: flex;
     justify-content: flex-start;
-    gap: 5px; /* Reduce the gap between the buttons */
+    gap: 5px;
 }
 
-/* Smaller button styling */
 .button-group .btn {
     padding: 5px 8px;
-    font-size: 12px;
+    font-size: 10px; /* Smaller font size for buttons on larger screens */
 }
 
 /* Mobile view styling */
 @media (max-width: 768px) {
     table thead {
-        display: none; /* Hide the table headers */
+        display: none; /* Hide table headers on mobile */
     }
 
     table tbody tr {
@@ -432,59 +515,64 @@ td[data-label="Service Type"], td[data-label="Booking Date"] {
 
     table tbody tr td {
         display: flex;
-        justify-content: space-between; /* Space between label and value */
-        align-items: center; /* Align vertically */
+        justify-content: space-between;
+        align-items: center;
         padding: 8px 10px;
         border-bottom: 1px solid #ddd;
-        position: relative;
+        text-align: left;
     }
 
     table tbody tr td:before {
-        content: attr(data-label);
-        flex-basis: 40%; /* Label takes 40% of the row */
+        content: attr(data-label); /* Display the label */
+        flex-basis: 40%;
         font-weight: bold;
-        white-space: nowrap; /* Prevent wrapping of the labels */
+        text-align: left;
+        white-space: nowrap;
     }
 
     table tbody tr td:last-child {
         border-bottom: 0;
     }
 
-    /* Ensure Booking Date displays fully on mobile */
+    /* Align the booking date to the left */
     td[data-label="Booking Date"] {
-        text-align: right; /* Align the date value to the right */
-        padding-right: 10px; /* Add space between text and the edge */
-        white-space: nowrap; /* Prevent wrapping */
+        text-align: left; /* Ensure the Booking Date aligns left */
     }
 
     /* Adjust buttons for mobile */
     .button-group {
+        flex-direction: row;
         justify-content: space-between;
-        gap: 5px;
+        gap: 10px;
     }
 
     .button-group .btn {
-        flex: 1 1 45%;
-        margin-bottom: 5px;
+        width: 30%; /* Make the buttons smaller on mobile */
+        padding: 5px;
     }
 
-    /* Mobile does not use fixed width for Actions or Service Type */
-    td.button-group, td[data-label="Service Type"], td[data-label="Booking Date"] {
-        width: auto; /* Reset width for mobile */
+    /* Reset widths for Service Type, Booking Date, and Status on mobile */
+    td[data-label="Service Type"], td[data-label="Booking Date"], td[data-label="Status"] {
+        width: auto; /* Let these fields adjust based on content */
     }
 }
-
-
-
 </style>
 
 
 
 
 
-    <script>
-        // Initialize the DataTable without search, pagination, and length change
-		new DataTable('#recent-bookings', {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let bookingIdToCancel = null; // Store the booking ID for cancellation
+    const confirmCancelButton = document.getElementById('confirmCancelButton'); // "Yes, Cancel Booking" button
+    const ctx = document.getElementById('completedBookingsChart').getContext('2d');
+    let bookingChart = null;
+    let currentPage = 1; // Track current page for activities
+
+    // Initialize the DataTable for recent bookings
+    new DataTable('#recent-bookings', {
         responsive: true,
         searching: false,
         paging: false,
@@ -493,7 +581,7 @@ td[data-label="Service Type"], td[data-label="Booking Date"] {
         fixedHeader: true
     });
 
-    // Initialize DataTable for payment history
+    // Initialize the DataTable for payment history
     new DataTable('#payment-history', {
         responsive: true,
         searching: false,
@@ -502,52 +590,95 @@ td[data-label="Service Type"], td[data-label="Booking Date"] {
         bInfo: false,
         fixedHeader: true
     });
-    </script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let bookingIdToCancel = null; // Store the booking ID for cancellation
-    const confirmCancelButton = document.getElementById('confirmCancelButton'); // "Yes, Cancel Booking" button
+
+    // Function to update the bookings chart with real-time data
+    function updateChart() {
+        const filter = document.getElementById('timeFilter').value;
+
+        fetch('{{ route('passenger.bookings.chartData') }}?filter=' + filter)
+            .then(response => response.json())
+            .then(data => {
+                if (bookingChart) {
+                    bookingChart.destroy(); // Destroy previous chart instance
+                }
+
+                bookingChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: 'Completed Bookings',
+                                data: data.completedBookings,
+                                backgroundColor: 'rgba(0, 128, 0, 1)', // Deep green
+                                borderColor: 'rgba(0, 128, 0, 1)', // Deep green border
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Cancelled Bookings',
+                                data: data.cancelledBookings,
+                                backgroundColor: 'rgba(255, 0, 0, 1)', // Deep red
+                                borderColor: 'rgba(255, 0, 0, 1)', // Deep red border
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching chart data:', error));
+    }
+
+    // Function to fetch and display user activities with pagination
+    function updateUserActivities(page = 1) {
+        fetch(`{{ route('passenger.activities') }}?page=${page}`)
+            .then(response => response.json())
+            .then(data => {
+                const activityList = document.getElementById('userActivityList');
+                const previousPageBtn = document.getElementById('previousPageBtn');
+                const nextPageBtn = document.getElementById('nextPageBtn');
+                
+                activityList.innerHTML = ''; // Clear previous activities
+
+                if (data.activities.length > 0) {
+                    data.activities.forEach(activity => {
+                        const listItem = document.createElement('li');
+                        listItem.className = 'list-group-item';
+                        listItem.innerHTML = `<strong>${activity.description}</strong> <small class="text-muted">(${new Date(activity.created_at).toLocaleString()})</small>`;
+                        activityList.appendChild(listItem);
+                    });
+                } else {
+                    activityList.innerHTML = '<li class="list-group-item">No recent activity found.</li>';
+                }
+
+                // Handle pagination buttons
+                previousPageBtn.disabled = (data.page === 1);
+                nextPageBtn.disabled = !data.hasNextPage;
+            })
+            .catch(error => console.error('Error fetching user activities:', error));
+    }
 
     // Function to fetch recent bookings
     function fetchRecentBookings() {
-        console.log('Fetching recent bookings...'); // Log when fetching starts
-        
-        // Ensure the CSRF token is available
-        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
-        if (!csrfTokenMeta) {
-            console.error('CSRF token not found in the page.');
-            return;
-        }
-
-        const csrfToken = csrfTokenMeta.getAttribute('content');
-        console.log('CSRF token:', csrfToken); // Log the CSRF token
-        
-        fetch('/passenger/recent-bookings', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken // Ensure CSRF token is included
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Data received:', data);
-            updateBookingsTable(data);
-        })
-        .catch(error => {
-            console.error('Error fetching recent bookings:', error);
-        });
+        fetch('/passenger/recent-bookings')
+            .then(response => response.json())
+            .then(data => {
+                updateBookingsTable(data);
+            })
+            .catch(error => {
+                console.error('Error fetching recent bookings:', error);
+            });
     }
 
     // Function to update the bookings table
     function updateBookingsTable(bookings) {
         const tableBody = document.querySelector('#recent-bookings tbody');
-        if (!tableBody) {
-            console.log('Table body not found in DOM.');
-            return;
-        }
-
-        console.log('Updating bookings table with data:', bookings);
         tableBody.innerHTML = '';  // Clear previous table rows
 
         if (bookings.length === 0) {
@@ -557,30 +688,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
         bookings.forEach(booking => {
             const bookingDate = new Date(booking.created_at).toLocaleDateString(); // Format the date
-
-            // Check if the Edit button should be disabled based on the status
             const isEditable = booking.status.toLowerCase() === 'pending';
             const isCancelable = booking.status.toLowerCase() === 'pending';
-
             const isExpired = booking.status.toLowerCase() === 'expired';
 
-			const bookingUrl = `/booking/${booking.id}/view`;
-			const editUrl = `/booking/${booking.id}/edit`;
+            const bookingUrl = `/booking/${booking.id}/view`;
+            const editUrl = `/booking/${booking.id}/edit`;
 
-			const row = `
-				<tr>
-					<td data-label="Booking Ref">${booking.booking_reference}</td>
-					<td data-label="Booking Date">${bookingDate}</td>
-					<td data-label="Service Type">${booking.service_type}</td>
-					<td data-label="Status"><span class="badge ${getStatusClass(booking.status)}">${booking.status}</span></td>
-					<td data-label="Actions" class="button-group">
-						<a class="btn btn-warning btn-sm ${!isEditable ? 'disabled' : ''}" href="${editUrl}" ${!isEditable ? 'aria-disabled="true"' : ''}>Edit</a>
-						<button class="btn btn-danger btn-sm ${(!isCancelable || isExpired) ? 'disabled' : ''}" data-id="${booking.id}" type="button">Cancel</button>
-						<a class="btn btn-primary btn-sm" href="${bookingUrl}">View</a>
-					</td>
-				</tr>
-			`;
-
+            const row = `
+                <tr>
+                    <td data-label="Booking Ref">${booking.booking_reference}</td>
+                    <td data-label="Booking Date">${bookingDate}</td>
+                    <td data-label="Service Type">${booking.service_type}</td>
+                    <td data-label="Status"><span class="badge ${getStatusClass(booking.status)}">${booking.status}</span></td>
+                    <td data-label="Actions" class="button-group">
+                        <a class="btn btn-warning btn-sm ${!isEditable ? 'disabled' : ''}" href="${editUrl}" ${!isEditable ? 'aria-disabled="true"' : ''}>Edit</a>
+                        <button class="btn btn-danger btn-sm ${(!isCancelable || isExpired) ? 'disabled' : ''}" data-id="${booking.id}" type="button">Cancel</button>
+                        <a class="btn btn-primary btn-sm" href="${bookingUrl}">View</a>
+                    </td>
+                </tr>
+            `;
             tableBody.innerHTML += row;
         });
 
@@ -627,6 +754,67 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Function to fetch payment history
+    function fetchPaymentHistory() {
+        fetch('/passenger/payment-history')
+            .then(response => response.json())
+            .then(data => {
+                updatePaymentTable(data);
+            })
+            .catch(error => console.error('Error fetching payment history:', error));
+    }
+
+    // Function to update the payments table
+    function updatePaymentTable(payments) {
+        const tableBody = document.querySelector('#payment-history tbody');
+        tableBody.innerHTML = '';  // Clear previous table rows
+
+        if (payments.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No payment history found.</td></tr>';
+            return;
+        }
+
+        payments.forEach(payment => {
+            const invoiceDate = new Date(payment.invoice_date).toLocaleDateString(); // Format the invoice date
+            const badgeClass = payment.status.toLowerCase() === 'paid' ? 'bg-success' : 'bg-danger';
+
+            const row = `
+                <tr>
+                    <td data-label="Booking Ref">${payment.booking.booking_reference}</td>
+                    <td data-label="Invoice Number">${payment.invoice_number}</td>
+                    <td data-label="Amount">₦${payment.amount}</td>
+                    <td data-label="Invoice Date">${invoiceDate}</td>
+                    <td data-label="Payment Status"><span class="badge ${badgeClass}">${payment.status}</span></td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+    }
+
+    // Function to get the correct class for booking status
+    function getStatusClass(status) {
+        switch (status) {
+            case 'paid':
+                return 'bg-success';
+            case 'unpaid':
+                return 'bg-warning';
+            case 'completed':
+                return 'bg-success';
+            case 'pending':
+                return 'bg-warning';
+                       case 'refunded':
+                return 'bg-danger';
+            case 'cancelled':
+                return 'bg-danger';
+            case 'confirmed':
+                return 'bg-info';
+            case 'expired':
+                return 'bg-secondary';
+            default:
+                return 'bg-secondary';
+        }
+    }
+
     // Function to fetch dashboard data
     function fetchDashboardData() {
         console.log('Fetching dashboard data...');
@@ -641,102 +829,41 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error fetching dashboard data:', error));
     }
 
-    // Function to fetch payment history
-    function fetchPaymentHistory() {
-        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
-        const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
-        
-        console.log('Fetching payment history...');
-
-        fetch('/passenger/payment-history', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.statusText);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Payment history received:', data);
-            updatePaymentTable(data);
-        })
-        .catch(error => {
-            console.error('Error fetching payment history:', error);
-        });
-    }
-
-    // Function to update the payments table
-function updatePaymentTable(payments) {
-    const tableBody = document.querySelector('#payment-history tbody');
-    tableBody.innerHTML = '';  // Clear previous table rows
-
-    if (payments.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No payment history found.</td></tr>';
-        return;
-    }
-
-    payments.forEach(payment => {
-        const invoiceDate = new Date(payment.invoice_date).toLocaleDateString(); // Format the invoice date
-
-        // Determine badge class based on status
-        const badgeClass = payment.status.toLowerCase() === 'paid' ? 'bg-success' : 'bg-danger';
-
-        const row = `
-            <tr>
-                <td data-label="Booking Ref">${payment.booking.booking_reference}</td>
-                <td data-label="Invoice Number">${payment.invoice_number}</td>
-                <td data-label="Amount">₦${payment.amount}</td>
-                <td data-label="Invoice Date">${invoiceDate}</td>
-                <td data-label="Payment Status">
-                    <span class="badge ${badgeClass}">${payment.status}</span>
-                </td>
-            </tr>
-        `;
-        tableBody.innerHTML += row;
-    });
-}
-
-    // Function to get the correct class for payment status
-    function getStatusClass(status) {
-        switch (status) {
-            case 'paid':
-                return 'bg-success';
-            case 'unpaid':
-                return 'bg-warning';
-            case 'completed':
-                return 'bg-success';
-            case 'pending':
-                return 'bg-warning';
-            case 'refunded':
-                return 'bg-danger';
-            case 'cancelled':
-                return 'bg-danger';
-            case 'confirmed':
-                return 'bg-info';
-            default:
-                return 'bg-secondary';
-        }
-    }
-
-    // Poll the recent bookings, dashboard data, and payment history every 10 seconds
+    // Poll recent bookings, dashboard data, payment history, and chart data every 10 seconds
     setInterval(() => {
         fetchRecentBookings();
         fetchDashboardData();
         fetchPaymentHistory();
-    }, 10000);  // 10 seconds polling interval
+        updateChart();
+        updateUserActivities(currentPage);
+    }, 10000);  // Poll every 10 seconds
 
-    // Fetch the data immediately when the page loads
+    // Event listener for time filter change for chart
+    document.getElementById('timeFilter').addEventListener('change', updateChart);
+
+    // Event listeners for pagination of user activities
+    document.getElementById('previousPageBtn').addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            updateUserActivities(currentPage);
+        }
+    });
+
+    document.getElementById('nextPageBtn').addEventListener('click', () => {
+        currentPage++;
+        updateUserActivities(currentPage);
+    });
+
+    // Initial data fetch when the page loads
     fetchRecentBookings();
     fetchDashboardData();
     fetchPaymentHistory();
-
+    updateChart();
+    updateUserActivities(currentPage);
 });
 </script>
+
+
 
 
 @endsection

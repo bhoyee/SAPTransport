@@ -196,9 +196,9 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-
-
 Route::middleware(['auth', 'verified'])->group(function () {
+
+// Route::middleware(['auth', 'verified'])->group(function () {
 
     // Airport Transfer Booking Route
 

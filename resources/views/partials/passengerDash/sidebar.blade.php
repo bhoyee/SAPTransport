@@ -312,10 +312,10 @@
 
 
 					    
-
+<!-- 
 					    <li class="nav-item">
 
-					        <!--//Bootstrap Icons: https://icons.getbootstrap.com/ -->
+					      
 
 					        <a class="nav-link" href="help.html">
 
@@ -333,9 +333,9 @@
 
 		                         <span class="nav-link-text">Help</span>
 
-					        </a><!--//nav-link-->
+					        </a>
 
-					    </li><!--//nav-item-->					    
+					    </li>				     -->
 
 				    </ul><!--//app-menu-->
 
@@ -351,7 +351,7 @@
 
 						        <!--//Bootstrap Icons: https://icons.getbootstrap.com/ -->
 
-						        <a class="nav-link" href="#">
+						        <a class="nav-link" href="{{ route('passenger.settings') }}">
 
 							        <span class="nav-icon">
 

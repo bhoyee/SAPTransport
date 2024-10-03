@@ -82,31 +82,27 @@
     <!-- Custom JS for Idle Timer (lock screen) -->
     <script>
         let idleTime = 0;
-        const maxIdleTime = 10 * 60; // 10 minutes
+        const maxIdleTime = 60; // 10 minutes (600 seconds)
 
-        // Function to reset the idle timer when there's user interaction
+        // Reset the idle timer when there's user interaction
         function resetIdleTimer() {
-            console.log('User activity detected, resetting idle timer'); // Debugging log
             idleTime = 0;
         }
 
         // Increment the idle timer every second
         setInterval(() => {
             idleTime++;
-            console.log('Idle time:', idleTime); // Debugging log to check idle time increment
-
             // If idle time exceeds the max limit, redirect to the lock screen
             if (idleTime >= maxIdleTime) {
-                console.log('Max idle time reached. Redirecting to lock screen.');
-                window.location.href = "{{ route('lockscreen.show') }}";
+                window.location.href = "{{ route('lockscreen.show') }}"; // Redirect to the lock screen
             }
         }, 1000); // Check every second
 
-        // Reset idle timer on user interaction (mouse movement or keypress)
+        // Reset the idle timer on various user interactions (mouse, keyboard, touch)
         window.onmousemove = resetIdleTimer;
         window.onkeypress = resetIdleTimer;
-
-        // Optional: Also reset timer on touch events for mobile devices
+        window.onclick = resetIdleTimer;
+        window.onscroll = resetIdleTimer;
         window.ontouchstart = resetIdleTimer;
     </script>
 
