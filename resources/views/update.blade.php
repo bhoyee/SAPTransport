@@ -120,7 +120,7 @@
     <div class="container">
         <!-- Last Updated Date -->
         <div class="last-updated">
-            Last Updated: September 28, 2024
+            Last Updated: October 4th, 2024
         </div>
         <!-- Countdown Timer -->
         <div class="countdown" id="countdown-timer">
@@ -177,7 +177,7 @@
                                 </ul>
                             </li>
                             <li class="list-group-item">
-                                <span class="task">Consultant Features:</span>
+                                <span class="task">Consultant Features (Staff):</span>
                                 <ul>
                                     <li>Dashboard: View reports and booking data analysis</li>
                                     <li>Booking Management: Confirm, view, and edit bookings</li>
@@ -233,7 +233,7 @@
                             <li class="list-group-item">
                                Recent Booking and Payment History tables on Passanger Dashboad responsiveness
                                 <span class="new-badge">fixed</span>
-                                <span class="status">25/09/2024 at 11:30</span>
+                                <span class="status">5/09/2024 at 11:30</span>
                             </li>
                         </ul>
                     </div>
@@ -251,12 +251,14 @@
                             <li class="list-group-item">
                                 <span class="task">Backend API Development:</span>
                                 <ul>
+                                <li>Admin Login <span class="status in-progress">In Progress</span></li>
+                                   <li>Admin Dashboard <span class="status in-progress">In Progress</span></li>
                                     <li>Login API <span class="status completed">Completed</span></li>
                                     <li>Registration API <span class="status completed">Completed</span></li>
-                                    <li>Payment Gateway Integration <span class="status completed">Completed</span><span class="new-badge">New</span></li>
-                                    <li>PayStack Integration <span class="status completed">Completed</span><span class="new-badge">New</span></li>
-                                    <li>Payment History <span class="status in-progress">In Progress</span></li>
-                                    <!-- <li>Payment Gateway Integration <span class="status in-progress">In Progress</span></li> -->
+                                    <li>Payment Gateway Integration <span class="status completed">Completed</span></li>
+                                    <li>PayStack Integration <span class="status completed">Completed</span></li>
+                                    <li>Payment History <span class="status completed">Completed</span><span class="new-badge">New</span></li>
+                                   
                                     <!-- <li>Booking API <span class="status pending">Pending</span></li> -->
                                     <li>Booking API <span class="status completed">Completed</span><span class="new-badge">New</span></li>
 
@@ -265,19 +267,19 @@
                             <li class="list-group-item">
                                 <span class="task">Frontend Integration:</span>
                                 <ul>
-                                    <li>Passenger Dashboard UI <span class="status completed">Completed</span></li>
-                                    <li>PassengerBooking Form Integration <span class="status completed">Completed</span></li>
-                                    <li>Booking Confirmation Page <span class="status completed">Completed</span></li>
+                                <li>Passenger Area <span class="status completed">Completed</span><span class="new-badge">New</span></li>
+                                <li> Booking Options: Book Airport Pickup/Drop-off, Book Charter Trip<span class="status completed">Completed</span><span class="new-badge">New</span></li>
+                                <li>  Booking Management: View invoices/receipts, Manage bookings, Manage payments <span class="status completed">Completed</span><span class="new-badge">New</span></li>
+                                <li>   Profile and Security: Manage profile and change password <span class="status completed">Completed</span><span class="new-badge">New</span></li>
+                                <li>    Support: Open support tickets, Send messages to support <span class="status completed">Completed</span><span class="new-badge">New</span></li>
+                                <li>   Dashboard: Overview of bookings, payments, trip history, and booking status <span class="status completed">Completed</span><span class="new-badge">New</span></li>
 
-                                    <li>PassengerBooking Payment Form Integration <span class="status completed">Completed</span><span class="new-badge">New</span></li>
-                                    <li>PassengerBooking Payment invoice <span class="status completed">Completed</span><span class="new-badge">New</span></li>
 
                                     <!-- <li>Passenger: Payment Form Integration  <span class="status in-progress">In Progress</span></li> -->
-                                    <li>Passenger: My Trip / Bookings <span class="status pending">Pending</span></li>
+                                    <!-- <li>Passenger: My Trip / Bookings <span class="status pending">Pending</span></li>
                                     <li>Passenger: Invoices / Receipts<span class="status pending">Pending</span></li>
-                                    <li>Passenger: Support / Ticket<span class="status pending">Pending</span></li>
-                                    <li>Passenger: Help<span class="status pending">Pending</span></li>
-                                    <li>Passenger: Settings<span class="status pending">Pending</span></li>
+                                    <li>Passenger: Support / Ticket<span class="status pending">Pending</span></li> -->
+                                    <!-- <li>Passenger: Settings<span class="status pending">Pending</span></li> -->
                                 </ul>
                             </li>
                             <li class="list-group-item">
@@ -304,8 +306,8 @@
                                 <span class="task">Complete Frontend Integration:</span>
                                 <ul>
                                     <li>Payment Form Integration (PayStack Integration) <span class="status completed">Completed</span></li>
-                                    <li>Passenger Portal <span class="status in-progress">In Progress</span></li>
-                                    <li>Admin Portal <span class="status pending">Pending</span></li>
+                                    <li>Passenger Portal <span class="status completed">Completed</span></li>
+                                    <li>Admin Portal <span class="status in-progress">In Progress</span></li>
                                     <li>Staff Portal <span class="status pending">Pending</span></li>
                                 </ul>
                             </li>
@@ -350,7 +352,7 @@
 <script>
       function startCountdown() {
     // Set the fixed start date (when the countdown actually started)
-    const startDate = new Date('2024-09-10'); // Example: September 10, 2024
+    const startDate = new Date('2024-09-9'); // Example: September 10, 2024
 
     // Set the end date to 3 months from the start date
     const endDate = new Date(startDate);
