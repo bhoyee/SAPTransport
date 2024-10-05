@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -9,49 +8,63 @@ use Illuminate\Support\Facades\Hash;
 
 class LockScreenController extends Controller
 {
-    // Show the lock screen view
     public function show()
     {
-        if (!session()->has('lastActivityTime')) {
-            // If the session expired, redirect to the login page
-            return redirect()->route('login')->withErrors(['message' => 'Your session has expired. Please log in again.']);
+        // Log for debugging
+        \Log::info('LockScreenController@show called');
+
+        // Check if session is locked
+        if (session('is_locked', false)) {
+            \Log::info('Session is locked, showing lock screen');
+            return view('auth.lockscreen');
         }
 
-        return view('auth.lockscreen');
+        \Log::info('Session is not locked, redirecting to login');
+        return redirect()->route('login');
     }
 
-    // Handle unlocking with password
     public function unlock(Request $request)
     {
-        if ($request->isMethod('get')) {
-            return redirect()->route('login')->withErrors(['message' => 'Session expired. Please log in again.']);
-        }
-
         $user = Auth::user();
 
-        if (!$user) {
-            return redirect()->route('login')->withErrors(['error' => 'User not authenticated. Please log in again.']);
-        }
-
+        // Check if password matches
         if (is_null($request->password) || !Hash::check($request->password, $user->password)) {
+            \Log::info('Invalid password provided');
             return redirect()->route('lockscreen.show')->withErrors(['password' => 'Invalid password.']);
         }
 
         // Unlock the session
+        \Log::info('Unlocking session');
         session()->put('is_locked', false);
-        return redirect()->route('passenger.dashboard');
+
+        // Redirect to the previous URL or dashboard
+        return redirect(session('previousUrl', route('passenger.dashboard')));
     }
 
-    // Handle social login unlock (optional)
     public function handleGoogleUnlock()
     {
-        $user = Auth::user();
-
-        if ($user) {
-            session()->put('is_locked', false);
-            return redirect()->route('passenger.dashboard');
+        try {
+            $user = Auth::user();
+    
+            // Log user authentication status
+            \Log::info('Attempting to unlock with Google', ['user_id' => $user ? $user->id : null]);
+    
+            // Check if the user is authenticated through Google
+            if ($user && $user->provider == 'google') {
+                \Log::info('Google unlock successful, unlocking session', ['user_id' => $user->id]);
+                session()->put('is_locked', false); // Unlock session
+                return redirect()->route('passenger.dashboard');
+            }
+    
+            // If Google authentication fails
+            \Log::info('Google authentication failed, user not authenticated through Google');
+            return redirect()->route('login')->withErrors(['error' => 'Google authentication failed.']);
+        } catch (\Exception $e) {
+            // Catch and log any unexpected errors
+            \Log::error('Error during Google unlock', ['error' => $e->getMessage(), 'user_id' => $user ? $user->id : null]);
+            return redirect()->route('login')->withErrors(['error' => 'An unexpected error occurred. Please try again.']);
         }
-
-        return redirect()->route('login')->withErrors(['error' => 'Google authentication failed.']);
     }
+    
+    
 }

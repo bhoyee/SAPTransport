@@ -2,6 +2,8 @@
 
 // app/Http/Controllers/Auth/LoginController.php
 
+// app/Http/Controllers/Auth/LoginController.php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -35,31 +37,61 @@ class LoginController extends Controller
 
         // Attempt to log the user in
         if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {
+            $user = Auth::user();
+
             // Log success
-            Log::info('User authenticated', ['email' => $request->email]);
+            Log::info('User authenticated', ['email' => $request->email, 'role' => $user->role]);
 
-            // Check if the user has verified their email
-            if (Auth::user()->email_verified_at === null) {
-                Log::info('Redirecting to verification.notice', ['email' => Auth::user()->email]);
+            // Check the role and redirect accordingly
+            if ($user->role === 'passenger') {
+                // Passengers must have verified email
+                if ($user->email_verified_at === null) {
+                    Log::info('Redirecting to verification.notice', ['email' => $user->email]);
 
-                // Log unverified email login attempt
-                ActivityLogger::log('Login Attempt', 'Email not verified: ' . $request->email);
+                    // Log unverified email login attempt
+                    ActivityLogger::log('Login Attempt', 'Email not verified: ' . $request->email);
 
-                return redirect()->route('verification.notice')->with('error', 'You need to verify your email before logging in.');
+                    return redirect()->route('verification.notice')->with('error', 'You need to verify your email before logging in.');
+                }
+
+                // Log successful passenger login
+                Log::info('Passenger logged in', ['email' => $user->email]);
+
+                ActivityLogger::customLog('Login Success', 'Passenger logged in: ' . $request->email, $user->id);
+
+                // Set session lock to false and redirect to passenger dashboard
+                session()->put('is_locked', false);
+                $request->session()->regenerate();
+
+                return redirect()->route('passenger.dashboard');
+
+            } elseif ($user->role === 'admin') {
+                // Admins do not need email verification, log and redirect
+                Log::info('Admin logged in', ['email' => $user->email]);
+
+                ActivityLogger::customLog('Login Success', 'Admin logged in: ' . $request->email, $user->id);
+
+                session()->put('is_locked', false);
+                $request->session()->regenerate();
+
+                return redirect()->route('admin.dashboard');
+
+            } elseif ($user->role === 'consultant') {
+                // Consultants do not need email verification, log and redirect
+                Log::info('Consultant logged in', ['email' => $user->email]);
+
+                ActivityLogger::customLog('Login Success', 'Consultant logged in: ' . $request->email, $user->id);
+
+                session()->put('is_locked', false);
+                $request->session()->regenerate();
+
+                return redirect()->route('staff.dashboard');
             }
 
-            // Log verified email
-            Log::info('User email verified', ['email' => Auth::user()->email]);
+            // If user has an unknown role, log and redirect to login
+            Log::warning('Unknown role attempted login', ['email' => $user->email, 'role' => $user->role]);
 
-            // Log successful login activity using customLog for "You" message
-            ActivityLogger::customLog('Login Success', 'logged in: ' . $request->email, Auth::id());
-
-            // Set the session 'is_locked' to false after successful login
-            session()->put('is_locked', false);
-            $request->session()->regenerate();
-
-            // Redirect the user to the passenger dashboard if email is verified
-            return redirect()->route('passenger.dashboard');
+            return redirect()->route('login')->withErrors(['error' => 'Unknown role, access denied.']);
         }
 
         // Log failed login attempt
@@ -77,10 +109,16 @@ class LoginController extends Controller
     // Logout the user
     public function logout(Request $request)
     {
+        $user = Auth::user();
+
+        // Log logout action
+        Log::info('User logged out', ['user_id' => $user ? $user->id : null]);
+
+        ActivityLogger::log('Logout', 'User logged out: ' . ($user ? $user->email : 'Unknown'));
+
         Auth::logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         // Redirect to the home page after logout

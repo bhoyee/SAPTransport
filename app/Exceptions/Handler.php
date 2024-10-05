@@ -4,6 +4,8 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Symfony\Component\HttpFoundation\Exception\SessionExpiredException;
+use Illuminate\Session\TokenMismatchException;
 
 class Handler extends ExceptionHandler
 {
@@ -48,6 +50,12 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+           // Handle CSRF Token Mismatch or Session Timeout (419)
+        if ($exception instanceof TokenMismatchException || $exception instanceof SessionExpiredException) {
+            // Redirect to login page with a session expired message
+            return redirect()->route('login')->with('message', 'Your session has expired. Please log in again.');
+        }
+
         return parent::render($request, $exception);
     }
 }

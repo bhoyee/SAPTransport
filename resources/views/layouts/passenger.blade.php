@@ -81,30 +81,49 @@
 
     <!-- Custom JS for Idle Timer (lock screen) -->
     <script>
-        let idleTime = 0;
-        const maxIdleTime = 60; // 10 minutes (600 seconds)
+    const lockTimeout = 600000;  // 10 minutes (600,000 milliseconds)
 
-        // Reset the idle timer when there's user interaction
-        function resetIdleTimer() {
-            idleTime = 0;
-        }
+    //const lockTimeout = 60000; // 1 mins
+    
+    let idleTimer;
 
-        // Increment the idle timer every second
-        setInterval(() => {
-            idleTime++;
-            // If idle time exceeds the max limit, redirect to the lock screen
-            if (idleTime >= maxIdleTime) {
-                window.location.href = "{{ route('lockscreen.show') }}"; // Redirect to the lock screen
-            }
-        }, 1000); // Check every second
+    function lockSession() {
+        console.log('Locking session due to inactivity');
 
-        // Reset the idle timer on various user interactions (mouse, keyboard, touch)
-        window.onmousemove = resetIdleTimer;
-        window.onkeypress = resetIdleTimer;
-        window.onclick = resetIdleTimer;
-        window.onscroll = resetIdleTimer;
-        window.ontouchstart = resetIdleTimer;
-    </script>
+        // Send a request to the server to lock the session
+        fetch('/lock-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({})
+        }).then(() => {
+            window.location.href = "{{ route('lockscreen.show') }}";  // Redirect to lock screen
+        }).catch((error) => {
+            console.error('Error locking session:', error);
+        });
+    }
+
+    // Function to reset the idle timer
+    function resetIdleTimer() {
+        clearTimeout(idleTimer);  // Clear the previous timer
+        idleTimer = setTimeout(lockSession, lockTimeout);  // Set a new timeout for 10 minutes
+    }
+
+    // Reset the timer on user activity
+    window.onload = resetIdleTimer;
+    window.onmousemove = resetIdleTimer;
+    window.onmousedown = resetIdleTimer;  // Catches touchscreen presses
+    window.ontouchstart = resetIdleTimer;
+    window.onclick = resetIdleTimer;      // Catches touchpad clicks
+    window.onkeypress = resetIdleTimer;
+
+    // Start the idle timer when the page loads
+    resetIdleTimer();
+</script>
+
+
 
     <!-- Other Plugin JS -->
     <script src="{{ asset('assets/plugins/chart.js/chart.min.js') }}"></script>
