@@ -1,40 +1,31 @@
 <?php
 
-
-
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Auth\RegisterController;
-
 use App\Http\Controllers\Auth\LoginController;
-
 use App\Http\Controllers\Auth\VerificationController;
-
 use App\Http\Controllers\Auth\SocialLoginController;
-
 use App\Http\Controllers\Auth\PassengerController;
-
 use App\Http\Controllers\Auth\ForgotPasswordController;
-
 use App\Http\Controllers\Auth\ProfileController;
-
 use App\Http\Controllers\Auth\LockScreenController;
-
 use App\Http\Controllers\BookingController;
-
 use App\Http\Controllers\PassengerHomeController;
-
 use App\Http\Controllers\PaymentController;
-
 use App\Http\Controllers\BookingEditController;
-
 use App\Http\Controllers\InvoiceController;
-
 use App\Http\Controllers\ContactController;
-
 use App\Http\Controllers\SettingsController;
-
 use App\Http\Controllers\AccountController;
+
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController; // Alias for Admin DashboardController
+use App\Http\Controllers\Admin\UserController as AdminUserController; // Alias for Admin UserController
+
+use App\Http\Controllers\Staff\DashboardController as StaffDashboardController; // Alias for Staff DashboardController
+use App\Http\Controllers\Staff\SupportController as StaffSupportController; // Alias for Staff SupportController
+
+
 
 
 
@@ -169,16 +160,22 @@ Route::get('/password/reset/success', function () {
 // Route::post('/unlock', [LockScreenController::class, 'unlock'])->name('lockscreen.unlock');
 
 // Screen Locker Routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/lock', [LockScreenController::class, 'show'])->name('lockscreen.show');
-    Route::post('/unlock', [LockScreenController::class, 'unlock'])->name('lockscreen.unlock');
+// Route::middleware(['auth'])->group(function () {
+//     Route::get('/lock', [LockScreenController::class, 'show'])->name('lockscreen.show');
+//     Route::post('/unlock', [LockScreenController::class, 'unlock'])->name('lockscreen.unlock');
     
-    // Route for unlocking via Google social login
-    Route::get('/unlock/google', [SocialLoginController::class, 'redirectToGoogle'])->name('auth.google.unlock');
-    Route::get('/unlock/google/callback', [LockScreenController::class, 'handleGoogleUnlock']);
+//     // Route for unlocking via Google social login
+//     Route::get('/unlock/google', [SocialLoginController::class, 'redirectToGoogle'])->name('auth.google.unlock');
+//     Route::get('/unlock/google/callback', [LockScreenController::class, 'handleGoogleUnlock']);
+// });
+
+
+Route::fallback(function () {
+    return redirect()->route('login')->with('message', 'Session expired or page expired. Please log in again.');
 });
 
 
+Route::get('/auth/google/unlock', [LockScreenController::class, 'handleGoogleUnlock'])->name('auth.google.unlock');
 
     
 
@@ -195,6 +192,23 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
+Route::get('/passenger/dashboard', [PassengerController::class, 'dashboard'])
+    ->name('passenger.dashboard');
+    
+Route::get('/lock', [LockScreenController::class, 'show'])->name('lockscreen.show');
+Route::post('/unlock', [LockScreenController::class, 'unlock'])->name('lockscreen.unlock');
+
+Route::post('/lock-session', function () {
+    session()->put('is_locked', true);
+    return response()->json(['status' => 'locked']);
+});
+
+
+// Route::get('/about', 'Index')->name('about.page')->middleware('check');
+
+// Route::get('/passenger/dashboard', [PassengerController::class, 'dashboard'])->name('passenger.dashboard');
+
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -206,7 +220,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Passenger Dashboard
 
-    Route::get('/passenger/dashboard', [PassengerController::class, 'dashboard'])->name('passenger.dashboard');
+    // Route::get('/passenger/dashboard', [PassengerController::class, 'dashboard'])->name('passenger.dashboard');
 
     // Route to fetch recent bookings
     Route::get('/passenger/recent-bookings', [PassengerHomeController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
@@ -297,6 +311,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/passenger/bookings/chart-data', [PassengerHomeController::class, 'getChartData'])->name('passenger.bookings.chartData');
     Route::get('/passenger/activities', [PassengerHomeController::class, 'getUserActivities'])->name('passenger.activities');
 });
+
+
+// Admin routes
+// Admin routes
+// Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
+//     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+//     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users');
+//     // Add more admin routes here
+// });
+
+// // Staff routes
+// Route::prefix('staff')->middleware(['auth', 'role:staff'])->group(function () {
+//     Route::get('/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
+//     Route::get('/support', [StaffSupportController::class, 'index'])->name('staff.support');
+//     // Add more staff routes here
+// });
+
+
+// Admin routes
+Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+
+// Staff (Consultant) routes
+Route::get('/staff/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
+
 
 
 // Clear Cache Route (for admin use)
