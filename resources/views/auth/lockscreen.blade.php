@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -26,6 +25,8 @@
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
         }
 
         .image-container {
@@ -54,6 +55,18 @@
             }
         }
     </style>
+       <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const logoutTimeout = 600000; // 10 minutes (in milliseconds)
+
+            setTimeout(function () {
+                // After 10 minutes of being idle on the lock screen, redirect to the login page
+                window.location.href = "{{ route('login') }}";
+            }, logoutTimeout);
+
+            console.log('Lock screen timeout initiated');
+        });
+    </script>
 </head>
 
 <body>
@@ -61,11 +74,11 @@
         <div class="row w-100">
             <!-- Left side: form -->
             <div class="col-md-6 form-container">
-                <h2>Screen Locked</h2>
-                <span>Hey! Unlock Your Screen.</span>
+                <h2 class="text-center">Screen Locked</h2>
+                <p class="text-center">Hey! Unlock Your Screen.</p>
                 <form method="POST" action="{{ route('lockscreen.unlock') }}">
                     @csrf
-                    <div class="form-group mt-5">
+                    <div class="form-group">
                         <label for="password">Enter your password to unlock</label>
                         <input type="password" name="password" id="password" class="form-control" required>
                         @if($errors->any())
@@ -74,12 +87,10 @@
                     </div>
                     <button type="submit" class="btn btn-primary btn-lg btn-block">Unlock</button>
                 </form>
-                
+
                 <!-- Google login button for social login users -->
                 <p class="text-center mt-3">OR</p>
-                <a href="{{ route('auth.google.unlock') }}" class="btn btn-danger btn-lg btn-block">
-                    Unlock with Google
-                </a>
+                <a href="{{ route('auth.google.unlock') }}" class="btn btn-danger btn-lg btn-block">Unlock with Google</a>
 
                 <p class="text-center mt-3">Back to <a href="{{ route('login') }}">Login</a></p>
             </div>
