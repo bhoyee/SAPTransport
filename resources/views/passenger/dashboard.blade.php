@@ -1,6 +1,80 @@
 @extends('layouts.passenger')
 
 @section('title', 'Passenger Dashboard')
+@push('styles')
+
+	<!-- Custom CSS for Mobile-Friendly Table -->
+<style>
+/* Sidebar positioning and overflow behavior */
+
+
+/* Responsive table container */
+.table-responsive {
+    overflow-x: auto;
+}
+
+/* Default table style for desktop */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+th, td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+    white-space: nowrap; /* Prevent content from wrapping */
+}
+
+/* Adjust button group styling */
+.button-group {
+    display: flex;
+    justify-content: flex-start;
+    gap: 5px;
+}
+
+.button-group .btn {
+    padding: 5px 8px;
+    font-size: 10px;
+}
+
+/* Mobile view styling */
+@media (max-width: 768px) {
+    /* Allow horizontal scroll for the table */
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%; /* Ensure full width */
+        display: block;
+    }
+
+    /* Adjust columns for readability */
+    th, td {
+        padding: 10px;
+        font-size: 14px;
+        white-space: nowrap; /* Prevent wrapping */
+    }
+
+    /* Button group responsive behavior */
+    .button-group {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .button-group .btn {
+        width: 30%;
+        padding: 5px;
+    }
+}
+
+
+</style>
+
+@endpush
 
 @section('content')
  
@@ -166,6 +240,7 @@
             <div class="app-card-header p-3">
                 <h4 class="app-card-title">Recent Booking</h4>
             </div>
+            <div class="table-responsive">
                   <table id="recent-bookings" class="table table-striped table-bordered">
                     <thead>
                         <tr>
@@ -180,6 +255,7 @@
                         <!-- Booking data will be injected here -->
                     </tbody>
                 </table>
+            </div>
 
         </div>
 
@@ -438,129 +514,7 @@
 			</div>
 
 
-
-	<!-- Custom CSS for Mobile-Friendly Table -->
-<style>
-	/* Default table style */
-/* Default table style for desktop */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px; /* Adjust the base font size for the table on larger screens */
-}
-
-th, td {
-    padding: 8px; /* Reduced padding for a more compact table */
-    border: 1px solid #ddd;
-    text-align: left;
-    white-space: nowrap;
-}
-
-/* Adjust column width based on unique IDs */
-
-/* Booking Ref Column */
-#booking-ref-header, td[data-label="Booking Ref"] {
-    width: 80px; /* Adjust width for Booking Ref */
-    font-size: 12px;
-}
-
-/* Booking Date Column */
-#booking-date-header, td[data-label="Booking Date"] {
-    width: 100px; /* Adjust width for Booking Date */
-    font-size: 12px;
-}
-
-/* Service Type Column */
-#service-type-header, td[data-label="Service Type"] {
-    width: 120px; /* Adjust width for Service Type */
-    font-size: 12px;
-}
-
-/* Status Column */
-#status-header, td[data-label="Status"] {
-    width: 90px; /* Adjust width for Status */
-    font-size: 12px;
-}
-
-/* Actions Column */
-#actions-header, td.button-group {
-    width: 150px; /* Adjust width for Actions */
-    text-align: left;
-}
-
-/* Adjust button group styling */
-.button-group {
-    display: flex;
-    justify-content: flex-start;
-    gap: 5px;
-}
-
-.button-group .btn {
-    padding: 5px 8px;
-    font-size: 10px; /* Smaller font size for buttons on larger screens */
-}
-
-/* Mobile view styling */
-@media (max-width: 768px) {
-    table thead {
-        display: none; /* Hide table headers on mobile */
-    }
-
-    table tbody tr {
-        display: block;
-        margin-bottom: 15px;
-        border-bottom: 2px solid #ddd;
-        padding-bottom: 15px;
-    }
-
-    table tbody tr td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 10px;
-        border-bottom: 1px solid #ddd;
-        text-align: left;
-    }
-
-    table tbody tr td:before {
-        content: attr(data-label); /* Display the label */
-        flex-basis: 40%;
-        font-weight: bold;
-        text-align: left;
-        white-space: nowrap;
-    }
-
-    table tbody tr td:last-child {
-        border-bottom: 0;
-    }
-
-    /* Align the booking date to the left */
-    td[data-label="Booking Date"] {
-        text-align: left; /* Ensure the Booking Date aligns left */
-    }
-
-    /* Adjust buttons for mobile */
-    .button-group {
-        flex-direction: row;
-        justify-content: space-between;
-        gap: 10px;
-    }
-
-    .button-group .btn {
-        width: 30%; /* Make the buttons smaller on mobile */
-        padding: 5px;
-    }
-
-    /* Reset widths for Service Type, Booking Date, and Status on mobile */
-    td[data-label="Service Type"], td[data-label="Booking Date"], td[data-label="Status"] {
-        width: auto; /* Let these fields adjust based on content */
-    }
-}
-</style>
-
-
-
-
+@push('scripts')
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -863,7 +817,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-
+@endpush
 
 
 @endsection
