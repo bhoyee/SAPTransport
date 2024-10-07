@@ -17,6 +17,8 @@ class Kernel extends HttpKernel
         \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        \App\Http\Middleware\VerifyCsrfToken::class, // This is your custom middleware now
+
     ];
 
     /**
@@ -64,6 +66,9 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class, // Laravel provided middleware
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class, // Laravel provided middleware
         'role' => \App\Http\Middleware\CheckRole::class,  // Ensure you have this registered
+        'admin' => \App\Http\Middleware\AdminMiddleware::class,
+        'csrf' => \App\Http\Middleware\VerifyCsrfToken::class,
+
 
     ];
 }
