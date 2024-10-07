@@ -82,15 +82,12 @@
     <!-- Custom JS for Idle Timer (lock screen) -->
     <script>
     const lockTimeout = 600000;  // 10 minutes (600,000 milliseconds)
-
-    //const lockTimeout = 60000; // 1 mins
-    
     let idleTimer;
+    let lastActivity = Date.now();
 
+    // Function to lock session
     function lockSession() {
         console.log('Locking session due to inactivity');
-
-        // Send a request to the server to lock the session
         fetch('/lock-session', {
             method: 'POST',
             headers: {
@@ -105,25 +102,42 @@
         });
     }
 
-    // Function to reset the idle timer
+    // Function to reset idle timer and prevent session lock
     function resetIdleTimer() {
-        clearTimeout(idleTimer);  // Clear the previous timer
-        idleTimer = setTimeout(lockSession, lockTimeout);  // Set a new timeout for 10 minutes
+        lastActivity = Date.now();
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(lockSession, lockTimeout);
     }
 
-    // Reset the timer on user activity
-    window.onload = resetIdleTimer;
-    window.onmousemove = resetIdleTimer;
-    window.onmousedown = resetIdleTimer;  // Catches touchscreen presses
-    window.ontouchstart = resetIdleTimer;
-    window.onclick = resetIdleTimer;      // Catches touchpad clicks
-    window.onkeypress = resetIdleTimer;
+    // Update timer regularly using requestAnimationFrame to detect activity better on mobile
+    function monitorActivity() {
+        const now = Date.now();
+        if (now - lastActivity > lockTimeout) {
+            lockSession();
+        }
+        requestAnimationFrame(monitorActivity);
+    }
 
-    // Start the idle timer when the page loads
-    resetIdleTimer();
-</script>
+    // Listen for various user actions to reset idle timer
+    function attachUserActivityListeners() {
+        window.addEventListener('mousemove', resetIdleTimer);
+        window.addEventListener('mousedown', resetIdleTimer);  // Mouse click or press
+        window.addEventListener('touchstart', resetIdleTimer);  // Touchscreen interactions
+        window.addEventListener('click', resetIdleTimer);      // Mouse clicks
+        window.addEventListener('keypress', resetIdleTimer);   // Key presses
 
+        // Additional mobile gestures
+        window.addEventListener('scroll', resetIdleTimer);      // Scroll events
+        window.addEventListener('touchmove', resetIdleTimer);   // Touch gestures
+    }
 
+    // Start monitoring activity when the page loads
+    window.onload = function () {
+        resetIdleTimer();
+        monitorActivity();
+        attachUserActivityListeners();
+    };
+    </script>
 
     <!-- Other Plugin JS -->
     <script src="{{ asset('assets/plugins/chart.js/chart.min.js') }}"></script>

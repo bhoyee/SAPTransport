@@ -133,6 +133,9 @@ class RegisterController extends Controller
                 'phone' => $request->phone,
 
                 'gender' => $request->gender,
+                
+                'created_by' => $request->email,  // Set created_by to the user's own email
+
 
             ]);
 

@@ -32,13 +32,10 @@ class BookingController extends Controller
 
                 // Check if the user is logged in
 
-      
+       if (!Auth::check()) {
 
-            if (!Auth::check()) {
-
-                return back()->with('error', 'You need to login before booking a trip.');
-
-            }
+            return back()->with('error', 'You need to login before booking a trip.');
+        }
 
             
 
