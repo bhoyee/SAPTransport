@@ -19,6 +19,9 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\AccountController;
 
+use Illuminate\Support\Facades\Auth;
+
+
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController; // Alias for Admin DashboardController
 use App\Http\Controllers\Admin\UserController as AdminUserController; // Alias for Admin UserController
 
@@ -329,13 +332,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // });
 
 
-// Admin routes
-Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+// Admin dashboard route without middleware
+// Admin dashboard route without middleware
+Route::get('/admin/dashboard', function () {
+    // Check if the user is authenticated and has the 'admin' role
+    if (Auth::check() && Auth::user()->role === 'admin') {
+        return view('admin.dashboard');
+    }
+    
+    // If not an admin, redirect to login or unauthorized page
+    return redirect('/login')->with('error', 'Unauthorized access');
+})->name('admin.dashboard')->middleware('auth');
 
-// Staff (Consultant) routes
-Route::get('/staff/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
+// User creation routes for admins
+Route::prefix('admin')->middleware('auth')->group(function () {
+    
+    Route::get('users/create', function () {
+        // Check if the authenticated user is an admin
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            return view('admin.create'); // Correct view path based on your existing view
+        }
+        return redirect('/login')->with('error', 'Unauthorized access');
+    })->name('admin.users.create');
 
-
+    Route::post('users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
+});
 
 // Clear Cache Route (for admin use)
 
