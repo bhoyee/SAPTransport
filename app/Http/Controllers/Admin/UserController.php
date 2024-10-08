@@ -34,6 +34,8 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:passenger,consultant,admin',
+            'gender' => 'required|in:male,female',  // Add gender validation
+
         ]);
 
         // Check if the user with the same email already exists
@@ -50,6 +52,8 @@ class UserController extends Controller
         \Log::info('Creating user with the following details: ', [
             'name' => $request->name,
             'email' => $request->email,
+            'gender' => $request->gender,  // Log gender as well
+
             'created_by' => $createdBy,  // Log the creator's email
         ]);
 
@@ -60,6 +64,7 @@ class UserController extends Controller
                 'email' => $request->email,
                 'password' => bcrypt($request->password), // Hash the password
                 'role' => $request->role,
+                'gender' => $request->gender,  // Save gender
                 'created_by' => $createdBy,  // Automatically store the creator's email
             ]);
 

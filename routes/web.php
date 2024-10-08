@@ -18,8 +18,8 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\AccountController;
-
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Admin\UserReportController;
 
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController; // Alias for Admin DashboardController
@@ -357,6 +357,28 @@ Route::prefix('admin')->middleware('auth')->group(function () {
 
     Route::post('users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
 });
+
+
+
+Route::get('admin/users/report', [App\Http\Controllers\Admin\UserReportController::class, 'index'])->name('admin.users.report');
+Route::get('admin/users/report', [App\Http\Controllers\Admin\UserReportController::class, 'showReportPage'])->name('admin.users.report');
+
+
+Route::get('admin/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index')->middleware('auth');
+Route::delete('admin/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy')->middleware('auth');
+Route::post('admin/users/{user}/suspend', [App\Http\Controllers\Admin\UserController::class, 'suspend'])->name('admin.users.suspend')->middleware('auth');
+Route::get('admin/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'show'])->name('admin.users.show')->middleware('auth');
+// Add the route for editing a user
+Route::get('admin/users/{user}/edit', [App\Http\Controllers\Admin\UserController::class, 'edit'])->name('admin.users.edit')->middleware('auth');
+Route::put('users/{user}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update')->middleware('auth');
+Route::post('/admin/users/delete', [App\Http\Controllers\Admin\UserController::class, 'delete'])->name('admin.users.delete')->middleware('auth');
+
+
+
+Route::post('admin/users/report/pdf', [App\Http\Controllers\Admin\UserReportController::class, 'generatePDF'])->name('admin.users.report.pdf');
+
+
+
 
 // Clear Cache Route (for admin use)
 
