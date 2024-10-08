@@ -5,7 +5,7 @@
 <p>Passengers, Staffs  or addtional system admin</p> 
 
 <div class="app-card app-card-details shadow-sm mb-4">
-<div class="app-card-body p-4 gx-5 gy-3">
+    <div class="app-card-body p-4">
       
 
     <!-- Display Success Message -->
@@ -38,14 +38,7 @@
     @endif
 
     <!-- User Creation Form -->
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    Create User
-                </div>
-
-                <div class="card-body">
+  
                     <form method="POST" action="{{ route('admin.users.store') }}" id="create-user-form">
                         @csrf
 
@@ -136,11 +129,7 @@
                     </form>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 
-</div>
 @endsection
 
 @push('scripts')
