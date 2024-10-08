@@ -54,13 +54,32 @@ class SocialLoginController extends Controller
     }
 
     // Register or login user
+// Register or login user
     protected function _registerOrLoginUser($socialUser, $provider)
     {
         $existingUser = User::where('email', $socialUser->email)->first();
 
+        // If the user already exists
         if ($existingUser) {
-            Auth::login($existingUser);
             
+            // Check if the user is suspended or deleted
+            if ($existingUser->status === 'suspend') {
+                // Log the suspended account attempt
+                ActivityLogger::customLog('Login Failed - Account Suspended', 'User attempted to log in with suspended account via ' . ucfirst($provider) . ': ' . $socialUser->email, $existingUser->id);
+                
+                return redirect()->route('login')->with('error', 'Your account has been suspended, please contact support.');
+            }
+
+            if ($existingUser->status === 'deleted') {
+                // Log the deleted account attempt
+                ActivityLogger::customLog('Login Failed - Account Deleted', 'User attempted to log in with deleted account via ' . ucfirst($provider) . ': ' . $socialUser->email, $existingUser->id);
+                
+                return redirect()->route('login')->with('error', 'Your account has been removed from the system, please contact support.');
+            }
+
+            // Log the user in
+            Auth::login($existingUser);
+
             // Log activity for login with customization
             ActivityLogger::customLog('Login Success', 'logged in via ' . ucfirst($provider) . ': ' . $socialUser->email, $existingUser->id);
 
@@ -69,17 +88,19 @@ class SocialLoginController extends Controller
                 return redirect()->route('complete.profile');
             }
 
+            // Redirect to the dashboard
             return redirect()->route('passenger.dashboard');
         } else {
+            // If the user does not exist, create a new account
             $newUser = User::create([
                 'name' => $socialUser->name,
                 'email' => $socialUser->email,
                 'password' => Hash::make('password'), // Default password
                 'provider' => $provider,
                 'created_by' => $socialUser->email,  // Set created_by as the user's email
-
             ]);
 
+            // Log the user in
             Auth::login($newUser);
 
             // Log account creation and login
@@ -88,4 +109,5 @@ class SocialLoginController extends Controller
             return redirect()->route('complete.profile');
         }
     }
+
 }
