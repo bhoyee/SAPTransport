@@ -5,8 +5,8 @@
 <p>Passengers, Staffs  or addtional system admin</p> 
 
 <div class="app-card app-card-details shadow-sm mb-4">
-    <div class="app-card-body p-4">
-        <div class="row gx-5 gy-3">
+<div class="app-card-body p-4 gx-5 gy-3">
+      
 
     <!-- Display Success Message -->
     @if(session('success'))
@@ -108,6 +108,21 @@
                             @enderror
                         </div>
 
+                        <div class="form-group mb-3">
+                            <label for="gender">Gender</label>
+                            <select id="gender" 
+                                    class="form-control @error('gender') is-invalid @enderror" 
+                                    name="gender" required>
+                                <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
+                                <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
+                            </select>
+                            @error('gender')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+
                         <!-- Submit Button and Spinner -->
                         <div class="form-group mb-0">
                             <button type="submit" class="btn btn-primary" id="create-user-btn">
@@ -124,7 +139,7 @@
         </div>
     </div>
 </div>
-</div>
+
 </div>
 @endsection
 
