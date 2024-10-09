@@ -157,7 +157,7 @@ class UserController extends Controller
         if (Auth::check() && Auth::user()->role !== 'admin') {
             return redirect('/')->with('error', 'Unauthorized access');
         }
-
+    
         // Validate the form data
         $request->validate([
             'name' => 'required|string|max:255',
@@ -165,29 +165,30 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:passenger,consultant,admin',
             'gender' => 'required|in:male,female',  // Add gender validation
-
         ]);
-
+    
         // Check if the user with the same email already exists
         $existingUser = User::where('email', $request->email)->first();
-
+    
         if ($existingUser) {
             return redirect()->back()->with('error', 'User with this email already exists.');
         }
-
+    
         // Determine the creator: If admin or consultant is logged in, use their email; otherwise, use the user's own email
         $createdBy = Auth::check() ? Auth::user()->email : $request->email;
-
+    
         // Log the captured email of the creator for debugging purposes
         \Log::info('Creating user with the following details: ', [
             'name' => $request->name,
             'email' => $request->email,
             'gender' => $request->gender,  // Log gender as well
-
             'created_by' => $createdBy,  // Log the creator's email
         ]);
-
+    
         try {
+            // Set the status based on the role
+            $status = ($request->role === 'passenger') ? 'inactive' : 'active';
+    
             // Create the new user
             User::create([
                 'name' => $request->name,
@@ -196,17 +197,19 @@ class UserController extends Controller
                 'role' => $request->role,
                 'gender' => $request->gender,  // Save gender
                 'created_by' => $createdBy,  // Automatically store the creator's email
+                'status' => $status, // Set the status based on the role
             ]);
-
+    
             // Log the successful creation of the user
             \Log::info('User created successfully by: ' . $createdBy);
-
+    
             return redirect()->route('admin.users.create')->with('success', 'User created successfully.');
         } catch (\Exception $e) {
             // Log the error for debugging
             \Log::error('User creation failed: ' . $e->getMessage());
-
+    
             return redirect()->back()->withInput()->with('error', 'An error occurred while creating the user.');
         }
     }
+    
 }
