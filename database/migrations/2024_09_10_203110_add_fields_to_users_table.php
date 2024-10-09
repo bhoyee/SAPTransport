@@ -16,7 +16,7 @@ class AddFieldsToUsersTable extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('phone', 15)->nullable()->after('password');  // Adding 'phone' field
             $table->enum('role', ['admin', 'consultant', 'passenger'])->default('passenger')->after('phone');  // Adding 'role' field
-            $table->enum('status', ['active', 'inactive'])->default('active')->after('role');  // Adding 'status' field
+            $table->enum('status', ['inactive', 'active'])->default('inactive')->after('role');  // Adding 'status' field
         });
     }
 

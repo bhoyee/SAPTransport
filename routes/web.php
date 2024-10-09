@@ -98,22 +98,23 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Email Verification Routes
 
+// Email Verification Routes
+
+// Show the email verification notice (This route requires auth)
 Route::get('/email/verify', [VerificationController::class, 'show'])->middleware('auth')->name('verification.notice');
 
+// Verify email route (no 'auth' middleware required)
 Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
+    ->middleware(['signed'])->name('verification.verify');
 
-    ->middleware(['auth', 'signed'])->name('verification.verify');
-
+// Resend the email verification link (This route requires auth)
 Route::post('/email/resend', [VerificationController::class, 'resend'])
-
     ->middleware(['auth', 'throttle:6,1'])->name('verification.resend');
 
+// Email verification success page
 Route::get('/email/verified-success', function () {
-
     return view('auth.verification-success');
-
 })->name('verification.success');
-
 
 
 // Social Login Routes

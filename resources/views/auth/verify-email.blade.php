@@ -20,7 +20,7 @@
     @endif
 
     <p>
-        Before proceeding, please check your email for a verification link.
+        Before proceeding, please check your email including your inbox and spam folder for a verification link.
         If you did not receive the email,
 
         <!-- Form to request a new verification link -->
