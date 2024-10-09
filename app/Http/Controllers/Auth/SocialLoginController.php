@@ -97,6 +97,7 @@ class SocialLoginController extends Controller
                 'email' => $socialUser->email,
                 'password' => Hash::make('password'), // Default password
                 'provider' => $provider,
+                'status' => 'inactive',
                 'created_by' => $socialUser->email,  // Set created_by as the user's email
             ]);
 
