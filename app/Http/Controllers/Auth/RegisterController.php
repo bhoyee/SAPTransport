@@ -120,7 +120,7 @@ class RegisterController extends Controller
 
         try {
 
-            // Create a new user
+                // Create a new user
 
             $user = User::create([
 
@@ -133,7 +133,10 @@ class RegisterController extends Controller
                 'phone' => $request->phone,
 
                 'gender' => $request->gender,
-                
+
+                'status' => 'inactive',
+
+
                 'created_by' => $request->email,  // Set created_by to the user's own email
 
 
