@@ -19,6 +19,9 @@ use App\Mail\BookingConfirmation;
 use Illuminate\Support\Facades\Log;
 
 use App\Models\User;
+use App\Services\ActivityLogger;
+use App\Models\Notification;
+use App\Mail\BookingAdminNotification; 
 
 
 
@@ -27,146 +30,100 @@ class BookingController extends Controller
 {
 
     public function store(Request $request)
-
     {
-
-                // Check if the user is logged in
-
-       if (!Auth::check()) {
-
+        // Check if the user is logged in
+        if (!Auth::check()) {
             return back()->with('error', 'You need to login before booking a trip.');
         }
-
-            
-
-                // Check if the user's email is verified
-
-    if (Auth::user()->email_verified_at === null) {
-
-        return redirect()->route('verification.notice')
-
-            ->with('error', 'You need to verify your email before booking a trip.');
-
-    }
-
-
-
     
-
-        // Validate the form inputs
-
-        $request->validate([
-
-            'service_type' => 'required',
-
-            'trip_type' => 'required',
-
-            'airport_name' => 'nullable|string',
-
-            'vehicle_type' => 'required|string',
-
-            'pickup_address' => 'nullable|string',
-
-            'dropoff_address' => 'nullable|string',
-
-            'pickup_date' => 'nullable|date',
-
-            'pickup_time' => 'nullable',
-
-            'number_adults' => 'required|integer|min:1',
-
-            'number_children' => 'nullable|integer',
-
-            'return_pickup_date' => 'nullable|date',  // Only for round trip
-
-            'return_pickup_time' => 'nullable'        // Only for round trip
-
-        ]);
-
-    
-
-        \Log::info('BookingController@store invoked.');
-
-    
-
-        // Create the booking record
-
-        $booking = Booking::create([
-
-            'user_id' => Auth::id(),
-
-            'service_type' => $request->input('service_type'),
-
-            'trip_type' => $request->input('trip_type'),
-
-            'status' => 'pending',
-
-            'airport_name' => $request->input('airport_name'),
-
-            'vehicle_type' => $request->input('vehicle_type'),
-
-            'pickup_address' => $request->input('pickup_address'),
-
-            'dropoff_address' => $request->input('dropoff_address'),
-
-            'pickup_date' => $request->input('pickup_date'),
-
-            'pickup_time' => $request->input('pickup_time'),
-
-            'return_pickup_date' => $request->input('return_pickup_date'),
-
-            'return_pickup_time' => $request->input('return_pickup_time'),
-
-            'number_adults' => $request->input('number_adults'),
-
-            'number_children' => $request->input('number_children'),
-
-        ]);
-
-    
-
-        \Log::info('Booking created successfully.', ['booking_id' => $booking->id]);
-
-    
-
-        $user = Auth::user(); // Get the authenticated user
-
-    
-
-        \Log::info('Attempting to send email to: ' . $user->email);
-
-    
-
-        // Send the confirmation email, passing both Booking and User
-
-        try {
-
-                // Include the booking status (default is 'pending')
-
-                $status = $booking->status;
-
-                Mail::to($user->email)->send(new BookingConfirmation($booking, $user, $status));
-
-                \Log::info('Email sent successfully.');
-
-        } catch (\Exception $e) {
-
-            \Log::error('Failed to send email: ' . $e->getMessage());
-
+        // Check if the user's email is verified
+        if (Auth::user()->email_verified_at === null) {
+            return redirect()->route('verification.notice')
+                ->with('error', 'You need to verify your email before booking a trip.');
         }
-
     
-
-        \Log::info('Redirecting to dashboard.');
-
+        // Validate the form inputs
+        $request->validate([
+            'service_type' => 'required',
+            'trip_type' => 'required',
+            'airport_name' => 'nullable|string',
+            'vehicle_type' => 'required|string',
+            'pickup_address' => 'nullable|string',
+            'dropoff_address' => 'nullable|string',
+            'pickup_date' => 'nullable|date',
+            'pickup_time' => 'nullable',
+            'number_adults' => 'required|integer|min:1',
+            'number_children' => 'nullable|integer',
+            'return_pickup_date' => 'nullable|date',  // Only for round trip
+            'return_pickup_time' => 'nullable'        // Only for round trip
+        ]);
     
+        \Log::info('BookingController@store invoked.');
+    
+        // Create the booking record
+        $booking = Booking::create([
+            'user_id' => Auth::id(),
+            'service_type' => $request->input('service_type'),
+            'trip_type' => $request->input('trip_type'),
+            'status' => 'pending',
+            'airport_name' => $request->input('airport_name'),
+            'vehicle_type' => $request->input('vehicle_type'),
+            'pickup_address' => $request->input('pickup_address'),
+            'dropoff_address' => $request->input('dropoff_address'),
+            'pickup_date' => $request->input('pickup_date'),
+            'pickup_time' => $request->input('pickup_time'),
+            'return_pickup_date' => $request->input('return_pickup_date'),
+            'return_pickup_time' => $request->input('return_pickup_time'),
+            'number_adults' => $request->input('number_adults'),
+            'number_children' => $request->input('number_children'),
+        ]);
+    
+        \Log::info('Booking created successfully.', ['booking_id' => $booking->id]);
+    
+        // Log the booking activity
+        ActivityLogger::log('Booking Created', 'Booking created for user: ' . Auth::user()->email . ', Booking Reference: ' . $booking->booking_reference);
+    
+        $user = Auth::user(); // Get the authenticated user
+    
+        \Log::info('Attempting to send email to: ' . $user->email);
+    
+        // Send the confirmation email
+        try {
+            $status = $booking->status;
+            Mail::to($user->email)->send(new BookingConfirmation($booking, $user, $status));
+            \Log::info('Email sent successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Failed to send email: ' . $e->getMessage());
+        }
+    
+        // Log the successful booking completion
+        ActivityLogger::log('Booking Completed', 'Booking successfully completed for user: ' . Auth::user()->email);
+    
+        // Push notification to all admin and consultant users
+        $adminConsultantUsers = User::whereIn('role', ['admin', 'consultant'])->get();
+        foreach ($adminConsultantUsers as $adminConsultant) {
+            Notification::create([
+                'user_id' => $adminConsultant->id,
+                'message' => 'A new booking has been made by ' . Auth::user()->name . '. Booking Reference: ' . $booking->booking_reference,
+                'type' => 'booking',
+                'status' => 'unread',
+                'related_user_name' => Auth::user()->name, 
 
-     // Return to the same page with success message and booking reference
-
+            ]);
+        }
+    
+        // Send an email notification to the admin email
+        try {
+            Mail::to('no-reply@saptransportationandlogistics.ng')->send(new BookingAdminNotification($booking));
+            \Log::info('Email notification sent to admin.');
+        } catch (\Exception $e) {
+            \Log::error('Failed to send email notification to admin: ' . $e->getMessage());
+        }
+    
+        // Return to the same page with success message and booking reference
         return back()->with(['success' => 'Booking successfully completed!', 'booking_reference' => $booking->booking_reference]);
-
     }
-
+    
     
 
     public function checkStatus(Request $request)
