@@ -21,6 +21,8 @@ use App\Http\Controllers\AccountController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Admin\UserReportController;
 
+use App\Http\Controllers\NotificationController;
+
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController; // Alias for Admin DashboardController
 use App\Http\Controllers\Admin\UserController as AdminUserController; // Alias for Admin UserController
@@ -315,6 +317,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/passenger/bookings/chart-data', [PassengerHomeController::class, 'getChartData'])->name('passenger.bookings.chartData');
     Route::get('/passenger/activities', [PassengerHomeController::class, 'getUserActivities'])->name('passenger.activities');
 });
+
+//Notification
+Route::get('/notifications/recent', [NotificationController::class, 'fetchRecentNotifications'])->name('notifications.recent');
+Route::get('/notifications', [NotificationController::class, 'viewAll'])->name('notifications.index');
+Route::get('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+
+Route::get('admin/notifications/view-all', [NotificationController::class, 'viewAll'])->name('notifications.index');
+
+// Change this route from GET to POST
+Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+
 
 
 // Admin routes
