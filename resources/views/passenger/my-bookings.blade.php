@@ -17,6 +17,7 @@
                     <th>Service Type</th>
                     <th>Pickup Date</th>
                     <th>Status</th>
+                    <td>Updated At</td>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -38,6 +39,8 @@
                             {{ ucfirst($booking->status) }}
                         </span>
                     </td>
+                    <td>{{ \Carbon\Carbon::parse($booking->updated_at)->format('d M, Y') }}</td>
+
                     <td>
                         <!-- Edit Button -->
                         <a href="{{ route('booking.edit', $booking->id) }}" 
