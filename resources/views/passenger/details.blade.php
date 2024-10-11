@@ -113,6 +113,14 @@
                         <p>{{ $booking->return_pickup_time }}</p>
                     </div>
                 @endif
+
+                                <!-- Updated at -->
+                                @if (!empty($booking->updated_at))
+                    <div class="col-md-6">
+                        <strong>Updated At:</strong>
+                        <p>{{ $booking->updated_at }}</p>
+                    </div>
+                @endif
             </div>
 
             <!-- Invoice and Payment Details -->
