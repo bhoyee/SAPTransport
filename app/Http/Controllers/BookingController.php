@@ -22,6 +22,8 @@ use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Models\Notification;
 use App\Mail\BookingAdminNotification; 
+use App\Mail\BookingCancellationAdminNotification;
+use App\Mail\BookingCancellation;
 
 
 
@@ -111,14 +113,22 @@ class BookingController extends Controller
 
             ]);
         }
-    
-        // Send an email notification to the admin email
+
+    // Send an email notification to the admin email
         try {
-            Mail::to('no-reply@saptransportationandlogistics.ng')->send(new BookingAdminNotification($booking));
-            \Log::info('Email notification sent to admin.');
+            $adminEmail = config('mail.admin_email');  // Fetch email from config
+            Mail::to($adminEmail)->send(new BookingAdminNotification($booking));
         } catch (\Exception $e) {
             \Log::error('Failed to send email notification to admin: ' . $e->getMessage());
         }
+    
+        // Send an email notification to the admin email
+        // try {
+        //     Mail::to('no-reply@saptransportationandlogistics.ng')->send(new BookingAdminNotification($booking));
+        //     \Log::info('Email notification sent to admin.');
+        // } catch (\Exception $e) {
+        //     \Log::error('Failed to send email notification to admin: ' . $e->getMessage());
+        // }
     
         // Return to the same page with success message and booking reference
         return back()->with(['success' => 'Booking successfully completed!', 'booking_reference' => $booking->booking_reference]);
@@ -208,21 +218,60 @@ class BookingController extends Controller
         try {
             // Find the booking by its ID
             $booking = Booking::findOrFail($id);
-
+    
             // Check if the booking is cancelable (only pending status can be cancelled)
             if ($booking->status !== 'pending') {
                 return response()->json(['error' => 'Booking cannot be cancelled.'], 400);
             }
-
+    
             // Update the booking status to cancelled
             $booking->update(['status' => 'cancelled']);
-
+    
+            // Log the user activity for cancellation
+            ActivityLogger::log('Booking Cancelled', 'Booking cancelled by user: ' . auth()->user()->email . ', Booking Reference: ' . $booking->booking_reference);
+    
+            $user = auth()->user(); // Get the authenticated user
+    
+            // Send cancellation email to the user
+            try {
+                Mail::to($user->email)->send(new BookingCancellation($booking, $user));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send cancellation email to user: ' . $e->getMessage());
+            }
+    
+            // Notify admin and consultants about the cancellation
+            $adminConsultantUsers = User::whereIn('role', ['admin', 'consultant'])->get();
+            foreach ($adminConsultantUsers as $adminConsultant) {
+                Notification::create([
+                    'user_id' => $adminConsultant->id,
+                    'message' => 'Booking cancelled by ' . $user->name . '. Booking Reference: ' . $booking->booking_reference,
+                    'type' => 'booking',
+                    'status' => 'unread',
+                    'related_user_name' => $user->name,
+                ]);
+            }
+    
+            // Send cancellation email to admin
+            // try {
+            //     Mail::to('no-reply@saptransportationandlogistics.ng')->send(new BookingCancellationAdminNotification($booking, $adminConsultantUsers));
+            // } catch (\Exception $e) {
+            //     \Log::error('Failed to send cancellation email to admin: ' . $e->getMessage());
+            // }
+            // Send cancellation email to admin using config-based admin email
+            try {
+                $adminEmail = config('mail.admin_email');  // Fetch email from config
+                Mail::to($adminEmail)->send(new BookingCancellationAdminNotification($booking, $adminConsultantUsers));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send cancellation email to admin: ' . $e->getMessage());
+            }
+        
             return response()->json(['success' => true, 'message' => 'Booking cancelled successfully.']);
         } catch (\Exception $e) {
             \Log::error('Error cancelling booking: ' . $e->getMessage());
             return response()->json(['error' => 'An error occurred while cancelling the booking.'], 500);
         }
     }
+
 
     public function myBookings()
     {
@@ -236,12 +285,6 @@ class BookingController extends Controller
         return view('passenger.my-bookings', compact('bookings'));
     }
     
-
-
- 
-
-
-
 
 }
 
