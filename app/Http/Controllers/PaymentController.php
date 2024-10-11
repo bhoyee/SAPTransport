@@ -9,7 +9,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log; // <-- Add this line
 use Paystack;
 use Illuminate\Support\Facades\Redirect;
-
+use App\Services\ActivityLogger;
+use App\Models\Notification;
+use App\Mail\PaymentAdminNotification;
+use App\Mail\PaymentConfirmation;
 
 class PaymentController extends Controller
 {
@@ -185,6 +188,39 @@ class PaymentController extends Controller
       
                   \Log::info("Payment updated for invoice {$invoice->invoice_number}");
       
+                   // Log user activity for the successful payment
+                    ActivityLogger::log('Payment Completed', 'Payment completed for booking reference: ' . $payment->booking->booking_reference . ' by user: ' . $payment->user->email);
+
+
+                    // Send notification to all admin and consultant users
+                    $adminConsultantUsers = User::whereIn('role', ['admin', 'consultant'])->get();
+                    foreach ($adminConsultantUsers as $adminConsultant) {
+                        Notification::create([
+                            'user_id' => $adminConsultant->id,
+                            'message' => 'Payment completed for booking reference: ' . $payment->booking->booking_reference . ' by user: ' . $payment->user->name,
+                            'type' => 'payment',
+                            'status' => 'unread',
+                            'related_user_name' => $payment->user->name,
+                        ]);
+                    }
+
+                    // Send payment confirmation email to the user
+                    try {
+                        Mail::to($payment->user->email)->send(new PaymentConfirmation($payment->booking));
+                        \Log::info('Payment confirmation email sent to user: ' . $payment->user->email);
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to send payment confirmation email to user: ' . $e->getMessage());
+                    }
+
+                     // Send notification email to the admin
+                    try {
+                        $adminEmail = config('mail.admin_email');
+                        Mail::to($adminEmail)->send(new PaymentAdminNotification($payment->booking));
+                        \Log::info('Payment notification email sent to admin.');
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to send payment notification email to admin: ' . $e->getMessage());
+                    }
+
                   // Redirect to a success page
                   return redirect()->route('invoice.paid', ['invoice' => $invoice->id])->with('success', 'Payment Successful!');
               } else {
