@@ -329,6 +329,10 @@ Route::get('admin/notifications/view-all', [NotificationController::class, 'view
 Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
 
 
+//contact form
+Route::post('/contact/submit', [ContactController::class, 'submit'])->name('contact.submit');
+
+
 
 // Admin routes
 // Admin routes
