@@ -6,6 +6,8 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Services\ActivityLogger;
+
 
 class BookingEditController extends Controller
 {
@@ -106,6 +108,10 @@ class BookingEditController extends Controller
                 'return_pickup_date' => $request->input('return_pickup_date'),
                 'return_pickup_time' => $request->input('return_pickup_time')
             ]);
+
+            // Log the user activity after successful update
+            ActivityLogger::log('Booking Updated', 'Booking ID ' . $booking->id . ' updated by user: ' . auth()->user()->email);
+
 
             // Flash success message
             return redirect()->route('booking.edit', $booking->id)->with('success', 'Booking updated successfully.');
