@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
+use App\Services\ActivityLogger;
+use App\Models\User;
+use App\Models\Notification;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ContactConfirmation;
+use App\Mail\AdminNotification;
 class ContactController extends Controller
 {
     // Display ticket creation form
@@ -118,4 +124,63 @@ class ContactController extends Controller
 
         return redirect()->route('viewTicket', $id)->with('success', 'Your reply has been added.');
     }
+
+    // contact form 
+
+    public function submit(Request $request)
+    {
+        $request->validate([
+            'categories' => 'required',
+            'fullname' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:15',
+            'email' => 'required|email',
+            'message' => 'required|string',
+        ]);
+
+        try {
+            // Generate a unique ticket number
+            $ticketNum = strtoupper(Str::random(6));
+
+            // Create a contact record
+            $contact = Contact::create([
+                'category' => $request->categories,
+                'fullname' => $request->fullname,
+                'phone_number' => $request->phone,
+                'email_address' => $request->email,
+                'message' => $request->message,
+                'ticket_num' => $ticketNum,
+                'status' => 'open',
+                'priority' => 'low',
+            ]);
+
+            // Send email to user
+            Mail::to($contact->email_address)->send(new ContactConfirmation($contact));
+
+            // Send email to admin
+            Mail::to(config('mail.admin_email'))->send(new AdminNotification($contact));
+
+            // Notify users with admin and consultant roles
+            $adminConsultantUsers = User::whereIn('role', ['admin', 'consultant'])->get();
+
+            foreach ($adminConsultantUsers as $adminConsultant) {
+                Notification::create([
+                    'user_id' => $adminConsultant->id,
+                    'message' => 'A new contact form submission from ' . $contact->fullname . ' with ticket number ' . $contact->ticket_num,
+                    'type' => 'message',
+                    'status' => 'unread',
+                    'related_user_name' => $contact->fullname,
+                ]);
+            }
+
+            // Redirect back with success message
+            return redirect()->back()->with('success', 'Message sent successfully!');
+
+        } catch (\Exception $e) {
+            // Redirect back with error message
+            return redirect()->back()->with('error', 'Failed to send message. Please try again.');
+        }
+    }
+    
+    
+    
 }
