@@ -13,6 +13,8 @@ use App\Services\ActivityLogger;
 use App\Models\Notification;
 use App\Mail\PaymentAdminNotification;
 use App\Mail\PaymentConfirmation;
+use Illuminate\Support\Facades\Mail;
+
 
 class PaymentController extends Controller
 {
