@@ -51,6 +51,7 @@ class Booking extends Model
         'return_pickup_date', 
 
          'return_pickup_time', 
+         'created_by',
 
 
 

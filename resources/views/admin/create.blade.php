@@ -66,7 +66,7 @@
                             @enderror
                         </div>
 
-                        <div class="form-group mb-3">
+                        <!-- <div class="form-group mb-3">
                             <label for="password">Password</label>
                             <input id="password" type="password" 
                                    class="form-control @error('password') is-invalid @enderror" 
@@ -83,7 +83,7 @@
                             <input id="password-confirm" type="password" 
                                    class="form-control" 
                                    name="password_confirmation" required>
-                        </div>
+                        </div> -->
 
                         <div class="form-group mb-3">
                             <label for="role">Role</label>

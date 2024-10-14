@@ -72,18 +72,18 @@
                 <li class="nav-item">
                 <li class="nav-item">
                 @if(Auth::check())
-                    @if(Auth::user()->role === 'passenger' && Auth::user()->email_verified_at === null)
-                        <a href="{{ route('verification.notice') }}" id="auth-button" class="btn btn-warning ml-2">
+                    @if(Auth::user()->hasRole('passenger') && Auth::user()->email_verified_at === null)
+                        <a href="{{ route('verification.notice') }}" id="auth-button" class="btn btn-warning ms-2">
                             Verify Your Email
                         </a>
                     @else
                         <a href="{{ route(
-                            Auth::user()->role === 'admin' ? 'admin.dashboard' : 
-                            (Auth::user()->role === 'consultant' ? 'consultant.dashboard' : 'passenger.dashboard')
-                        ) }}" id="auth-button" class="btn btn-primary ml-2">Dashboard</a>
+                            Auth::user()->hasRole('admin') ? 'admin.dashboard' : 
+                            (Auth::user()->hasRole('consultant') ? 'consultant.dashboard' : 'passenger.dashboard')
+                        ) }}" id="auth-button" class="btn btn-primary ms-2">Dashboard</a>
                     @endif
                 @else
-                    <a href="{{ route('login') }}" id="auth-button" class="btn btn-primary ml-2">Sign In / Sign Up</a>
+                    <a href="{{ route('login') }}" id="auth-button" class="btn btn-primary ms-2">Sign In / Sign Up</a>
                 @endif
             </li>
 

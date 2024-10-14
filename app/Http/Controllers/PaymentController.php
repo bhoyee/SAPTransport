@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Payment;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log; // <-- Add this line
+use Illuminate\Support\Facades\Log;
 use Paystack;
 use Illuminate\Support\Facades\Redirect;
 use App\Services\ActivityLogger;
@@ -14,20 +14,28 @@ use App\Models\Notification;
 use App\Mail\PaymentAdminNotification;
 use App\Mail\PaymentConfirmation;
 use Illuminate\Support\Facades\Mail;
-
+use App\Models\User;
 
 class PaymentController extends Controller
 {
+    // Fetch payment history for passengers, consultants, and admins
     public function getPaymentHistory()
     {
         try {
-            $userId = Auth::id();
+            $user = Auth::user();
 
-            // Fetch payments with the associated booking for the logged-in user
-            $payments = Payment::with('booking')
-                               ->where('user_id', $userId)
-                               ->orderBy('payment_date', 'desc')
-                               ->get();
+            if ($user->hasRole('passenger')) {
+                // Passengers only see their own payment history
+                $payments = Payment::with('booking')
+                    ->where('user_id', $user->id)
+                    ->orderBy('payment_date', 'desc')
+                    ->get();
+            } elseif ($user->hasRole('consultant') || $user->hasRole('admin')) {
+                // Consultants and admins can see all payment records
+                $payments = Payment::with('booking')
+                    ->orderBy('payment_date', 'desc')
+                    ->get();
+            }
 
             // Log the payments for debugging
             Log::info('Fetched payments:', $payments->toArray());
@@ -41,19 +49,28 @@ class PaymentController extends Controller
         }
     }
 
+    // Show payment history page with role-based access
     public function paymentHistory()
     {
-        $userId = Auth::id();
+        $user = Auth::user();
 
-        // Fetch all payments for the logged-in user with their associated booking
-        $payments = Payment::with('booking', 'booking.invoice') // Assuming you have a relationship to invoices
-            ->where('user_id', $userId)
-            ->orderBy('payment_date', 'desc')
-            ->paginate(10); // Paginate the results
+        if ($user->hasRole('passenger')) {
+            // Passengers only see their own payments
+            $payments = Payment::with('booking', 'booking.invoice')
+                ->where('user_id', $user->id)
+                ->orderBy('payment_date', 'desc')
+                ->paginate(10);
+        } elseif ($user->hasRole('consultant') || $user->hasRole('admin')) {
+            // Consultants and admins can see all payment records
+            $payments = Payment::with('booking', 'booking.invoice')
+                ->orderBy('payment_date', 'desc')
+                ->paginate(10);
+        }
 
         return view('passenger.payment-history', compact('payments'));
     }
 
+    // Request refund for a specific payment
     public function requestRefund(Request $request)
     {
         $paymentId = $request->input('payment_id');
@@ -72,66 +89,71 @@ class PaymentController extends Controller
         return redirect()->route('payment.history')->with('error', 'Refund request failed.');
     }
 
-
     
+    // Show unpaid payments (specific to logged-in users or all for consultants and admins)
     public function unpaidPayments()
     {
-        // Fetch all unpaid bookings for the logged-in user
-        $unpaidPayments = Payment::with('booking')
-            ->where('user_id', Auth::id())
-            ->where('status', 'unpaid')
-            ->get();
+        $user = Auth::user();
 
-        // Return the view with unpaid bookings
+        if ($user->hasRole('passenger')) {
+            // Passengers see only their own unpaid payments
+            $unpaidPayments = Payment::with('booking')
+                ->where('user_id', $user->id)
+                ->where('status', 'unpaid')
+                ->get();
+        } elseif ($user->hasRole('consultant') || $user->hasRole('admin')) {
+            // Consultants and admins can see all unpaid payments
+            $unpaidPayments = Payment::with('booking')
+                ->where('status', 'unpaid')
+                ->get();
+        }
+
+        // Return the view with unpaid payments
         return view('passenger.makepayments', compact('unpaidPayments'));
     }
 
-      // Function to handle the payment process
-      
-      public function pay(Request $request)
-      {
-          // Find the invoice and booking details
-          $invoice = Invoice::findOrFail($request->invoice_id);
-          $booking = $invoice->booking;
-      
-          // Generate a unique reference by appending a timestamp or random string to the invoice number
-          $transactionReference = $invoice->invoice_number . '-' . uniqid();
-      
-          // Check if an unpaid payment already exists for this booking
-          $existingPayment = Payment::where('booking_id', $booking->id)
-              ->where('status', 'unpaid')
-              ->first();
-      
-          if ($existingPayment) {
-              // Update the existing unpaid payment record with the new reference
-              $existingPayment->update([
-                  'payment_reference' => $transactionReference,  // Store the new reference
-                  'payment_method' => 'paystack',  // Default method until confirmed
-              ]);
-              \Log::info("Existing unpaid payment updated with new reference: $transactionReference");
-          } else {
-              // Insert the payment record with "unpaid" status if no existing record is found
-              Payment::create([
-                  'booking_id' => $booking->id,
-                  'user_id' => $booking->user_id,
-                  'amount' => $invoice->amount,
-                  'status' => 'unpaid',  // Initial unpaid status
-                  'payment_method' => 'paystack',  // Default method until confirmed
-                  'payment_reference' => $transactionReference,  // Store the unique reference
-              ]);
-              \Log::info("New unpaid payment created with reference: $transactionReference");
-          }
-      
-          // Redirect to Paystack payment page with the unique reference
-          return Paystack::getAuthorizationUrl([
-              'email' => $booking->user->email,
-              'amount' => $invoice->amount * 100,  // Amount in kobo
-              'reference' => $transactionReference,  // Use the unique reference
-              'metadata' => [
-                  'booking_id' => $booking->id,
-              ],
-          ])->redirectNow();
-      }
+       // Handle the payment process
+    public function pay(Request $request)
+    {
+        $invoice = Invoice::findOrFail($request->invoice_id);
+        $booking = $invoice->booking;
+
+        // Generate a unique reference for Paystack
+        $transactionReference = $invoice->invoice_number . '-' . uniqid();
+
+        // Check if an unpaid payment already exists for this booking
+        $existingPayment = Payment::where('booking_id', $booking->id)
+            ->where('status', 'unpaid')
+            ->first();
+
+        if ($existingPayment) {
+            $existingPayment->update([
+                'payment_reference' => $transactionReference,
+                'payment_method' => 'paystack',
+            ]);
+            Log::info("Existing unpaid payment updated with new reference: $transactionReference");
+        } else {
+            Payment::create([
+                'booking_id' => $booking->id,
+                'user_id' => $booking->user_id,
+                'amount' => $invoice->amount,
+                'status' => 'unpaid',
+                'payment_method' => 'paystack',
+                'payment_reference' => $transactionReference,
+            ]);
+            Log::info("New unpaid payment created with reference: $transactionReference");
+        }
+
+        // Redirect to Paystack payment page
+        return Paystack::getAuthorizationUrl([
+            'email' => $booking->user->email,
+            'amount' => $invoice->amount * 100,  // Amount in kobo
+            'reference' => $transactionReference,
+            'metadata' => [
+                'booking_id' => $booking->id,
+            ],
+        ])->redirectNow();
+    }
       
       public function handleGatewayCallback()
       {

@@ -9,16 +9,14 @@ use PDF; // Assuming you're using dompdf
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
-
 class UserReportController extends Controller
 {
     public function index()
     {
-        // Check if the authenticated user has the 'admin' role
-        if (Auth::check() && Auth::user()->role === 'admin') {
+        // Check if the authenticated user has the 'admin' role using Spatie's role-based system
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
             \Log::info('Loading view: admin.users.report');
             return view('admin.users.report');
-
         }
 
         return redirect()->route('login')->with('error', 'Unauthorized access.');
@@ -37,9 +35,9 @@ class UserReportController extends Controller
         // Initialize the query and exclude users with 'deleted' status
         $query = User::where('status', '!=', 'deleted');
     
-        // Role filter
+        // Role filter using Spatie's roles
         if (!empty($request->role)) {
-            $query->where('role', $request->role);
+            $query->role($request->role); // Use Spatie's role method instead of direct column access
         }
     
         // Date range filter
@@ -90,20 +88,24 @@ class UserReportController extends Controller
             ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="' . $fileName . '"']
         );
     }
-    
+
     public function showReportPage()
     {
+        // Update the role-based queries using Spatie's role system
         $totalUsers = User::where('status', '!=', 'deleted')->count();
-        $totalPassengers = User::where('role', 'passenger')->where('status', '!=', 'deleted')->count();
-        $totalStaff = User::where('role', '!=', 'passenger')->where('status', '!=', 'deleted')->count();
-            // Total unverified users excluding 'consultant' and 'admin' roles
+        
+        $totalPassengers = User::role('passenger')->where('status', '!=', 'deleted')->count();
+        
+        $totalStaff = User::role('consultant')->where('status', '!=', 'deleted')->count();
+        
+        // Total unverified users excluding 'consultant' and 'admin' roles
         $unverifiedUsers = User::where('status', '!=', 'deleted')
-        ->whereNull('email_verified_at')
-        ->whereNotIn('role', ['consultant', 'admin'])
-        ->count();
+            ->whereNull('email_verified_at')
+            ->whereDoesntHave('roles', function($query) {
+                $query->whereIn('name', ['consultant', 'admin']); // Use roles from Spatie's system
+            })
+            ->count();
 
         return view('admin.users.report', compact('totalUsers', 'totalPassengers', 'totalStaff', 'unverifiedUsers'));
     }
-        
-    
-    }
+}

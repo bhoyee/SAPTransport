@@ -1,9 +1,5 @@
 <?php
 
-// app/Http/Controllers/Auth/LoginController.php
-
-// app/Http/Controllers/Auth/LoginController.php
-
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -22,113 +18,111 @@ class LoginController extends Controller
     }
 
     // Handle the login request
-// Handle the login request
-public function login(Request $request)
-{
-    // Log the login attempt
-    Log::info('Login attempt initiated', ['email' => $request->email]);
+    public function login(Request $request)
+    {
+        // Log the login attempt
+        Log::info('Login attempt initiated', ['email' => $request->email]);
 
-    // Validate the login credentials
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required|string|min:8',
-    ]);
+        // Validate the login credentials
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string|min:8',
+        ]);
 
-    Log::info('Login validation passed');
+        Log::info('Login validation passed');
 
-    // Attempt to log the user in
-    if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {
-        $user = Auth::user();
+        // Attempt to log the user in
+        if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {
+            $user = Auth::user();
 
-        // Log success
-        Log::info('User authenticated', ['email' => $request->email, 'role' => $user->role]);
+            // Log success
+            Log::info('User authenticated', ['email' => $request->email, 'role' => $user->getRoleNames()]);
 
-        // Check for account suspension
-        if ($user->status === 'suspend') {
-            Log::warning('Login attempt for suspended account', ['email' => $user->email]);
+            // Check for account suspension
+            if ($user->status === 'suspend') {
+                Log::warning('Login attempt for suspended account', ['email' => $user->email]);
 
-            // Log the suspension attempt
-            ActivityLogger::log('Login Attempt', 'Suspended account: ' . $request->email);
+                // Log the suspension attempt
+                ActivityLogger::log('Login Attempt', 'Suspended account: ' . $request->email);
 
-            Auth::logout();
-            return redirect()->route('login')->with('error', 'Your account has been suspended, please contact support.');
-        }
-
-        // Check for account deletion
-        if ($user->status === 'deleted') {
-            Log::warning('Login attempt for deleted account', ['email' => $user->email]);
-
-            // Log the deleted account attempt
-            ActivityLogger::log('Login Attempt', 'Deleted account: ' . $request->email);
-
-            Auth::logout();
-            return redirect()->route('login')->with('error', 'Your account has been removed from our system, contact support for further clarification.');
-        }
-
-        // Proceed with the current logic based on the user's role
-        if ($user->role === 'passenger') {
-            // Passengers must have verified email
-            if ($user->email_verified_at === null) {
-                Log::info('Redirecting to verification.notice', ['email' => $user->email]);
-
-                // Log unverified email login attempt
-                ActivityLogger::log('Login Attempt', 'Email not verified: ' . $request->email);
-
-                return redirect()->route('verification.notice')->with('error', 'You need to verify your email before logging in.');
+                Auth::logout();
+                return redirect()->route('login')->with('error', 'Your account has been suspended, please contact support.');
             }
 
-            // Log successful passenger login
-            Log::info('Passenger logged in', ['email' => $user->email]);
+            // Check for account deletion
+            if ($user->status === 'deleted') {
+                Log::warning('Login attempt for deleted account', ['email' => $user->email]);
 
-            ActivityLogger::customLog('Login Success', 'Passenger logged in: ' . $request->email, $user->id);
+                // Log the deleted account attempt
+                ActivityLogger::log('Login Attempt', 'Deleted account: ' . $request->email);
 
-            // Set session lock to false and redirect to passenger dashboard
-            session()->put('is_locked', false);
-            $request->session()->regenerate();
+                Auth::logout();
+                return redirect()->route('login')->with('error', 'Your account has been removed from our system, contact support for further clarification.');
+            }
 
-            return redirect()->route('passenger.dashboard');
+            // Proceed with the logic based on the user's role using Spatie's `hasRole()`
+            if ($user->hasRole('passenger')) {
+                // Passengers must have verified email
+                if ($user->email_verified_at === null) {
+                    Log::info('Redirecting to verification.notice', ['email' => $user->email]);
 
-        } elseif ($user->role === 'admin') {
-            // Admins do not need email verification, log and redirect
-            Log::info('Admin logged in', ['email' => $user->email]);
+                    // Log unverified email login attempt
+                    ActivityLogger::log('Login Attempt', 'Email not verified: ' . $request->email);
 
-            ActivityLogger::customLog('Login Success', 'Admin logged in: ' . $request->email, $user->id);
+                    return redirect()->route('verification.notice')->with('error', 'You need to verify your email before logging in.');
+                }
 
-            session()->put('is_locked', false);
-            $request->session()->regenerate();
+                // Log successful passenger login
+                Log::info('Passenger logged in', ['email' => $user->email]);
 
-            return redirect()->route('admin.dashboard');
+                ActivityLogger::customLog('Login Success', 'Passenger logged in: ' . $request->email, $user->id);
 
-        } elseif ($user->role === 'consultant') {
-            // Consultants do not need email verification, log and redirect
-            Log::info('Consultant logged in', ['email' => $user->email]);
+                // Set session lock to false and redirect to passenger dashboard
+                session()->put('is_locked', false);
+                $request->session()->regenerate();
 
-            ActivityLogger::customLog('Login Success', 'Consultant logged in: ' . $request->email, $user->id);
+                return redirect()->route('passenger.dashboard');
 
-            session()->put('is_locked', false);
-            $request->session()->regenerate();
+            } elseif ($user->hasRole('admin')) {
+                // Admins do not need email verification, log and redirect
+                Log::info('Admin logged in', ['email' => $user->email]);
 
-            return redirect()->route('staff.dashboard');
+                ActivityLogger::customLog('Login Success', 'Admin logged in: ' . $request->email, $user->id);
+
+                session()->put('is_locked', false);
+                $request->session()->regenerate();
+
+                return redirect()->route('admin.dashboard');
+
+            } elseif ($user->hasRole('consultant')) {
+                // Consultants do not need email verification, log and redirect
+                Log::info('Consultant logged in', ['email' => $user->email]);
+
+                ActivityLogger::customLog('Login Success', 'Consultant logged in: ' . $request->email, $user->id);
+
+                session()->put('is_locked', false);
+                $request->session()->regenerate();
+
+                return redirect()->route('staff.dashboard');
+            }
+
+            // If user has an unknown role, log and redirect to login
+            Log::warning('Unknown role attempted login', ['email' => $user->email, 'role' => $user->getRoleNames()]);
+
+            return redirect()->route('login')->withErrors(['error' => 'Unknown role, access denied.']);
         }
 
-        // If user has an unknown role, log and redirect to login
-        Log::warning('Unknown role attempted login', ['email' => $user->email, 'role' => $user->role]);
+        // Log failed login attempt
+        Log::info('Login attempt failed', ['email' => $request->email]);
 
-        return redirect()->route('login')->withErrors(['error' => 'Unknown role, access denied.']);
+        // Log failed login activity
+        ActivityLogger::log('Login Failed', 'Invalid credentials: ' . $request->email);
+
+        // If login attempt fails, throw validation error
+        throw ValidationException::withMessages([
+            'email' => 'The provided credentials do not match our records.',
+        ]);
     }
-
-    // Log failed login attempt
-    Log::info('Login attempt failed', ['email' => $request->email]);
-
-    // Log failed login activity
-    ActivityLogger::log('Login Failed', 'Invalid credentials: ' . $request->email);
-
-    // If login attempt fails, throw validation error
-    throw ValidationException::withMessages([
-        'email' => 'The provided credentials do not match our records.',
-    ]);
-}
-
 
     // Logout the user
     public function logout(Request $request)

@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Services\ActivityLogger;
 
-
 class BookingEditController extends Controller
 {
     // Show the edit form with the current booking details
@@ -17,14 +16,14 @@ class BookingEditController extends Controller
         try {
             // Fetch the booking based on the ID
             $booking = Booking::findOrFail($id);
-    
+
             // Normalize service_type and trip_type to match the front-end values
             if ($booking->service_type == 'Charter Service') {
                 $booking->service_type = 'Charter';
             } elseif ($booking->service_type == 'Airport Transfer') {
                 $booking->service_type = 'AirportTransfer';
             }
-    
+
             if ($booking->trip_type == 'Round Trip') {
                 $booking->trip_type = 'round_trip';
             } elseif ($booking->trip_type == 'One Way') {
@@ -34,15 +33,15 @@ class BookingEditController extends Controller
             } elseif ($booking->trip_type == 'Airport Drop-Off') {
                 $booking->trip_type = 'airport_dropoff';
             }
-    
+
             // Check if the authenticated user is the owner of the booking
             if ($booking->user_id !== Auth::id()) {
                 return redirect()->route('passenger.dashboard')->with('error', 'Unauthorized access.');
             }
-    
+
             // Log the booking data to verify everything is being passed correctly
             Log::info('Booking data for edit:', $booking->toArray());
-    
+
             // Point to the correct view in the 'passenger' folder
             return view('passenger.editbooking', compact('booking'));
         } catch (\Exception $e) {
@@ -50,8 +49,7 @@ class BookingEditController extends Controller
             return redirect()->route('passenger.dashboard')->with('error', 'Unable to load booking details. Please try again later.');
         }
     }
-    
-    
+
     // Handle the update request
     public function update(Request $request, $id)
     {
@@ -112,7 +110,6 @@ class BookingEditController extends Controller
             // Log the user activity after successful update
             ActivityLogger::log('Booking Updated', 'Booking ID ' . $booking->id . ' updated by user: ' . auth()->user()->email);
 
-
             // Flash success message
             return redirect()->route('booking.edit', $booking->id)->with('success', 'Booking updated successfully.');
         } catch (\Exception $e) {
@@ -123,23 +120,21 @@ class BookingEditController extends Controller
         }
     }
 
+    // Show booking details
+    public function show($id, Request $request)
+    {
+        try {
+            // Fetch the booking with the related invoice
+            $booking = Booking::with('invoice')->findOrFail($id);
 
-       // show booking details
+            // Check if the 'from' parameter is set in the request
+            $from = $request->query('from', null);
 
-       public function show($id, Request $request)
-       {
-           // Fetch the booking with the related invoice
-           $booking = Booking::with('invoice')->findOrFail($id);
-       
-           // Check if the 'from' parameter is set in the request
-           $from = $request->query('from', null); 
-       
-           // Pass the 'booking' and 'from' parameters to the view
-           return view('passenger.details', compact('booking', 'from'));
-       }
-
-
-       
-   
-
+            // Pass the 'booking' and 'from' parameters to the view
+            return view('passenger.details', compact('booking', 'from'));
+        } catch (\Exception $e) {
+            Log::error('Error fetching booking details: ' . $e->getMessage());
+            return redirect()->route('passenger.dashboard')->with('error', 'Unable to load booking details. Please try again later.');
+        }
+    }
 }

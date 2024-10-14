@@ -66,42 +66,49 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($users as $user)
-                    <tr>
-                        <td>{{ $user->name }}</td>
-                        <td>{{ $user->email }}</td>
-                        <td>{{ $user->role === 'consultant' ? 'Staff' : ucfirst($user->role) }}</td>
-                        <td>
-                            @if($user->status === 'active')
-                                <span class="badge bg-success">Active</span>
-                            @elseif($user->status === 'inactive')
-                                <span class="badge bg-warning">Inactive</span>
-                            @elseif($user->status === 'suspend')
-                                <span class="badge bg-danger">Suspended</span>
-                            @else
-                                <span class="badge bg-secondary">Deleted</span>
-                            @endif
-                        </td>
-                        <td>{{ $user->created_at->format('Y-m-d H:i:s') }}</td>
-                        <td>
-                            <a href="{{ route('admin.users.show', $user->id) }}" class="btn btn-sm btn-primary">View</a>
-                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-user-id="{{ $user->id }}">Delete</button>
+    @foreach ($users as $user)
+        <tr>
+            <td>{{ $user->name }}</td>
+            <td>{{ $user->email }}</td>
+            <td>
+                @if($user->getRoleNames()->isNotEmpty())
+                    {{ $user->getRoleNames()->first() === 'consultant' ? 'Staff' : ucfirst($user->getRoleNames()->first()) }}
+                @else
+                    No Role Assigned
+                @endif
+            </td>
+            <td>
+                @if($user->status === 'active')
+                    <span class="badge bg-success">Active</span>
+                @elseif($user->status === 'inactive')
+                    <span class="badge bg-warning">Inactive</span>
+                @elseif($user->status === 'suspend')
+                    <span class="badge bg-danger">Suspended</span>
+                @else
+                    <span class="badge bg-secondary">Deleted</span>
+                @endif
+            </td>
+            <td>{{ $user->created_at->format('Y-m-d H:i:s') }}</td>
+            <td>
+                <a href="{{ route('admin.users.show', $user->id) }}" class="btn btn-sm btn-primary">View</a>
+                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-user-id="{{ $user->id }}">Delete</button>
 
-                            <!-- Suspend/Activate Form with Spinner -->
-                            <form action="{{ route('admin.users.suspend', $user->id) }}" method="POST" class="suspend-form" style="display: inline-block;">
-                                @csrf
-                                <button type="submit" class="btn btn-sm {{ $user->status === 'suspend' ? 'btn-secondary' : 'btn-warning' }} suspend-btn">
-                                {{ $user->status === 'suspend' ? 'Activate' : 'Suspend' }}
-                                </button>
-                                <button class="btn btn-sm btn-warning suspend-spinner" type="button" disabled style="display: none;">
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    Processing...
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
+                <!-- Suspend/Activate Form with Spinner -->
+                <form action="{{ route('admin.users.suspend', $user->id) }}" method="POST" class="suspend-form" style="display: inline-block;">
+                    @csrf
+                    <button type="submit" class="btn btn-sm {{ $user->status === 'suspend' ? 'btn-secondary' : 'btn-warning' }} suspend-btn">
+                    {{ $user->status === 'suspend' ? 'Activate' : 'Suspend' }}
+                    </button>
+                    <button class="btn btn-sm btn-warning suspend-spinner" type="button" disabled style="display: none;">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Processing...
+                    </button>
+                </form>
+            </td>
+        </tr>
+    @endforeach
+</tbody>
+
         </table>
     </div>
 </div>

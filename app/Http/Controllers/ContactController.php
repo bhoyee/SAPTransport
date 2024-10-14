@@ -4,17 +4,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Contact;
-use App\Models\TicketReply; // Import TicketReply model
+use App\Models\TicketReply;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-
 use App\Services\ActivityLogger;
 use App\Models\User;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ContactConfirmation;
 use App\Mail\AdminNotification;
+
 class ContactController extends Controller
 {
     // Display ticket creation form
@@ -29,11 +29,11 @@ class ContactController extends Controller
     {
         // Validate form inputs
         $validator = Validator::make($request->all(), [
-            'subject' => 'required|string|max:255', // Added subject validation
+            'subject' => 'required|string|max:255',
             'department' => 'required|in:support,sales,billing',
             'priority' => 'required|in:low,medium,high',
             'message' => 'required|string',
-            'attachment' => 'nullable|mimes:docx,doc,pdf,jpg,jpeg,png|max:2048' // File validation
+            'attachment' => 'nullable|mimes:docx,doc,pdf,jpg,jpeg,png|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -54,14 +54,14 @@ class ContactController extends Controller
         // Create the ticket
         $ticket = Contact::create([
             'ticket_num' => $ticketNumber,
-            'fullname' => Auth::user()->name, // Automatically get user's name
-            'email_address' => Auth::user()->email, // Automatically get user's email
-            'subject' => $request->input('subject'), // Store the subject
+            'fullname' => Auth::user()->name,
+            'email_address' => Auth::user()->email,
+            'subject' => $request->input('subject'),
             'department' => $request->input('department'),
             'priority' => $request->input('priority'),
-            'message' => $request->input('message'), // HTML content from Quill
+            'message' => $request->input('message'),
             'attachment' => $fileName,
-            'status' => 'open', // New tickets are marked as 'open' by default
+            'status' => 'open',
         ]);
 
         return redirect()->back()->with('success', "Ticket created successfully! Ticket Number: {$ticket->ticket_num}");
@@ -88,7 +88,7 @@ class ContactController extends Controller
             return redirect()->route('passenger.my-tickets')->with('error', 'Unauthorized access to this ticket.');
         }
 
-        $replies = TicketReply::with('user')->where('ticket_id', $id)->get();  // Load replies with user info
+        $replies = TicketReply::with('user')->where('ticket_id', $id)->get();
 
         return view('passenger.view-ticket', compact('ticket', 'replies'));
     }
@@ -116,7 +116,7 @@ class ContactController extends Controller
         TicketReply::create([
             'ticket_id' => $ticket->id,
             'user_id' => Auth::id(),
-            'message' => $request->input('message'), // Store the reply as HTML
+            'message' => $request->input('message'),
         ]);
 
         // Mark ticket as 'open' again after a reply
@@ -125,8 +125,7 @@ class ContactController extends Controller
         return redirect()->route('viewTicket', $id)->with('success', 'Your reply has been added.');
     }
 
-    // contact form 
-
+    // Handle contact form submission
     public function submit(Request $request)
     {
         $request->validate([
@@ -159,8 +158,8 @@ class ContactController extends Controller
             // Send email to admin
             Mail::to(config('mail.admin_email'))->send(new AdminNotification($contact));
 
-            // Notify users with admin and consultant roles
-            $adminConsultantUsers = User::whereIn('role', ['admin', 'consultant'])->get();
+            // Notify users with 'admin' or 'consultant' roles
+            $adminConsultantUsers = User::role(['admin', 'consultant'])->get(); // Using Spatie's role system
 
             foreach ($adminConsultantUsers as $adminConsultant) {
                 Notification::create([
@@ -180,7 +179,4 @@ class ContactController extends Controller
             return redirect()->back()->with('error', 'Failed to send message. Please try again.');
         }
     }
-    
-    
-    
 }

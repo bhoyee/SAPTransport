@@ -7,10 +7,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable;
+    use HasRoles, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -23,11 +25,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'phone',
         'gender',
-        'role',     // Added to be fillable
-        'status',   // Added to be fillable
+        'status',   // Keep for tracking user status
         'created_by',
-
     ];
+
+    // protected $dates = ['deleted_at'];  // Track soft deletes
 
     /**
      * The attributes that should be hidden for serialization.
@@ -58,5 +60,29 @@ class User extends Authenticatable implements MustVerifyEmail
 
         // Send the default Laravel email verification notification
         $this->notify(new \Illuminate\Auth\Notifications\VerifyEmail);
+    }
+
+    /**
+     * Example relationship: A user can have many bookings
+     */
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    /**
+     * Accessor for gender: Capitalize the first letter.
+     */
+    public function getGenderAttribute($value)
+    {
+        return ucfirst($value);
+    }
+
+    /**
+     * Mutator for gender: Store gender as lowercase.
+     */
+    public function setGenderAttribute($value)
+    {
+        $this->attributes['gender'] = strtolower($value);
     }
 }
