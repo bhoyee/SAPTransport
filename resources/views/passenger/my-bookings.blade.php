@@ -10,58 +10,54 @@
 <div class="app-card shadow-sm mb-4">
     <div class="app-card-body">
         <table id="bookings-table" class="table table-striped table-bordered table-responsive">
-            <thead>
-                <tr>
-                    <th>Booking Ref</th>
-                    <th>Booking Date</th>
-                    <th>Service Type</th>
-                    <th>Pickup Date</th>
-                    <th>Status</th>
-                    <td>Updated At</td>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($bookings as $booking)
-                <tr>
-                    <td>{{ $booking->booking_reference }}</td>
-                    <td>{{ \Carbon\Carbon::parse($booking->created_at)->format('d M, Y') }}</td>
-                    <td>{{ $booking->service_type }}</td>
-                    <td>{{ \Carbon\Carbon::parse($booking->pickup_date)->format('d M, Y') }}</td>
-                    <td>
-                        <!-- Define badge colors based on booking status -->
-                        <span class="badge 
-                            @if(strtolower($booking->status) == 'completed') bg-success
-                            @elseif(strtolower($booking->status) == 'pending') bg-warning
-                            @elseif(strtolower($booking->status) == 'cancelled') bg-danger
-                            @elseif(strtolower($booking->status) == 'expired') bg-secondary
-                            @endif">
-                            {{ ucfirst($booking->status) }}
-                        </span>
-                    </td>
-                    <td>{{ \Carbon\Carbon::parse($booking->updated_at)->format('d M, Y') }}</td>
+        <thead>
+            <tr>
+                <th>Booking Ref</th>
+                <th style="display:none;">Raw Booking Date</th> <!-- Hidden raw booking date for sorting -->
+                <th>Booking Date</th>
+                <th>Service Type</th>
+                <th>Pickup Date</th>
+                <th>Status</th>
+                <th>Updated At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($bookings as $booking)
+            <tr>
+                <td>{{ $booking->booking_reference }}</td>
+                <td style="display:none;">{{ \Carbon\Carbon::parse($booking->created_at)->format('Y-m-d') }}</td> <!-- Hidden raw date -->
+                <td>{{ \Carbon\Carbon::parse($booking->created_at)->format('d M, Y') }}</td> <!-- Display formatted date -->
+                <td>{{ $booking->service_type }}</td>
+                <td>{{ \Carbon\Carbon::parse($booking->pickup_date)->format('d M, Y') }}</td>
+                <td>
+                    <span class="badge 
+                        @if(strtolower($booking->status) == 'completed') bg-success
+                        @elseif(strtolower($booking->status) == 'pending') bg-warning
+                        @elseif(strtolower($booking->status) == 'cancelled') bg-danger
+                        @elseif(strtolower($booking->status) == 'expired') bg-secondary
+                        @endif">
+                        {{ ucfirst($booking->status) }}
+                    </span>
+                </td>
+                <td>{{ \Carbon\Carbon::parse($booking->updated_at)->format('d M, Y') }}</td>
+                <td>
+                    <a href="{{ route('booking.edit', $booking->id) }}" 
+                        class="btn btn-warning btn-sm {{ in_array(strtolower($booking->status), ['expired', 'cancelled', 'completed']) ? 'disabled' : '' }}" 
+                        {{ in_array(strtolower($booking->status), ['expired', 'cancelled', 'completed']) ? 'aria-disabled="true"' : '' }}>
+                        Edit
+                    </a>
+                    <button class="btn btn-danger btn-sm {{ in_array(strtolower($booking->status), ['expired', 'cancelled', 'completed']) ? 'disabled' : '' }}" 
+                        {{ in_array(strtolower($booking->status), ['expired', 'cancelled', 'completed']) ? 'aria-disabled="true"' : '' }}
+                        data-id="{{ $booking->id }}" type="button">
+                        Cancel
+                    </button>
+                    <a href="{{ route('booking.view', $booking->id) }}" class="btn btn-primary btn-sm">View</a>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
 
-                    <td>
-                        <!-- Edit Button -->
-                        <a href="{{ route('booking.edit', $booking->id) }}" 
-                            class="btn btn-warning btn-sm {{ in_array(strtolower($booking->status), ['expired', 'cancelled', 'completed']) ? 'disabled' : '' }}" 
-                            {{ in_array(strtolower($booking->status), ['expired', 'cancelled', 'completed']) ? 'aria-disabled="true"' : '' }}>
-                            Edit
-                        </a>
-
-                        <!-- Cancel Button -->
-                        <button class="btn btn-danger btn-sm {{ in_array(strtolower($booking->status), ['expired', 'cancelled', 'completed']) ? 'disabled' : '' }}" 
-                            {{ in_array(strtolower($booking->status), ['expired', 'cancelled', 'completed']) ? 'aria-disabled="true"' : '' }}
-                            data-id="{{ $booking->id }}" type="button">
-                            Cancel
-                        </button>
-
-                        <!-- View Button -->
-                        <a href="{{ route('booking.view', $booking->id) }}" class="btn btn-primary btn-sm">View</a>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
         </table>
     </div>
 </div>
@@ -95,8 +91,10 @@
             searching: true,
             ordering: true,
             lengthChange: true,
-            // Specify the column for initial ordering
-            order: [[1, 'desc']], // Order by the second column (Booking Date) in descending order
+            order: [[1, 'desc']], // Use the hidden raw booking date column for sorting
+            columnDefs: [
+                { targets: 1, visible: false } // Hide the raw date column
+            ]
         });
 
         // Handle booking cancellation

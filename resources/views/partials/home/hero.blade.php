@@ -555,6 +555,8 @@ const charterSubmitBtn = document.getElementById('ch-submit-btn');
 const bookSubmitBtn = document.getElementById('bk-submit-btn');
 const pickupDateInput = document.getElementById('pickup-date');
 const pickupTimeInput = document.getElementById('pickup-time');
+const ChpickupDateInput = document.getElementById('pickup-date-tab2');
+const ChpickupTimeInput = document.getElementById('pickup-time-tab2');
 const returnPickupDateInput = document.getElementById('return-pickup-date');
 const returnPickupTimeInput = document.getElementById('return-pickup-time');
 const today = new Date().toISOString().split('T')[0];
@@ -567,6 +569,9 @@ if (returnPickupDateInput) {
     returnPickupDateInput.setAttribute('min', today);
 }
 
+if (ChpickupDateInput) {
+    ChpickupDateInput.setAttribute('min', today);
+}
 // Restrict past times on the same day
 function restrictTime(dateInput, timeInput) {
     const selectedDate = new Date(dateInput.value);

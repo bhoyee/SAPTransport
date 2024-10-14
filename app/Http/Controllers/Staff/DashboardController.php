@@ -8,14 +8,14 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    //
     public function index()
     {
-        // Check if the authenticated user has the 'consultant' role
-        if (Auth::check() && Auth::user()->role === 'consultant') {
+        // Check if the authenticated user has the 'consultant' role using Spatie's hasRole method
+        if (Auth::check() && Auth::user()->hasRole('consultant')) {
             return view('staff.dashboard');
         }
 
+        // Redirect unauthorized users back to the login page with an error message
         return redirect()->route('login')->with('error', 'Unauthorized access.');
     }
 }

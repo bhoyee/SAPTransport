@@ -8,11 +8,10 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    //
     public function index()
     {
-        // Check if the authenticated user has the 'admin' role
-        if (Auth::check() && Auth::user()->role === 'admin') {
+        // Check if the authenticated user has the 'admin' role using Spatie's hasRole method
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
             return view('admin.dashboard');
         }
 

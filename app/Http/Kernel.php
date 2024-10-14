@@ -4,6 +4,7 @@ namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
+
 class Kernel extends HttpKernel
 {
     /**
@@ -17,8 +18,6 @@ class Kernel extends HttpKernel
         \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        \App\Http\Middleware\VerifyCsrfToken::class, // This is your custom middleware now
-
     ];
 
     /**
@@ -35,7 +34,6 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\TrackLastUrl::class,
-
 
             // Additional middleware for the web routes
             \App\Http\Middleware\CheckIfLocked::class,  // Custom lock screen middleware
@@ -54,7 +52,7 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $routeMiddleware = [
-        'auth' => \Illuminate\Auth\Middleware\Authenticate::class, // Correct Laravel-provided Authenticate middleware
+        'auth' => \Illuminate\Auth\Middleware\Authenticate::class, // Laravel-provided Authenticate middleware
         'lock' => \App\Http\Middleware\CheckIfLocked::class, // Custom lock middleware
         'session.timeout' => \App\Http\Middleware\SessionTimeout::class, // Custom session timeout middleware
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class, // Laravel provided middleware
@@ -65,10 +63,6 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class, // Laravel provided middleware
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class, // Laravel provided middleware
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class, // Laravel provided middleware
-        'role' => \App\Http\Middleware\CheckRole::class,  // Ensure you have this registered
-        'admin' => \App\Http\Middleware\AdminMiddleware::class,
-        'csrf' => \App\Http\Middleware\VerifyCsrfToken::class,
-
 
     ];
 }

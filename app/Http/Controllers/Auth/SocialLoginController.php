@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use App\Services\ActivityLogger;
+use Spatie\Permission\Models\Role;
 
 class SocialLoginController extends Controller
 {
@@ -54,7 +55,6 @@ class SocialLoginController extends Controller
     }
 
     // Register or login user
-// Register or login user
     protected function _registerOrLoginUser($socialUser, $provider)
     {
         $existingUser = User::where('email', $socialUser->email)->first();
@@ -101,6 +101,9 @@ class SocialLoginController extends Controller
                 'created_by' => $socialUser->email,  // Set created_by as the user's email
             ]);
 
+            // Assign the 'passenger' role to the newly created user
+            $newUser->assignRole('passenger');
+
             // Log the user in
             Auth::login($newUser);
 
@@ -110,5 +113,4 @@ class SocialLoginController extends Controller
             return redirect()->route('complete.profile');
         }
     }
-
 }

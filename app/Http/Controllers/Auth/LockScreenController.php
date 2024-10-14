@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
+
 class LockScreenController extends Controller
 {
     public function show()
@@ -48,16 +49,15 @@ class LockScreenController extends Controller
         \Log::info('Unlocking session', ['user_id' => $user->id]);
         session()->put('is_locked', false);
     
-        // Redirect based on role
-        if ($user->role === 'admin') {
+        // Redirect based on role using Spatie's hasRole()
+        if ($user->hasRole('admin')) {
             return redirect()->route('admin.dashboard');
-        } elseif ($user->role === 'consultant') {
+        } elseif ($user->hasRole('consultant')) {
             return redirect()->route('staff.dashboard');
         } else {
             return redirect()->route('passenger.dashboard');
         }
     }
-    
 
     public function handleGoogleUnlock()
     {
@@ -85,10 +85,10 @@ class LockScreenController extends Controller
                 \Log::info('Google unlock successful, unlocking session', ['user_id' => $user->id]);
                 session()->put('is_locked', false); // Unlock session
     
-                // Redirect based on role
-                if ($user->role === 'admin') {
+                // Redirect based on role using Spatie's hasRole()
+                if ($user->hasRole('admin')) {
                     return redirect()->route('admin.dashboard');
-                } elseif ($user->role === 'consultant') {
+                } elseif ($user->hasRole('consultant')) {
                     return redirect()->route('staff.dashboard');
                 } else {
                     return redirect()->route('passenger.dashboard');
@@ -104,7 +104,4 @@ class LockScreenController extends Controller
             return redirect()->route('login')->withErrors(['error' => 'An unexpected error occurred. Please try again.']);
         }
     }
-    
-    
-    
 }

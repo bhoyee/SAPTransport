@@ -4,7 +4,7 @@
 
     <div class="app-branding">
 
-        <a class="app-logo" href="{{ route('passenger.dashboard') }}">
+        <a class="app-logo" href="{{ url('/') }}">
 
             <img class="logo-icon me-2" src="{{ asset('assets/images/logo_old.png') }}" alt="logo">
 
@@ -74,7 +74,7 @@
 
 			
 
-					        <a class="nav-link submenu-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#submenu-3" aria-expanded="false" aria-controls="submenu-3">
+					        <a class="nav-link submenu-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#submenu-user" aria-expanded="false" aria-controls="submenu-user">
 
 						        <span class="nav-icon">
 
@@ -99,7 +99,7 @@
 
 					        </a>
 
-					        <div id="submenu-3" class="collapse submenu submenu-3" data-bs-parent="#menu-accordion">
+					        <div id="submenu-user" class="collapse submenu submenu-user" data-bs-parent="#menu-accordion">
 
 						        <ul class="submenu-list list-unstyled">
 
@@ -119,6 +119,65 @@
 					        </div>
 
 					    </li>
+
+
+
+                          <!-- create and manage booking-->
+                          <li class="nav-item has-submenu">
+
+			
+
+                            <a class="nav-link submenu-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#submenu-book" aria-expanded="false" aria-controls="submenu-book">
+
+                                <span class="nav-icon">
+
+								<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-calendar-check" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+
+									<path fill-rule="evenodd" d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+
+									<path fill-rule="evenodd" d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+
+								  </svg>
+
+                                </span>
+
+                                <span class="nav-link-text">Booking</span>
+
+                                <span class="submenu-arrow">
+
+                                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-chevron-down" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+
+                            <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+
+                            </svg>
+
+                            </span>
+
+                            </a>
+
+                            <div id="submenu-book" class="collapse submenu submenu-book" data-bs-parent="#menu-accordion">
+
+                                <ul class="submenu-list list-unstyled">
+
+                                <li class="submenu-item">
+                                    <a class="submenu-link" href="{{ url('/') }}">Book My Trip</a> <!-- Correct the route -->
+                                </li>
+
+
+                                <li class="submenu-item">
+                                    <a class="submenu-link" href="{{ route('admin.bookForSomeone') }}">Book For Someone</a>
+                                </li>
+
+                                <li class="submenu-item">
+                                <a class="submenu-link" href="">Manage Booking</a>
+                                </li>
+
+                                </ul>
+
+                            </div>
+
+                            </li>
+
 
 					    
 

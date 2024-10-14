@@ -13,6 +13,7 @@
         "laravel/tinker": "^2.9",
         "laravel/ui": "^4.5",
         "predis/predis": "*",
+        "spatie/laravel-permission": "^6.9",
         "spatie/laravel-tail": "^4.5",
         "unicodeveloper/laravel-paystack": "^1.2"
     },

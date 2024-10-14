@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Invoice;
+use App\Models\Payment;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log; // <-- Add this line
+use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\ActivityLogger;
 
 class InvoiceController extends Controller
 {
-
+    // Fetch unpaid invoices for logged-in users (passengers)
     public function unpaidPayments()
     {
         // Fetch all unpaid invoices for the logged-in user
@@ -21,45 +23,54 @@ class InvoiceController extends Controller
             ->where('status', 'Unpaid')  // Ensure 'Unpaid' matches your database enum
             ->get();
 
-        // Return the view with unpaid invoices
         return view('passenger.makepayments', compact('unpaidInvoices'));
     }
 
+    // Show an invoice
     public function showInvoice($id)
     {
         $user = Auth::user();  // Fetch the logged-in user
-        $invoice = Invoice::with('booking')->findOrFail($id);  // Fetch the invoice along with booking details
+        $invoice = Invoice::with('booking')->findOrFail($id);
 
-        // Check if the invoice belongs to the logged-in user (optional)
-        if ($invoice->booking->user_id !== $user->id) {
+        // Check if the user is an admin, consultant, or the owner of the invoice
+        if (!$this->canAccessInvoice($invoice, $user)) {
             return redirect()->route('passenger.makepayments')->with('error', 'Unauthorized access to invoice.');
         }
 
-        $booking = $invoice->booking;  // Get the related booking
+        $booking = $invoice->booking;
 
-        // Return the invoice view
         return view('passenger.invoice', compact('user', 'invoice', 'booking'));
     }
 
-    
-
+    // Download an invoice
     public function downloadInvoice($id)
     {
-        $invoice = Invoice::findOrFail($id);
+        $invoice = Invoice::with('booking')->findOrFail($id);
         $booking = $invoice->booking;
         $user = $booking->user;
 
+        if (!$this->canAccessInvoice($invoice, $user)) {
+            return redirect()->back()->with('error', 'Unauthorized access to invoice.');
+        }
+
         $pdf = Pdf::loadView('passenger.invoice-pdf', compact('invoice', 'booking', 'user'));
-        return $pdf->download('invoice_'.$invoice->invoice_number.'.pdf');
+        return $pdf->download('invoice_' . $invoice->invoice_number . '.pdf');
     }
 
+    // Fetch all invoices for logged-in users, admins, and consultants
     public function index()
     {
-        // Fetch all invoices for the logged-in user
-        $userId = Auth::id();
-        $invoices = Invoice::with('booking')->whereHas('booking', function($query) use ($userId) {
-            $query->where('user_id', $userId);
-        })->get();
+        $user = Auth::user();
+
+        // Admins and consultants should view all invoices
+        if ($user->hasRole(['admin', 'consultant'])) {
+            $invoices = Invoice::with('booking')->get();
+        } else {
+            // Passengers only view their own invoices
+            $invoices = Invoice::with('booking')->whereHas('booking', function ($query) {
+                $query->where('user_id', Auth::id());
+            })->get();
+        }
 
         return view('passenger.invoices', compact('invoices'));
     }
@@ -68,47 +79,46 @@ class InvoiceController extends Controller
     public function view($id)
     {
         $invoice = Invoice::with('booking')->findOrFail($id);
-        $user = Auth::user();  // Get the logged-in user
-        $booking = $invoice->booking;  // Get the related booking
-    
-        // Ensure booking is found
-        if (!$booking) {
-            return redirect()->route('passenger.dashboard')->with('error', 'Booking not found.');
+        $user = Auth::user();
+        $booking = $invoice->booking;
+
+        if (!$this->canAccessInvoice($invoice, $user)) {
+            return redirect()->route('passenger.dashboard')->with('error', 'Unauthorized access to invoice.');
         }
-    
+
         return view('passenger.invoice', compact('invoice', 'user', 'booking'));
     }
-    
 
-
+    // Handle payments
     public function pay(Request $request)
     {
-        // Find the invoice and booking details
         $invoice = Invoice::findOrFail($request->invoice_id);
         $booking = $invoice->booking;
 
-        // Generate a unique reference by appending a timestamp or random string to the invoice number
+        // Generate a unique transaction reference
         $transactionReference = $invoice->invoice_number . '-' . uniqid();
 
-        // Insert the payment record with "unpaid" status
+        // Create a payment record with initial 'unpaid' status
         $payment = Payment::create([
             'booking_id' => $booking->id,
             'user_id' => $booking->user_id,
             'amount' => $invoice->amount,
-            'status' => 'unpaid',  // Initial unpaid status
-            'payment_method' => 'paystack',  // Default method until confirmed
-            'payment_reference' => $transactionReference,  // Store the unique reference
+            'status' => 'unpaid',
+            'payment_method' => 'paystack',
+            'payment_reference' => $transactionReference,
         ]);
 
-        // Redirect to Paystack payment page with the unique reference
+        // Redirect to Paystack payment page
         return Paystack::getAuthorizationUrl([
             'email' => $booking->user->email,
-            'amount' => $invoice->amount * 100,  // Amount in kobo
-            'reference' => $transactionReference,  // Use the unique reference
+            'amount' => $invoice->amount * 100,
+            'reference' => $transactionReference,
         ])->redirectNow();
     }
 
-
-
-
+    // Helper function to determine access to an invoice
+    private function canAccessInvoice($invoice, $user)
+    {
+        return $user->hasRole(['admin', 'consultant']) || $invoice->booking->user_id === $user->id;
+    }
 }

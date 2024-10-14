@@ -13,22 +13,33 @@ use Carbon\Carbon;
 
 class PassengerHomeController extends Controller
 {
-    // Fetch recent bookings
+    // Fetch recent bookings for passengers, consultants, and admins
     public function getRecentBookings()
     {
         try {
-            $bookings = Booking::where('user_id', auth()->id())
-                ->orderBy('created_at', 'desc')
-                ->take(4) // Limit the number of recent bookings fetched
-                ->get();
-    
+            $user = Auth::user();
+            
+            if ($user->hasRole('passenger')) {
+                // Passengers only see their own bookings
+                $bookings = Booking::where('user_id', $user->id)
+                    ->orderBy('created_at', 'desc')
+                    ->take(4)
+                    ->get();
+            } elseif ($user->hasRole('consultant') || $user->hasRole('admin')) {
+                // Consultants and admins can see all bookings
+                $bookings = Booking::orderBy('created_at', 'desc')
+                    ->take(4)
+                    ->get();
+            }
+
+            // Check for expired bookings and update status
             foreach ($bookings as $booking) {
                 if ($booking->status === 'pending' && $booking->pickup_date < now()->toDateString()) {
                     $booking->status = 'expired';
                     $booking->save();
                 }
             }
-    
+
             return response()->json($bookings);
         } catch (\Exception $e) {
             Log::error('Error fetching recent bookings: ' . $e->getMessage());
@@ -36,22 +47,31 @@ class PassengerHomeController extends Controller
         }
     }
 
-    // Fetch payment history
+    // Fetch payment history for passengers, consultants, and admins
     public function getPaymentHistory()
     {
         try {
-            $userId = Auth::id();
-    
-            $invoices = Invoice::with('booking')
-                ->whereHas('booking', function($query) use ($userId) {
-                    $query->where('user_id', $userId);
-                })
-                ->orderBy('invoice_date', 'desc')
-                ->limit(4)
-                ->get();
-    
+            $user = Auth::user();
+
+            if ($user->hasRole('passenger')) {
+                // Passengers only see their own payment history
+                $invoices = Invoice::with('booking')
+                    ->whereHas('booking', function ($query) use ($user) {
+                        $query->where('user_id', $user->id);
+                    })
+                    ->orderBy('invoice_date', 'desc')
+                    ->limit(4)
+                    ->get();
+            } elseif ($user->hasRole('consultant') || $user->hasRole('admin')) {
+                // Consultants and admins can see all invoices
+                $invoices = Invoice::with('booking')
+                    ->orderBy('invoice_date', 'desc')
+                    ->limit(4)
+                    ->get();
+            }
+
             Log::info('Fetched invoices:', $invoices->toArray());
-    
+
             return response()->json($invoices);
         } catch (\Exception $e) {
             Log::error('Error fetching payment history: ' . $e->getMessage());
@@ -59,23 +79,34 @@ class PassengerHomeController extends Controller
         }
     }
 
-    // Fetch dashboard data
+    // Fetch dashboard data for passengers, consultants, and admins
     public function fetchDashboardData()
     {
-        $userId = Auth::id();
-    
-        $totalTrips = Booking::where('user_id', $userId)->count() ?? 0;
-        $cancelledTrips = Booking::where('user_id', $userId)
-            ->where('status', 'cancelled')
-            ->count() ?? 0;
-        $upcomingTrips = Booking::where('user_id', $userId)
-            ->whereIn('status', ['pending', 'confirmed'])
-            ->where('pickup_date', '>=', now()->startOfDay())
-            ->count() ?? 0;
-        $totalAmountPaid = Payment::where('user_id', $userId)
-            ->where('status', 'paid')
-            ->sum('amount') ?? 0;
-    
+        $user = Auth::user();
+
+        if ($user->hasRole('passenger')) {
+            // Passengers see their own data
+            $totalTrips = Booking::where('user_id', $user->id)->count() ?? 0;
+            $cancelledTrips = Booking::where('user_id', $user->id)
+                ->where('status', 'cancelled')
+                ->count() ?? 0;
+            $upcomingTrips = Booking::where('user_id', $user->id)
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->where('pickup_date', '>=', now()->startOfDay())
+                ->count() ?? 0;
+            $totalAmountPaid = Payment::where('user_id', $user->id)
+                ->where('status', 'paid')
+                ->sum('amount') ?? 0;
+        } elseif ($user->hasRole('consultant') || $user->hasRole('admin')) {
+            // Consultants and admins see aggregated data
+            $totalTrips = Booking::count() ?? 0;
+            $cancelledTrips = Booking::where('status', 'cancelled')->count() ?? 0;
+            $upcomingTrips = Booking::whereIn('status', ['pending', 'confirmed'])
+                ->where('pickup_date', '>=', now()->startOfDay())
+                ->count() ?? 0;
+            $totalAmountPaid = Payment::where('status', 'paid')->sum('amount') ?? 0;
+        }
+
         return response()->json([
             'totalTrips' => $totalTrips,
             'cancelledTrips' => $cancelledTrips,
@@ -84,21 +115,21 @@ class PassengerHomeController extends Controller
         ]);
     }
 
-    // Fetch chart data
+    // Fetch chart data (no role-based updates needed here)
     public function getChartData(Request $request)
     {
         $filter = $request->get('filter', 'week');
         $userId = Auth::id();
-    
+
         $labels = [];
         $completedBookings = [];
         $cancelledBookings = [];
-    
+
         if ($filter === 'week') {
             $startOfWeek = Carbon::now()->startOfWeek();
             $endOfWeek = Carbon::now()->endOfWeek();
             $labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    
+
             foreach (range(0, 6) as $day) {
                 $currentDay = $startOfWeek->copy()->addDays($day);
                 $completedCount = Booking::where('user_id', $userId)
@@ -116,7 +147,7 @@ class PassengerHomeController extends Controller
             $startOfMonth = Carbon::now()->startOfMonth();
             $endOfMonth = Carbon::now()->endOfMonth();
             $labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-    
+
             foreach (range(0, 3) as $week) {
                 $startOfWeek = $startOfMonth->copy()->addWeeks($week)->startOfWeek();
                 $endOfWeek = $startOfWeek->copy()->endOfWeek();
@@ -133,7 +164,7 @@ class PassengerHomeController extends Controller
             }
         } elseif ($filter === 'year') {
             $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
+
             foreach (range(1, 12) as $month) {
                 $startOfMonth = Carbon::createFromDate(null, $month, 1)->startOfMonth();
                 $endOfMonth = $startOfMonth->copy()->endOfMonth();
@@ -149,7 +180,7 @@ class PassengerHomeController extends Controller
                 $cancelledBookings[] = $cancelledCount;
             }
         }
-    
+
         return response()->json([
             'labels' => $labels,
             'completedBookings' => $completedBookings,
