@@ -103,7 +103,7 @@ Route::middleware(['auth', 'session.timeout', 'role:passenger'])->group(function
 });
 
 // Admin Routes (Protected by Spatie's Role Middleware)
-Route::prefix('admin')->middleware(['auth', 'session.timeout', 'role:admin'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::get('/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');

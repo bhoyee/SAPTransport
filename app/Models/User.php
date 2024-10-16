@@ -85,4 +85,11 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->attributes['gender'] = strtolower($value);
     }
+
+    public function creatorByEmail()
+    {
+        return $this->belongsTo(User::class, 'created_by', 'email');
+    }
+    
+
 }
