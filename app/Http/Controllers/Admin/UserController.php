@@ -43,9 +43,24 @@ class UserController extends Controller
             ->where('user_id', $user->id)
             ->select('action', 'description', 'ip_address', 'created_at', 'updated_at')
             ->get();
-
-        return view('admin.users.show', compact('userDetails', 'userActivities'));
+    
+        // Fetch the user's bookings and invoice details
+        $userBookings = \DB::table('bookings')
+            ->leftJoin('invoices', 'bookings.id', '=', 'invoices.booking_id')
+            ->where('bookings.user_id', $user->id)
+            ->select(
+                'bookings.booking_reference',
+                'bookings.created_at as booking_date',
+                'bookings.status as booking_status',
+                'invoices.invoice_number',
+                'invoices.amount as invoice_amount',
+                'invoices.status as invoice_status'
+            )
+            ->get();
+    
+        return view('admin.users.show', compact('userDetails', 'userActivities', 'userBookings'));
     }
+    
 
     public function edit(User $user)
     {
