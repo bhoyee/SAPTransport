@@ -9,28 +9,29 @@ use Illuminate\Support\Facades\Hash;
 
 class LockScreenController extends Controller
 {
+
     public function show()
     {
-        // Log for debugging
-        \Log::info('LockScreenController@show called');
-
-        // Check if session is locked
-        if (session('is_locked', false)) {
-            \Log::info('Session is locked, showing lock screen');
-            return view('auth.lockscreen');
-        }
-
-        \Log::info('Session is not locked, redirecting to login');
-        return redirect()->route('login');
+        return view('auth.lockscreen');  // Update the path to reflect the correct location
     }
+
 
     public function unlock(Request $request)
     {
-        $user = Auth::user();
+        \Log::info('Unlock process initiated by user ID: ' . auth()->id());
     
-        // Check if password matches
-        if (is_null($request->password) || !Hash::check($request->password, $user->password)) {
-            \Log::info('Invalid password provided');
+        // Get the currently authenticated user
+        $user = Auth::user();
+        
+        // Check if the user exists and password was entered
+        if (is_null($request->password)) {
+            \Log::info('Password was not provided');
+            return redirect()->route('lockscreen.show')->withErrors(['password' => 'Please enter a password.']);
+        }
+    
+        // Check if the password matches the user's password
+        if (!Hash::check($request->password, $user->password)) {
+            \Log::info('Invalid password provided by user ID: ' . $user->id);
             return redirect()->route('lockscreen.show')->withErrors(['password' => 'Invalid password.']);
         }
     
@@ -45,10 +46,10 @@ class LockScreenController extends Controller
             return redirect()->route('login')->withErrors(['error' => 'Your account has been removed from the system, please contact support.']);
         }
     
-        // Unlock the session
-        \Log::info('Unlocking session', ['user_id' => $user->id]);
-        session()->put('is_locked', false);
-    
+        // Log successful unlock
+        \Log::info('Unlocking session for user ID: ' . $user->id);
+        session()->forget('is_locked'); // Clear the lock session variable
+        
         // Redirect based on role using Spatie's hasRole()
         if ($user->hasRole('admin')) {
             return redirect()->route('admin.dashboard');
@@ -58,6 +59,7 @@ class LockScreenController extends Controller
             return redirect()->route('passenger.dashboard');
         }
     }
+    
 
     public function handleGoogleUnlock()
     {
@@ -104,4 +106,14 @@ class LockScreenController extends Controller
             return redirect()->route('login')->withErrors(['error' => 'An unexpected error occurred. Please try again.']);
         }
     }
+
+    public function checkSessionStatus()
+    {
+        if (Auth::check()) {
+            return response()->json(['active' => true]);
+        } else {
+            return response()->json(['active' => false]);
+        }
+    }
+
 }
