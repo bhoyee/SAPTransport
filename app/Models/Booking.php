@@ -51,7 +51,10 @@ class Booking extends Model
         'return_pickup_date', 
 
          'return_pickup_time', 
+
          'created_by',
+
+         'updated_by',
 
 
 
@@ -100,6 +103,15 @@ class Booking extends Model
         return $this->belongsTo(User::class);
 
     }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by', 'email');  // Assuming 'updated_by' stores the email
+    }
+
+
+
+    
 
     // Define the relationship to the Payment model
     public function payments()
@@ -223,6 +235,12 @@ class Booking extends Model
         }
 
     }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by', 'email');  // Assuming created_by stores the creator's email
+    }
+
 
 }
 
