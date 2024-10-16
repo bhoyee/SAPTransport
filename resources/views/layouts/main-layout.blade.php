@@ -197,10 +197,54 @@
     <div class="whatsapp-launcher">
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
     </div>
+    <script>
+    let idleTime = 0;
+    const lockTimeout = 10 * 60 * 1000; // 10 minutes for lock screen
+    const totalTimeout = 20 * 60 * 1000; // 20 minutes for session expiration
 
-    <!-- Scripts -->
+    // Increment the idle time counter every minute
+    let idleInterval = setInterval(timerIncrement, 60000); // 1 minute check interval
+
+    // Reset the idle timer on user activity
+    window.onmousemove = resetTimer;
+    window.onkeypress = resetTimer;
+    window.onscroll = resetTimer;
+    window.onclick = resetTimer;
+
+    function resetTimer() {
+        idleTime = 0; // Reset the timer to 0
+        updateLastActivity(); // Update the last activity on the server
+    }
+
+    function timerIncrement() {
+        idleTime += 60000; // Increment idle time by 1 minute
+
+        if (idleTime >= lockTimeout) {
+            // Redirect to the lock screen after 10 minutes of inactivity
+            window.location.href = '/lock';
+        }
+
+        if (idleTime >= totalTimeout) {
+            // Redirect to the home page after 20 minutes of inactivity (session timeout)
+            window.location.href = '/';
+        }
+    }
+
+    function updateLastActivity() {
+        // Use AJAX call to update the session activity timestamp
+        fetch('/update-last-activity', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json'
+            }
+        }).catch(err => console.error('Failed to update last activity', err));
+    }
+</script>
+
+
     
-<script>
+<!-- <script>
     let idleTime = 0;
     const maxIdleTime = 180; // 10 minutes in seconds
 
@@ -234,7 +278,7 @@
     document.addEventListener('keypress', () => idleTime = 0);
     document.addEventListener('click', () => idleTime = 0);
     document.addEventListener('scroll', () => idleTime = 0);
-</script>
+</script> -->
 
 
 

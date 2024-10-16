@@ -2,6 +2,7 @@
 
 @section('content')
 <h1 class="app-page-title">Generate User Report</h1>
+<p style="font-size: small; font-weight: bold;">Note: Total Users include (admin) while the rest doesn't .</p>
 <!-- Cards for Statistics -->
 <div class="row mb-4">
     <!-- Total Users Card -->

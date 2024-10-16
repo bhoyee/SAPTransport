@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'check.role' => \App\Http\Middleware\CheckRole::class,
+            'lock' => \App\Http\Middleware\CheckIfLocked::class, // Custom lock middleware
+            'session.timeout' => \App\Http\Middleware\SessionTimeout::class,
+            
 
         ]);
         

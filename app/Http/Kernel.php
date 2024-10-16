@@ -37,6 +37,11 @@ class Kernel extends HttpKernel
 
             // Additional middleware for the web routes
             \App\Http\Middleware\CheckIfLocked::class,  // Custom lock screen middleware
+            \App\Http\Middleware\CheckRole::class, // Add this line
+            \App\Http\Middleware\SessionTimeout::class, // Add this line
+            \App\Http\Middleware\TrackLastUrl::class, // Add this line
+
+
         ],
 
         'api' => [
@@ -58,7 +63,7 @@ class Kernel extends HttpKernel
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class, // Laravel provided middleware
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class, // Laravel provided middleware
         'can' => \Illuminate\Auth\Middleware\Authorize::class, // Laravel provided middleware
-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class, // Custom middleware
+        // 'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class, // Custom middleware
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class, // Laravel provided middleware
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class, // Laravel provided middleware
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class, // Laravel provided middleware

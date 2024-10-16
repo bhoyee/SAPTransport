@@ -50,12 +50,11 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
-           // Handle CSRF Token Mismatch or Session Timeout (419)
-        if ($exception instanceof TokenMismatchException || $exception instanceof SessionExpiredException) {
-            // Redirect to login page with a session expired message
-            return redirect()->route('login')->with('message', 'Your session has expired. Please log in again.');
+        if ($exception instanceof \Illuminate\Session\TokenMismatchException) {
+            return redirect('/')->with('message', 'Your session has expired. Please log in again.');
         }
-
+    
         return parent::render($request, $exception);
     }
+    
 }

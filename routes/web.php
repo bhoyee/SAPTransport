@@ -90,7 +90,7 @@ Route::fallback(function () {
 });
 
 // Passenger Dashboard Routes (Protected by Role)
-Route::middleware(['auth', 'role:passenger'])->group(function () {
+Route::middleware(['auth', 'session.timeout', 'role:passenger'])->group(function () {
     Route::get('/passenger/dashboard', [PassengerController::class, 'dashboard'])->name('passenger.dashboard');
     Route::get('/passenger/recent-bookings', [PassengerHomeController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
     Route::get('/passenger/payment-history', [PassengerHomeController::class, 'getPaymentHistory']);
@@ -103,7 +103,7 @@ Route::middleware(['auth', 'role:passenger'])->group(function () {
 });
 
 // Admin Routes (Protected by Spatie's Role Middleware)
-Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'session.timeout', 'role:admin'])->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::get('/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
@@ -116,7 +116,39 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show'); // Add this route
 
+    // Admin routes for managing bookings / Admin Booking Routes
+    Route::get('/manage-bookings', [AdminBookingController::class, 'manageBookings'])->name('admin.bookings.manage');
+    Route::post('/bookings/update-status/{id}', [AdminBookingController::class, 'updateBookingStatus'])->name('admin.bookings.updateStatus');
+
+    Route::post('/bookings/{id}/complete', [AdminBookingController::class, 'completeBooking'])->name('admin.bookings.complete');
+
+    Route::get('/bookings/{id}/view', [AdminBookingController::class, 'viewBooking'])->name('admin.bookings.view');
+    Route::get('/bookings/{id}/edit', [AdminBookingController::class, 'editBooking'])->name('admin.bookings.edit');
+    Route::put('/admin/bookings/{id}', [AdminBookingController::class, 'updateBooking'])->name('admin.bookings.update');
+    Route::post('/bookings/{id}/cancel', [AdminBookingController::class, 'cancelBooking'])->name('admin.bookings.cancel');
+    Route::delete('/bookings/{id}/delete', [AdminBookingController::class, 'deleteBooking'])->name('admin.bookings.delete');
+    Route::post('/bookings/{id}/update-status', [BookingController::class, 'updateBookingStatus'])->name('admin.bookings.updateStatus');
+
+
+
+
+// Route to load the search page where the admin enters the booking reference
+Route::get('/admin/bookings/confirm', [AdminBookingController::class, 'searchBooking'])->name('admin.bookings.confirm-search');
+
+
+
+
+// Route to handle the search and display the booking info if found
+Route::post('/admin/bookings/confirm-search', [AdminBookingController::class, 'searchBooking'])->name('admin.bookings.confirm-search-post');
+
+// Route to confirm a booking (requires the booking ID)
+Route::post('/admin/bookings/{id}/confirm', [AdminBookingController::class, 'confirmBooking'])->name('admin.bookings.confirm');
+
+
 });
+
+
+
 
 // Staff Routes (Protected by Role Middleware)
 Route::prefix('staff')->middleware(['auth', 'role:consultant'])->group(function () {
@@ -146,11 +178,23 @@ Route::get('/admin/dashboard', function () {
 Route::post('/contact/submit', [ContactController::class, 'submit'])->name('contact.submit');
 
 // Screen Lock Routes (Optional)
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/lock', [LockScreenController::class, 'show'])->name('lockscreen.show');
     Route::post('/unlock', [LockScreenController::class, 'unlock'])->name('lockscreen.unlock');
     Route::get('/auth/google/unlock', [LockScreenController::class, 'handleGoogleUnlock'])->name('auth.google.unlock');
 });
+
+// Add this route in your web.php
+Route::get('/check-session', [LockScreenController::class, 'checkSessionStatus']);
+
+
+
+Route::post('/update-last-activity', function () {
+    session()->put('lastActivityTime', now()->timestamp);
+    return response()->json(['status' => 'success']);
+})->middleware('auth');
+
 
 // Passenger Routes (for managing settings, account, and tickets)
 Route::middleware(['auth', 'role:passenger'])->group(function () {

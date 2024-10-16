@@ -54,8 +54,13 @@
                 margin-top: 20px;
             }
         }
+
+        .spinner-border {
+            display: none; /* Hide spinner initially */
+        }
     </style>
-       <script>
+
+    <script>
         document.addEventListener("DOMContentLoaded", function () {
             const logoutTimeout = 600000; // 10 minutes (in milliseconds)
 
@@ -64,7 +69,38 @@
                 window.location.href = "{{ route('login') }}";
             }, logoutTimeout);
 
-            console.log('Lock screen timeout initiated');
+            // Handle form submission with spinner
+            const form = document.getElementById('unlock-form');
+            const unlockButton = document.getElementById('unlock-btn');
+            const spinner = document.getElementById('spinner');
+
+            form.addEventListener('submit', function (e) {
+                spinner.style.display = 'inline-block'; // Show the spinner
+                unlockButton.disabled = true; // Disable the button to prevent multiple submissions
+                unlockButton.innerText = 'Unlocking...'; // Change button text
+            });
+
+            // Periodically check if the session is still active
+            setInterval(function () {
+                checkSessionStatus();
+            }, 60000); // Check every minute
+
+            function checkSessionStatus() {
+                fetch('/check-session', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.active) {
+                        // Session expired, redirect to home page
+                        window.location.href = "/";
+                    }
+                })
+                .catch(error => console.error('Error checking session status:', error));
+            }
         });
     </script>
 </head>
@@ -76,7 +112,7 @@
             <div class="col-md-6 form-container">
                 <h2 class="text-center">Screen Locked</h2>
                 <p class="text-center">Hey! Unlock Your Screen.</p>
-                <form method="POST" action="{{ route('lockscreen.unlock') }}">
+                <form method="POST" action="{{ route('lockscreen.unlock') }}" id="unlock-form">
                     @csrf
                     <div class="form-group">
                         <label for="password">Enter your password to unlock</label>
@@ -85,7 +121,10 @@
                             <div class="text-danger mt-2">{{ $errors->first() }}</div>
                         @endif
                     </div>
-                    <button type="submit" class="btn btn-primary btn-lg btn-block">Unlock</button>
+                    <button type="submit" class="btn btn-primary btn-lg btn-block" id="unlock-btn">
+                        Unlock
+                        <span class="spinner-border spinner-border-sm" role="status" id="spinner" aria-hidden="true"></span>
+                    </button>
                 </form>
 
                 <!-- Google login button for social login users -->

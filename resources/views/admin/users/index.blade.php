@@ -2,7 +2,8 @@
 
 @section('content')
 <h1 class="app-page-title">User Management</h1>
-<p>Manage all registered users here.</p>
+<p style="font-size: small; font-weight: bold;">Manage all registered users here. Note: Active Users include (admin) while the rest doesn't 
+</p>
 
 <!-- Statistics Cards -->
 <div class="row mb-4">
