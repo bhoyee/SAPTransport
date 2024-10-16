@@ -104,7 +104,9 @@ class BookingEditController extends Controller
                 'number_adults' => $request->input('number_adults'),
                 'number_children' => $request->input('number_children'),
                 'return_pickup_date' => $request->input('return_pickup_date'),
-                'return_pickup_time' => $request->input('return_pickup_time')
+                'return_pickup_time' => $request->input('return_pickup_time'),
+                'updated_by' => auth()->user()->email, // Track who updated the booking
+
             ]);
 
             // Log the user activity after successful update

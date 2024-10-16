@@ -47,6 +47,12 @@
                 <div class="row justify-content-center">
 
                     <!-- Left Column: Intro Text -->
+                    @if(session('message'))
+                        <div class="alert alert-warning">
+                            {{ session('message') }}
+                        </div>
+                    @endif
+
 
                     <div class="col-md-6 d-flex flex-column justify-content-center align-items-left text-left">
 
