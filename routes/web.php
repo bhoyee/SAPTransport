@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SupportController as StaffSupportController;
+use App\Http\Controllers\Admin\AdminBookingReportController;
 
 // Public Routes
 Route::get('/', function () {
@@ -129,21 +130,22 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/bookings/{id}/delete', [AdminBookingController::class, 'deleteBooking'])->name('admin.bookings.delete');
     Route::post('/bookings/{id}/update-status', [BookingController::class, 'updateBookingStatus'])->name('admin.bookings.updateStatus');
 
+    // Route to load the search page where the admin enters the booking reference
+    Route::get('/admin/bookings/confirm', [AdminBookingController::class, 'searchBooking'])->name('admin.bookings.confirm-search');
 
+    // Route to handle the search and display the booking info if found
+    Route::post('/admin/bookings/confirm-search', [AdminBookingController::class, 'searchBooking'])->name('admin.bookings.confirm-search-post');
 
+    // Route to confirm a booking (requires the booking ID)
+    Route::post('/admin/bookings/{id}/confirm', [AdminBookingController::class, 'confirmBooking'])->name('admin.bookings.confirm');
 
-// Route to load the search page where the admin enters the booking reference
-Route::get('/admin/bookings/confirm', [AdminBookingController::class, 'searchBooking'])->name('admin.bookings.confirm-search');
+    //admin booking report routes 
+    Route::get('/bookings/report', [AdminBookingReportController::class, 'index'])->name('admin.bookings.report');
+    Route::post('/bookings/report/pdf', [AdminBookingReportController::class, 'generatePdf'])->name('admin.bookings.report.pdf');
+    // Route::get('/bookings/report-data/{range}', [AdminBookingReportController::class, 'getReportData']);
 
-
-
-
-// Route to handle the search and display the booking info if found
-Route::post('/admin/bookings/confirm-search', [AdminBookingController::class, 'searchBooking'])->name('admin.bookings.confirm-search-post');
-
-// Route to confirm a booking (requires the booking ID)
-Route::post('/admin/bookings/{id}/confirm', [AdminBookingController::class, 'confirmBooking'])->name('admin.bookings.confirm');
-
+    Route::get('/bookings/report-data/{range}', [AdminBookingReportController::class, 'getReportData'])->name('admin.bookings.report.data');
+    Route::post('/admin/bookings/report/pdf', [AdminBookingReportController::class, 'generatePdf'])->name('admin.bookings.report.pdf');
 
 });
 
@@ -224,6 +226,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     // Admin Report Management
     Route::get('users/report', [UserReportController::class, 'showReportPage'])->name('admin.users.report');
     Route::post('users/report/pdf', [UserReportController::class, 'generatePDF'])->name('admin.users.report.pdf');
+    
 });
 
 // Booking for Admin and Staff (Admins and Consultants)
