@@ -176,8 +176,9 @@
 									<a class="submenu-link" href="{{ route('admin.bookings.confirm-search') }}">Confirm Booking</a>
 								</li>
 								<li class="submenu-item">
-									<a class="submenu-link" href="">Booking Report</a>
+									<a class="submenu-link" href="{{ route('admin.bookings.report') }}">Booking Report</a>
 								</li>
+
 
 
                                 </ul>
