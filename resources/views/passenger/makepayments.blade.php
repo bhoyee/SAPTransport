@@ -6,6 +6,14 @@
 <div class="app-page-title">
     <h1>Unpaid Payments</h1>
 </div>
+@if(session('error'))
+    <div class="alert alert-danger mt-4 alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+    </div>
+@endif
+
 
 <div class="app-card shadow-sm mb-4">
     <div class="app-card-body">
