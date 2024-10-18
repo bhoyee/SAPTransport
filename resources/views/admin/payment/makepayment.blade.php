@@ -85,6 +85,7 @@
     const searchSpinner = document.getElementById('search-spinner');
     const resultSection = document.getElementById('result-section');
 
+    // Handle search form submission
     searchForm.addEventListener('submit', function (event) {
         // Clear previous results
         resultSection.innerHTML = ''; // Clear previous booking details or error message
@@ -93,6 +94,17 @@
         searchSpinner.style.display = 'inline-block';
         searchButton.disabled = true;
         searchButton.innerHTML = 'Searching...';
+    });
+
+    // Handle "Pay Now" button spinner
+    $('form').on('submit', function(event) {
+        const paySpinner = $('#pay-spinner');
+        const payButton = $(this).find('button[type="submit"]');
+
+        // Show spinner and disable the button
+        paySpinner.show();
+        payButton.prop('disabled', true);
+        payButton.html('Processing...');
     });
 </script>
 @endpush

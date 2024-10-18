@@ -27,6 +27,8 @@ use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SupportController as StaffSupportController;
 use App\Http\Controllers\Admin\AdminBookingReportController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\WalkinPayController;
+
 
 
 // Public Routes
@@ -164,7 +166,7 @@ Route::get('/invoice/failed', [AdminPaymentController::class, 'failedInvoice'])-
 
 // Route::get('/payment/callback', [AdminPaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
 
-Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
+ Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
 
 
 
@@ -299,4 +301,20 @@ Route::get('/clear-cache', function () {
     return "Caches cleared";
 });
 
+// routes to make payment without login 
+// Route::get('/pay', [PaymentController::class, 'showPaymentPage'])->name('payment.show');
+// Route::get('/pay/search', [PaymentController::class, 'searchBooking'])->name('payment.search');
+// Route::post('/pay/process', [PaymentController::class, 'processPayment'])->name('payment.process');
 
+// Route::post('/walkinpay/process', [WalkinPayController::class, 'processPayment'])->name('payment.process');
+
+Route::get('/pay', [WalkinPayController::class, 'search'])->name('payment.search');
+
+Route::post('/walkinpay/process', [WalkinPayController::class, 'pay'])->name('payment.process');
+// Route::get('/payment/callback', [WalkinPayController::class, 'handleGatewayCallback'])->name('payment.callback');
+Route::get('/payment/success', function () {
+    return view('walkinpay.success');
+})->name('payment.success');
+Route::get('/payment/failed', function () {
+    return view('walkinpay.failed');
+})->name('payment.failed');

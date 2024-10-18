@@ -22,7 +22,7 @@ A payment has been successfully received for the following booking:
 
 Please verify the payment and update the records if necessary.
 
-@component('mail::button', ['url' => route('admin.booking.view', $booking->id)])
+@component('mail::button', ['url' => route('admin.bookings.view', $booking->id)])
 View Booking Details
 @endcomponent
 

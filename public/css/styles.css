@@ -57,6 +57,9 @@ footer {
     background-color: #f8f9fa;
     padding: 10px 0;
 }
+.footer-section a {
+    text-decoration: none;
+}
 
 .nav-tabs {
     position: relative;

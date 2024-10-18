@@ -137,7 +137,7 @@
                     <ul class="list-unstyled">
                         <li><a href="#" class="text-white">About</a></li>
                         <li><a href="#" class="text-white">My Booking</a></li>
-                        <li><a href="#" class="text-white">Make Payment</a></li>
+                        <li><a href="{{ route('payment.search') }}" class="text-white">Make Payment</a></li>
                         <li><a href="#" class="text-white">FAQ</a></li>
                         <li><a href="#" class="text-white">Login / Register</a></li>
                         
