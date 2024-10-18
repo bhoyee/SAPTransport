@@ -26,6 +26,8 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\SupportController as StaffSupportController;
 use App\Http\Controllers\Admin\AdminBookingReportController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+
 
 // Public Routes
 Route::get('/', function () {
@@ -147,7 +149,23 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/bookings/report-data/{range}', [AdminBookingReportController::class, 'getReportData'])->name('admin.bookings.report.data');
     Route::post('/admin/bookings/report/pdf', [AdminBookingReportController::class, 'generatePdf'])->name('admin.bookings.report.pdf');
 
+
+    Route::get('/payment/search', [AdminPaymentController::class, 'searchBooking'])->name('admin.payment.search');
+    Route::post('/pay', [AdminPaymentController::class, 'pay'])->name('admin.payment.pay');
+
+    Route::get('/invoice/paid/{invoice}', [AdminPaymentController::class, 'paidInvoice'])->name('admin.invoice.paid');
+Route::get('/invoice/failed', [AdminPaymentController::class, 'failedInvoice'])->name('admin.invoice.failed');
 });
+
+// Route::get('/admin/payment/callback', [AdminPaymentController::class, 'handleGatewayCallback'])->name('admin.payment.callback');
+
+// Single callback route for both admin and user
+// Route::get('/payment/callback', [AdminPaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
+
+// Route::get('/payment/callback', [AdminPaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
+
+Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
+
 
 
 
@@ -255,7 +273,7 @@ Route::middleware(['auth', 'role:passenger'])->group(function () {
 
     // Payment Routes
     Route::post('/pay', [PaymentController::class, 'pay'])->name('pay');
-    Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
+    // Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
     Route::get('/invoice/failed', [PaymentController::class, 'failedInvoice'])->name('invoice.failed');
     Route::get('/invoice/paid/{invoice}', [PaymentController::class, 'paidInvoice'])->name('invoice.paid');
     Route::get('/payments/history', [PaymentController::class, 'paymentHistory'])->name('payment.history');
@@ -267,6 +285,10 @@ Route::middleware(['auth', 'role:passenger'])->group(function () {
     Route::get('/invoice/pay/{id}', [InvoiceController::class, 'pay'])->name('invoice.pay');
     Route::post('/invoice/pay', [PaymentController::class, 'pay'])->name('invoice.pay');
 });
+
+// Route::get('/invoice/paid/{invoiceId}', [PaymentController::class, 'paidInvoice'])->name('invoice.paid');
+// Route::get('/invoice/failed', [PaymentController::class, 'failedInvoice'])->name('invoice.failed');
+
 
 // Clear Cache Route (for Admin Use)
 Route::get('/clear-cache', function () {
