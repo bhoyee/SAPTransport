@@ -227,7 +227,9 @@
 
 						        <ul class="submenu-list list-unstyled">
 							
-							        <li class="submenu-item"><a class="submenu-link" href="{{ route('passenger.makepayments') }}">Make Payment</a></li>
+								<li class="submenu-item">
+    <a class="submenu-link" href="{{ route('admin.payment.search') }}">Make Payment</a>
+</li>
 
 							        <li class="submenu-item"><a class="submenu-link" href="{{ route('payment.history') }}">Manage Payments</a></li>
 

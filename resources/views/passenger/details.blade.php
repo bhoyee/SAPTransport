@@ -45,7 +45,7 @@
                 <!-- Status -->
                 @if (!empty($booking->status))
                     <div class="col-md-6">
-                        <strong>Status:</strong>
+                        <strong>Booking Status:</strong>
                         <p>{{ $booking->status }}</p>
                     </div>
                 @endif
@@ -138,6 +138,11 @@
                     <div class="col-md-6">
                         <strong>Due Amount:</strong>
                         <p>₦{{ number_format($booking->invoice->amount, 2) }}</p>
+                    </div>
+
+                    <div class="col-md-6">
+                        <strong>Invoice Status:</strong>
+                        <p>{{ $booking->invoice->status }}</p>
                     </div>
                 @endif
             </div>
