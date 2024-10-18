@@ -10,11 +10,18 @@ Thank you for your payment. Your booking with the reference **{{ $booking->booki
 - **Service Type:** {{ $booking->service_type }}
 - **Trip Type:** {{ $booking->trip_type }}
 - **Pickup Date:** {{ \Carbon\Carbon::parse($booking->pickup_date)->format('F j, Y') }}
-- **Amount Paid:** ₦{{ number_format($booking->payment->amount, 2) }}
+@if(isset($booking->booking_reference))
+- **Booking Reference:** {{ $booking->booking_reference }}
+@else
+- **Booking Reference:** Not Available
+@endif
+
+**Amount Paid:** ₦{{ isset($booking->invoice->amount) ? number_format($booking->invoice->amount, 2) : 'Not Available' }}
+
 
 If you have any questions, feel free to contact us.
 
-@component('mail::button', ['url' => route('booking.details', $booking->id)])
+@component('mail::button', ['url' => route('booking.view', $booking->id)])
 View Booking Details
 @endcomponent
 

@@ -112,121 +112,149 @@ class PaymentController extends Controller
         return view('passenger.makepayments', compact('unpaidPayments'));
     }
 
-       // Handle the payment process
+  
     public function pay(Request $request)
     {
-        $invoice = Invoice::findOrFail($request->invoice_id);
-        $booking = $invoice->booking;
-
-        // Generate a unique reference for Paystack
-        $transactionReference = $invoice->invoice_number . '-' . uniqid();
-
-        // Check if an unpaid payment already exists for this booking
-        $existingPayment = Payment::where('booking_id', $booking->id)
-            ->where('status', 'unpaid')
-            ->first();
-
-        if ($existingPayment) {
-            $existingPayment->update([
-                'payment_reference' => $transactionReference,
-                'payment_method' => 'paystack',
-            ]);
-            Log::info("Existing unpaid payment updated with new reference: $transactionReference");
-        } else {
-            Payment::create([
+        try {
+            // Find the invoice by its ID
+            $invoice = Invoice::findOrFail($request->invoice_id);
+            $booking = $invoice->booking;
+    
+            // Check if an unpaid payment already exists for this booking
+            $existingPayment = Payment::where('booking_id', $booking->id)->first();
+    
+            if ($existingPayment && $existingPayment->status === 'paid') {
+                return redirect()->back()->with('error', 'Payment has already been completed for this booking.');
+            }
+    
+            // Generate a unique reference for Paystack
+            $transactionReference = $invoice->invoice_number . '-' . uniqid();
+    
+            // Update or create an unpaid payment record
+            if ($existingPayment && $existingPayment->status === 'unpaid') {
+                $existingPayment->update([
+                    'payment_reference' => $transactionReference,
+                    'payment_method' => 'paystack',
+                ]);
+                Log::info("Existing unpaid payment updated with new reference: $transactionReference");
+            } else {
+                Payment::create([
+                    'booking_id' => $booking->id,
+                    'user_id' => $booking->user_id,
+                    'amount' => $invoice->amount,
+                    'status' => 'unpaid',
+                    'payment_method' => 'paystack',
+                    'payment_reference' => $transactionReference,
+                ]);
+                Log::info("New unpaid payment created with reference: $transactionReference");
+            }
+    
+            // Add metadata to specify whether this is an admin or a passenger payment
+            $metadata = [
                 'booking_id' => $booking->id,
-                'user_id' => $booking->user_id,
-                'amount' => $invoice->amount,
-                'status' => 'unpaid',
-                'payment_method' => 'paystack',
-                'payment_reference' => $transactionReference,
-            ]);
-            Log::info("New unpaid payment created with reference: $transactionReference");
+                'is_admin' => auth()->user()->hasRole('admin') ? true : false,  // Add this field to metadata
+            ];
+    
+            // Redirect to Paystack payment page
+            return Paystack::getAuthorizationUrl([
+                'email' => $booking->user->email,
+                'amount' => $invoice->amount * 100,  // Amount in kobo
+                'reference' => $transactionReference,
+                'metadata' => $metadata,
+            ])->redirectNow();
+        } catch (\Exception $e) {
+            // Log any errors that occur
+            Log::error('Error initiating payment: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Unable to process payment. Please try again.');
         }
-
-        // Redirect to Paystack payment page
-        return Paystack::getAuthorizationUrl([
-            'email' => $booking->user->email,
-            'amount' => $invoice->amount * 100,  // Amount in kobo
-            'reference' => $transactionReference,
-            'metadata' => [
-                'booking_id' => $booking->id,
-            ],
-        ])->redirectNow();
     }
-      
-      public function handleGatewayCallback()
-      {
-          try {
-              // Get payment details from Paystack
-              $paymentDetails = Paystack::getPaymentData();
-      
-              // Log Paystack payment details for debugging
-              \Log::info('Payment details from Paystack: ', $paymentDetails);
-      
-              // Extract relevant information
-              $reference = $paymentDetails['data']['reference'];
-              $amountPaid = $paymentDetails['data']['amount'] / 100;  // Convert to Naira
-              $paymentMethod = $paymentDetails['data']['channel'];  // e.g., card, bank
-              $paymentStatus = $paymentDetails['data']['status'];  // success or failure
-      
-              // Ensure that booking_id is in the metadata
-              if (!isset($paymentDetails['data']['metadata']['booking_id'])) {
-                  \Log::error("Booking ID is missing in the metadata.");
-                  return redirect()->route('invoice.failed')->with('error', 'Booking ID not found in payment metadata.');
-              }
-      
-              $bookingId = $paymentDetails['data']['metadata']['booking_id'];
-      
-              // Find the existing unpaid payment record for this booking
-              $payment = Payment::where('booking_id', $bookingId)
-                  ->where('status', 'unpaid')
-                  ->first();
-      
-              if (!$payment) {
-                  \Log::error("Unpaid payment not found for booking_id: $bookingId");
-                  return redirect()->route('invoice.failed')->with('error', 'Unpaid payment record not found.');
-              }
-      
-              // Find the corresponding invoice
-              $invoice = Invoice::where('booking_id', $payment->booking_id)->first();
-      
-              if (!$invoice) {
-                  \Log::error("Invoice not found for booking_id: {$payment->booking_id}");
-                  return redirect()->route('invoice.failed')->with('error', 'Invoice not found.');
-              }
-      
-              // Handle success or failure of the payment
-              if ($paymentStatus === 'success' && $invoice->amount == $amountPaid) {
-                  // Update the invoice status to "Paid"
-                  $invoice->update(['status' => 'Paid']);
-                  \Log::info("Invoice {$invoice->invoice_number} marked as paid");
-      
-                  // Update the payment record with the successful payment details
-                  $payment->update([
-                      'status' => 'paid',
-                      'payment_reference' => $reference,
-                      'payment_method' => $paymentMethod,
-                      'payment_date' => now(),
-                  ]);
-      
-                  \Log::info("Payment updated for invoice {$invoice->invoice_number}");
-      
+    
+    public function handleGatewayCallback()
+    {
+        try {
+            // Get payment details from Paystack
+            $paymentDetails = Paystack::getPaymentData();
+            \Log::info('Payment details from Paystack: ', $paymentDetails);
+    
+            // Extract relevant information
+            $reference = $paymentDetails['data']['reference'];
+            $amountPaid = $paymentDetails['data']['amount'] / 100;  // Convert kobo to Naira
+            $paymentStatus = $paymentDetails['data']['status'];
+            $bookingId = $paymentDetails['data']['metadata']['booking_id'];
+    
+            // Handle 'is_admin' flag properly (convert string to boolean)
+            $isAdmin = isset($paymentDetails['data']['metadata']['is_admin']) && filter_var($paymentDetails['data']['metadata']['is_admin'], FILTER_VALIDATE_BOOLEAN);
+    
+            // Find the corresponding invoice
+            $invoice = Invoice::where('booking_id', $bookingId)->first();
+            if (!$invoice) {
+                \Log::error("Invoice not found for booking_id: $bookingId");
+                return redirect()->route($isAdmin ? 'admin.invoice.failed' : 'invoice.failed')->with('error', 'Invoice not found.');
+            }
+    
+            // Handle successful payment
+            if ($paymentStatus === 'success' && $invoice->amount == $amountPaid) {
+                // Check for an unpaid payment record for this booking
+                $payment = Payment::where('booking_id', $bookingId)->where('status', 'unpaid')->first();
+    
+                if ($payment) {
+                    // If an unpaid payment exists, update it to 'paid'
+                    $payment->update([
+                        'status' => 'paid',
+                        'payment_reference' => $reference,
+                        'payment_method' => $paymentDetails['data']['channel'], // e.g., card, bank
+                        'payment_date' => now(),
+                    ]);
+                    \Log::info("Updated unpaid payment to 'paid' for booking_id: $bookingId");
+                } else {
+                    // If no unpaid payment record exists, create a new payment record as 'paid'
+                    Payment::create([
+                        'booking_id' => $bookingId,
+                        'user_id' => $invoice->booking->user_id,
+                        'amount' => $amountPaid,
+                        'status' => 'paid',
+                        'payment_reference' => $reference,
+                        'payment_method' => $paymentDetails['data']['channel'],
+                        'payment_date' => now(),
+                    ]);
+                    \Log::info("Created new payment record for booking_id: $bookingId");
+                }
+    
+                // Mark the invoice as "Paid"
+                $invoice->update(['status' => 'Paid']);
+                \Log::info("Invoice {$invoice->invoice_number} marked as paid");
+
+
+
+                // Logging before sending email
+                \Log::info('Sending payment confirmation email', ['booking' => $payment->booking, 'amount' => $payment->amount]);
+
+                // Ensure the booking object is loaded before sending the email
+                if (!$payment->booking) {
+                    \Log::error('Booking not found for payment');
+                    return; // Optionally handle this case
+                }
+
+                // Use session flash to pass the invoice number and success message
+                session()->flash('invoice_number', $invoice->invoice_number);
+                session()->flash('success', 'Payment Successful!');
+        
+
                    // Log user activity for the successful payment
                     ActivityLogger::log('Payment Completed', 'Payment completed for booking reference: ' . $payment->booking->booking_reference . ' by user: ' . $payment->user->email);
 
 
                     // Send notification to all admin and consultant users
-                    $adminConsultantUsers = User::whereIn('role', ['admin', 'consultant'])->get();
-                    foreach ($adminConsultantUsers as $adminConsultant) {
-                        Notification::create([
-                            'user_id' => $adminConsultant->id,
-                            'message' => 'Payment completed for booking reference: ' . $payment->booking->booking_reference . ' by user: ' . $payment->user->name,
-                            'type' => 'payment',
-                            'status' => 'unread',
-                            'related_user_name' => $payment->user->name,
-                        ]);
-                    }
+                        $adminConsultantUsers = User::role(['admin', 'consultant'])->get();
+                        foreach ($adminConsultantUsers as $adminConsultant) {
+                            Notification::create([
+                                'user_id' => $adminConsultant->id,
+                                'message' => 'Payment completed for booking reference: ' . $payment->booking->booking_reference . ' by user: ' . $payment->user->name,
+                                'type' => 'payment',
+                                'status' => 'unread',
+                                'related_user_name' => $payment->user->name,
+                            ]);
+                        }
 
                     // Send payment confirmation email to the user
                     try {
@@ -235,8 +263,8 @@ class PaymentController extends Controller
                     } catch (\Exception $e) {
                         \Log::error('Failed to send payment confirmation email to user: ' . $e->getMessage());
                     }
-
-                     // Send notification email to the admin
+        
+                   // Send notification email to the admin
                     try {
                         $adminEmail = config('mail.admin_email');
                         Mail::to($adminEmail)->send(new PaymentAdminNotification($payment->booking));
@@ -245,28 +273,26 @@ class PaymentController extends Controller
                         \Log::error('Failed to send payment notification email to admin: ' . $e->getMessage());
                     }
 
-                  // Redirect to a success page
-                  return redirect()->route('invoice.paid', ['invoice' => $invoice->id])->with('success', 'Payment Successful!');
-              } else {
-                  // Update the existing unpaid payment with the new reference on failure
-                  $payment->update([
-                      'payment_reference' => $reference,
-                      'payment_method' => $paymentMethod,
-                  ]);
-      
-                  \Log::error("Payment failed for reference: $reference");
-                  return redirect()->route('invoice.failed')->with('error', 'Payment failed or verification mismatch.');
-              }
-          } catch (\Exception $e) {
-              // Log any errors during the process
-              \Log::error("Error during payment verification: " . $e->getMessage());
-      
-              return redirect()->route('invoice.failed')->with('error', 'Payment verification failed.');
-          }
-      }
-      
-      
-      
+
+
+                // Redirect based on whether it's an admin or a user payment
+                if ($isAdmin) {
+                    return redirect()->route('admin.invoice.paid', ['invoice' => $invoice->id])->with('success', 'Payment Successful!');
+                } else {
+                    return redirect()->route('invoice.paid', ['invoice' => $invoice->id])->with('success', 'Payment Successful!');
+                }
+            } else {
+                // Handle payment failure
+                \Log::error("Payment failed for reference: $reference");
+                return redirect()->route($isAdmin ? 'admin.invoice.failed' : 'invoice.failed')->with('error', 'Payment failed or verification mismatch.');
+            }
+        } catch (\Exception $e) {
+            \Log::error("Error during payment verification: " . $e->getMessage());
+            return redirect()->route($isAdmin ? 'admin.invoice.failed' : 'invoice.failed')->with('error', 'Payment verification failed.');
+        }
+    }
+    
+    
 
         /**
      * Redirect the User to Paystack Payment Page
@@ -289,16 +315,48 @@ class PaymentController extends Controller
     
     public function failedInvoice()
     {
-        // Log that the payment failed
+        // Log the payment failure
         \Log::error('Payment failed or verification mismatch.');
-
+    
+        // Return the view with an error message
         return view('passenger.invoice-failed')->with('error', 'Payment verification failed or mismatched.');
     }
+    
 
-    public function paidInvoice(Invoice $invoice)
-    {
-        return view('passenger.invoice-paid', compact('invoice'));
+    // public function paidInvoice($invoiceId)
+    // {
+    //     // Find the invoice by its ID
+    //     $invoice = Invoice::findOrFail($invoiceId);
+    
+    //     // Check if the authenticated user is the owner of the invoice
+    //     if (auth()->user()->id !== $invoice->booking->user_id) {
+    //         abort(403, 'You are not authorized to view this invoice.');
+    //     }
+    
+    //     // Display the successful payment page
+    //     return view('passenger.invoice-paid', compact('invoice'));
+    // }
+
+    public function paidInvoice($invoiceId)
+{
+    // Find the invoice by its ID
+    $invoice = Invoice::findOrFail($invoiceId);
+
+    // Ensure the invoice has a booking
+    if (!$invoice->booking) {
+        return redirect()->back()->with('error', 'Booking not found for this invoice.');
     }
+
+    // Check if the authenticated user is the owner of the invoice
+    // if (auth()->user()->id !== $invoice->booking->user_id) {
+    //     abort(403, 'You are not authorized to view this invoice.');
+    // }
+
+    // Display the successful payment page
+    return view('passenger.invoice-paid', compact('invoice'));
+}
+
+    
 
 
     
