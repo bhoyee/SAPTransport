@@ -125,10 +125,9 @@
         </a>
 
         <!-- Pay Now Button -->
-        <a href="{{ route('passenger.makepayments') }}" class="btn-primary">
+        <a href="{{ route('payment.search') }}" class="btn-primary">
             Pay Now
         </a>
-
     </div>
 
     <p>If you have any questions, feel free to contact our support team.</p>
