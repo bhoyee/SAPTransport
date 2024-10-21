@@ -22,14 +22,24 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         // Check if the user is logged in
-        if (!Auth::check()) {
-            return back()->with('error', 'You need to login before booking a trip.');
-        }
+        \Log::info('BookingController@store invoked.');
+
+    // Check if the user is logged in
+    if (!Auth::check()) {
+        \Log::info('User not authenticated.');
+        return response()->json([
+            'success' => false,
+            'error' => 'You need to login before booking a trip.',
+        ], 401); // Use appropriate HTTP status code
+    }
     
+        
         $user = Auth::user();
     
         // Check if the user has the 'passenger' role and if their email is verified
+
         if ($user->hasRole('passenger') && $user->email_verified_at === null) {
+            \Log::info('User needs to verify their email before booking.');
             return redirect()->route('verification.notice')
                 ->with('error', 'You need to verify your email before booking a trip.');
         }

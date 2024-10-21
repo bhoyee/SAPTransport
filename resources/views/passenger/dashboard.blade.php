@@ -6,14 +6,16 @@
 	<!-- Custom CSS for Mobile-Friendly Table -->
 <style>
 /* Sidebar positioning and overflow behavior */
+/* Style for Recent Activity area */
+#userActivityList .list-group-item {
+    font-size: 14px; /* Default size for desktop */
+}
 
-
-/* Responsive table container */
+/* General table styles */
 .table-responsive {
     overflow-x: auto;
 }
 
-/* Default table style for desktop */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -24,10 +26,10 @@ th, td {
     padding: 8px;
     border: 1px solid #ddd;
     text-align: left;
-    white-space: nowrap; /* Prevent content from wrapping */
+    white-space: nowrap;
 }
 
-/* Adjust button group styling */
+/* Button group styling */
 .button-group {
     display: flex;
     justify-content: flex-start;
@@ -39,38 +41,40 @@ th, td {
     font-size: 10px;
 }
 
-/* Mobile view styling */
+/* Mobile view for tables */
 @media (max-width: 768px) {
-    /* Allow horizontal scroll for the table */
-    .table-responsive {
-        overflow-x: auto;
+
+    #userActivityList .list-group-item {
+        font-size: 12px; /* Smaller font size for mobile */
+    }
+    table, thead, tbody, th, td, tr {
+        display: block; /* Each element becomes block-level */
+    }
+    
+    th {
+        display: none; /* Hide table headers */
     }
 
-    table {
-        width: 100%; /* Ensure full width */
+    td {
+        position: relative;
+        padding-left: 50%;
+        text-align: right; /* Align text to the right for a better mobile view */
+    }
+
+    /* Add labels using the data-label attribute */
+    td[data-label]:before {
+        content: attr(data-label); /* Show the data-label attribute as content */
+        position: absolute;
+        left: 10px;
+        font-weight: bold;
+        text-align: left;
+    }
+
+    td {
         display: block;
-    }
-
-    /* Adjust columns for readability */
-    th, td {
-        padding: 10px;
-        font-size: 14px;
-        white-space: nowrap; /* Prevent wrapping */
-    }
-
-    /* Button group responsive behavior */
-    .button-group {
-        flex-direction: row;
-        justify-content: space-between;
-        gap: 10px;
-    }
-
-    .button-group .btn {
-        width: 30%;
-        padding: 5px;
+        font-size: 14px; /* Increase the font size slightly for readability */
     }
 }
-
 
 </style>
 
@@ -272,53 +276,57 @@ th, td {
 
 
 					<!-- Responsive Payment History Table -->
-					<div class="col-12 col-lg-6">
-						<div class="app-card app-card-stats-table h-100 shadow-sm">
-							<div class="app-card-header p-3">
-								<h4 class="app-card-title">Payment History</h4>
-							</div>
-							<div class="container">
-								<table id="payment-history" class="table table-striped table-bordered table-responsive">
-									<thead>
-										<tr>
-											<th>Booking Ref</th>
-											<th>Invoice Num</th>
-											<th>Amount</th>
-											<th>Invoice Date</th>
-											<th>Status</th>
-										</tr>
-									</thead>
-									<tbody>
-										<!-- Payment data will be injected here -->
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
+					<!-- Responsive Payment History Table -->
+                    <div class="col-12 col-lg-6">
+                        <div class="app-card app-card-stats-table h-100 shadow-sm">
+                            <div class="app-card-header p-3">
+                                <h4 class="app-card-title">Payment History</h4>
+                            </div>
+                            <div class="container">
+                                <div class="table-responsive">
+                                    <table id="payment-history" class="table table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Booking Ref</th>
+                                                <th>Invoice Num</th>
+                                                <th>Amount</th>
+                                                <th>Invoice Date</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Payment data will be injected here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
 					
 					
 								<!-- RRecent Activity -->
-					<div class="col-12 col-lg-6">
-						<div class="app-card app-card-stats-table h-100 shadow-sm">
-							<div class="app-card-header p-3">
-								<h4 class="app-card-title">Recent Activity</h4>
-							</div>
-							<div class="container">
-							    
-							                <ul id="userActivityList" class="list-group">
-                <!-- User activity items will be appended here -->
-            </ul>
+                        <!-- Responsive Recent Activity -->
+                        <div class="col-12 col-lg-6">
+                            <div class="app-card app-card-stats-table h-100 shadow-sm">
+                                <div class="app-card-header p-3">
+                                    <h4 class="app-card-title">Recent Activity</h4>
+                                </div>
+                                <div class="container">
+                                    <ul id="userActivityList" class="list-group">
+                                        <!-- User activity items will be appended here -->
+                                    </ul>
 
-            <!-- Pagination Buttons -->
-            <div class="d-flex justify-content-between mt-3">
-                <button id="previousPageBtn" class="btn btn-secondary btn-sm" disabled>Previous</button>
-                <button id="nextPageBtn" class="btn btn-secondary btn-sm">Next</button>
-            </div>
-		
-							</div>
-						</div>
-					</div>
-					
+                                    <!-- Pagination Buttons -->
+                                    <div class="d-flex justify-content-between mt-3">
+                                        <button id="previousPageBtn" class="btn btn-secondary btn-sm" disabled>Previous</button>
+                                        <button id="nextPageBtn" class="btn btn-secondary btn-sm">Next</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                                            
 					
 
 
@@ -526,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPage = 1; // Track current page for activities
 
     // Initialize the DataTable for recent bookings
-    new DataTable('#recent-bookings', {
+        new DataTable('#recent-bookings', {
         responsive: true,
         searching: false,
         paging: false,
@@ -535,7 +543,6 @@ document.addEventListener('DOMContentLoaded', function() {
         fixedHeader: true
     });
 
-    // Initialize the DataTable for payment history
     new DataTable('#payment-history', {
         responsive: true,
         searching: false,
@@ -544,6 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
         bInfo: false,
         fixedHeader: true
     });
+
 
     // Function to update the bookings chart with real-time data
     function updateChart() {
@@ -655,7 +663,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td data-label="Booking Date">${bookingDate}</td>
                     <td data-label="Service Type">${booking.service_type}</td>
                     <td data-label="Status"><span class="badge ${getStatusClass(booking.status)}">${booking.status}</span></td>
-                    <td data-label="Actions" class="button-group">
+                    <td data-label="" class="button-group">
                         <a class="btn btn-warning btn-sm ${!isEditable ? 'disabled' : ''}" href="${editUrl}" ${!isEditable ? 'aria-disabled="true"' : ''}>Edit</a>
                         <button class="btn btn-danger btn-sm ${(!isCancelable || isExpired) ? 'disabled' : ''}" data-id="${booking.id}" type="button">Cancel</button>
                         <a class="btn btn-primary btn-sm" href="${bookingUrl}">View</a>

@@ -54,26 +54,21 @@
                         <p>Experience seamless and reliable transportation with SAPTransport.</p>
 
                     </div>
-
-        
-
-                    <!-- Right Column: Tabs and Forms -->
+           <!-- Right Column: Tabs and Forms -->
 
                     <div class="col-md-6">
-
-                         @if (session('error'))
-
-            <div class="alert alert-danger alert-dismissible fade show" role="alert" id="error-message">
-
-                <strong>Error!</strong> {{ session('error') }}
-
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-
-            </div>
-
-        @endif
-
-        
+                    @if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" id="error-message">
+        <strong>Error!</strong> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@else
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" id="error-message" style="display:none;">
+        <strong>Error!</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+ 
 
         @if (session('success'))
 
@@ -542,7 +537,7 @@
         $('#bookingSuccessModal').modal('show');
     }
 
-    // Date and time restrictions logic
+        // Date and time restrictions logic
     const setupDateRestrictions = (dateInput, timeInput) => {
         if (dateInput) {
             const today = new Date().toISOString().split('T')[0];
@@ -565,6 +560,7 @@
     setupDateRestrictions(document.getElementById('pickup-date-tab2'), document.getElementById('pickup-time-tab2'));
 
     // Generic AJAX submission handler for forms
+    // Generic AJAX submission handler for forms
     const handleFormSubmission = (form, submitBtn, route) => {
         if (form) {
             form.addEventListener('submit', function (event) {
@@ -581,28 +577,41 @@
                     },
                     body: formData,
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            document.getElementById('bookingSuccessModalLabel').innerHTML = 'Booking Successful!';
-                            document.querySelector('.modal-body').innerHTML = `
-                                <p>Your booking has been successfully completed.</p>
-                                <p><strong>Booking Reference:</strong> ${data.booking_reference}</p>`;
-                            $('#bookingSuccessModal').modal('show');
-                        } else {
-                            alert('An error occurred while processing your booking.');
-                        }
-                        submitBtn.innerHTML = "Proceed";
-                        submitBtn.disabled = false;
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        submitBtn.innerHTML = "Proceed";
-                        submitBtn.disabled = false;
-                    });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+
+                          // Reset the form after successful submission
+                        form.reset();
+
+                        document.getElementById('bookingSuccessModalLabel').innerHTML = 'Booking Successful!';
+                        document.querySelector('.modal-body').innerHTML = `
+                            <p>Your booking has been successfully completed.</p>
+                            <p><strong>Booking Reference:</strong> ${data.booking_reference}</p>`;
+                        $('#bookingSuccessModal').modal('show');
+                    } else if (data.error) {
+                        // Inject the error message into the alert container
+                        const errorContainer = document.getElementById('error-message');
+                        errorContainer.innerHTML = `
+                            <strong>Error!</strong> ${data.error}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+                        errorContainer.style.display = 'block';
+                    } else {
+                        alert('An error occurred while processing your booking.');
+                    }
+                    submitBtn.innerHTML = "Proceed";
+                    submitBtn.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    submitBtn.innerHTML = "Proceed";
+                    submitBtn.disabled = false;
+                });
             });
         }
     };
+
+
 
     // Setup form submissions for Airport Transfer and Charter
     handleFormSubmission(document.getElementById('airport-transfer-form'), document.getElementById('submit-btn'), "{{ route('booking.store') }}");

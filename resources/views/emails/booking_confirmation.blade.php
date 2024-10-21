@@ -161,9 +161,9 @@
         <p>Thank you for choosing SAP Transportation!</p>
 
         <!-- Smaller, left-aligned button -->
-        <a href="{{ route('my-bookings') }}" class="btn-primary">
+        <!-- <a href="{{ route('my-bookings') }}" class="btn-primary">
             View Booking
-        </a>
+        </a> -->
 
         <p>Thanks,<br>{{ config('app.name') }}</p>
     </div>
