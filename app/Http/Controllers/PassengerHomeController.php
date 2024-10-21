@@ -23,12 +23,12 @@ class PassengerHomeController extends Controller
                 // Passengers only see their own bookings
                 $bookings = Booking::where('user_id', $user->id)
                     ->orderBy('created_at', 'desc')
-                    ->take(4)
+                    ->take(6)
                     ->get();
             } elseif ($user->hasRole('consultant') || $user->hasRole('admin')) {
                 // Consultants and admins can see all bookings
                 $bookings = Booking::orderBy('created_at', 'desc')
-                    ->take(4)
+                    ->take(6)
                     ->get();
             }
 
