@@ -257,6 +257,9 @@ class PaymentController extends Controller
         $paymentStatus = $paymentDetails['data']['status'];
         $bookingId = $paymentDetails['data']['metadata']['booking_id'];
 
+        \Log::info('Payment details from Paystack: ', $paymentDetails);
+
+
         // Find the corresponding invoice
         $invoice = Invoice::where('booking_id', $bookingId)->first();
         if (!$invoice) {
