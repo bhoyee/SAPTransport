@@ -207,37 +207,29 @@
 
     // Event listener for the report range dropdown (daily, weekly, monthly, yearly)
     document.getElementById('report-timeframe').addEventListener('change', function() {
-        const range = this.value;
-        console.log('Selected range:', range); // Log the selected range
+    const range = this.value;
+    console.log('Selected range:', range); // Log the selected range
 
-        // Send AJAX request to fetch data based on the selected time range
-        fetch(`/admin/bookings/report-data/${range}`)
-            .then(response => {
-                console.log('Response status:', response.status); // Log the response status
-                return response.text();  // Change to .text() to inspect the raw response
-            })
-            .then(text => {
-                console.log('Response text:', text);  // Log the response text for debugging
-                try {
-                    const data = JSON.parse(text);  // Attempt to parse the text as JSON
-                    console.log('Received data:', data); // Log the received data
+    // Send AJAX request to fetch data based on the selected time range
+    fetch(`/admin/bookings/report-data/${range}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Received data:', data); // Log the received data
 
-                    document.getElementById('total-bookings').innerText = data.totalBookings;
-                    document.getElementById('total-pending').innerText = data.totalPending;
-                    document.getElementById('total-confirmed').innerText = data.totalConfirmed;
-                    document.getElementById('total-cancelled').innerText = data.totalCancelled;
-                    document.getElementById('total-completed').innerText = data.totalCompleted;
-                } catch (error) {
-                    console.error('Error parsing JSON:', error);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error); // Log any error
-            });
-    });
+            document.getElementById('total-bookings').innerText = data.totalBookings;
+            document.getElementById('total-pending').innerText = data.totalPending;
+            document.getElementById('total-confirmed').innerText = data.totalConfirmed;
+            document.getElementById('total-cancelled').innerText = data.totalCancelled;
+            document.getElementById('total-completed').innerText = data.totalCompleted;
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error); // Log any error
+        });
+});
 
-    // Trigger change event to load today's data on page load
-    document.getElementById('report-timeframe').dispatchEvent(new Event('change'));
+// Trigger change event to load today's data on page load
+document.getElementById('report-timeframe').dispatchEvent(new Event('change'));
+
 </script>
 
 @endpush

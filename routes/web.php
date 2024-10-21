@@ -28,6 +28,9 @@ use App\Http\Controllers\Staff\SupportController as StaffSupportController;
 use App\Http\Controllers\Admin\AdminBookingReportController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\WalkinPayController;
+use App\Http\Controllers\Admin\PaymentReportController;
+use App\Http\Controllers\Admin\UserPaymentReportController;
+
 
 
 
@@ -156,8 +159,45 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/pay', [AdminPaymentController::class, 'pay'])->name('admin.payment.pay');
 
     Route::get('/invoice/paid/{invoice}', [AdminPaymentController::class, 'paidInvoice'])->name('admin.invoice.paid');
-Route::get('/invoice/failed', [AdminPaymentController::class, 'failedInvoice'])->name('admin.invoice.failed');
+    Route::get('/invoice/failed', [AdminPaymentController::class, 'failedInvoice'])->name('admin.invoice.failed');
+    
+    //manage payment route
+    // Route::get('/payments', [AdminPaymentController::class, 'managePayments'])->name('admin.payments.index');
+    // Route::post('/payments/{id}/refund', [AdminPaymentController::class, 'processRefund'])->name('admin.payment.refund');
+
+ // Manage payment route
+ Route::get('/payments', [AdminPaymentController::class, 'managePayments'])->name('admin.payments.index');
+    
+ // Process refund route
+ Route::post('/payments/{id}/refund', [AdminPaymentController::class, 'processRefund'])->name('admin.payment.refund');
+ 
+ // Decline refund route
+ Route::post('/payments/{id}/refund/decline', [AdminPaymentController::class, 'declineRefund'])->name('admin.payment.refund.decline');
+
+ //cash payment routes
+ //Route::get('/payments/cash', [AdminPaymentController::class, 'showCashPaymentForm'])->name('admin.payment.cash');
+ Route::post('/payments/cash/update', [AdminPaymentController::class, 'recordCashPayment'])->name('admin.payment.cash.update');
+ Route::get('/payment/cash', [AdminPaymentController::class, 'showCashPaymentForm'])->name('admin.payment.cash');
+ Route::post('/payments/{id}/refund/cash', [AdminPaymentController::class, 'refundCash'])->name('admin.payments.refund.cash');
+
+
+  // Show the payment report page
+  Route::get('/payments/report', [PaymentReportController::class, 'showPaymentReportPage'])->name('admin.payments.report');
+
+  // Fetch report data for cards (based on daily, weekly, monthly, yearly)
+  Route::get('/payments/report-data/{timeframe}', [PaymentReportController::class, 'fetchReportData'])->name('admin.payments.report.data');
+
+  // Generate PDF for payments report
+  Route::post('/payments/report/pdf', [PaymentReportController::class, 'generatePdf'])->name('admin.payments.report.pdf');
+
+
+  // Routes for User Payment Report
+// Route::get('/reports/user-payment-report', [UserPaymentReportController::class, 'index'])->name('admin.reports.user-payment');
+Route::post('/reports/user-payment-report/pdf', [UserPaymentReportController::class, 'generateUserPaymentReport'])->name('admin.reports.user-payment.pdf');
+Route::get('/reports/user-payment-report', [UserPaymentReportController::class, 'index'])->name('admin.reports.userPaymentReport');
+
 });
+
 
 // Route::get('/admin/payment/callback', [AdminPaymentController::class, 'handleGatewayCallback'])->name('admin.payment.callback');
 

@@ -12,18 +12,28 @@ class AdminBookingReportController extends Controller
     //
     public function index()
     {
-        // Default values for today
-        $bookingsToday = Booking::whereDate('created_at', now())->get();
-
+        // Daily report - Bookings created today and filtered by created_at for total bookings
+        $today = now();
+    
+        // Total bookings created today
+        $totalBookings = Booking::whereDate('created_at', $today)->count();
+    
+        // Bookings by status with updated_at for status tracking
+        $totalPending = Booking::whereDate('updated_at', $today)->where('status', 'pending')->count();
+        $totalConfirmed = Booking::whereDate('updated_at', $today)->where('status', 'confirmed')->count();
+        $totalCancelled = Booking::whereDate('updated_at', $today)->where('status', 'cancelled')->count();
+        $totalCompleted = Booking::whereDate('updated_at', $today)->where('status', 'completed')->count();
+    
         // Pass necessary data to the view (e.g., for the cards)
         return view('admin.bookings.booking_report', [
-            'totalBookings' => $bookingsToday->count(),
-            'totalPending' => $bookingsToday->where('status', 'pending')->count(),
-            'totalConfirmed' => $bookingsToday->where('status', 'confirmed')->count(),
-            'totalCancelled' => $bookingsToday->where('status', 'cancelled')->count(),
-            'totalCompleted' => $bookingsToday->where('status', 'completed')->count(),
+            'totalBookings' => $totalBookings,
+            'totalPending' => $totalPending,
+            'totalConfirmed' => $totalConfirmed,
+            'totalCancelled' => $totalCancelled,
+            'totalCompleted' => $totalCompleted,
         ]);
     }
+    
 
     public function generatePdf(Request $request)
     {
@@ -104,41 +114,45 @@ class AdminBookingReportController extends Controller
     
     
     
-    
     public function getReportData($range)
     {
         \Log::info('getReportData called with range: ' . $range); // Log the selected range
-
+    
         try {
             // Initialize booking query
             $bookingsQuery = Booking::query();
     
-            // Fetch booking data based on the selected timeframe using 'updated_at'
+            // Fetch booking data for the total bookings based on 'created_at'
             if ($range === 'daily') {
+                $totalBookings = Booking::whereDate('created_at', today())->count();
                 $bookings = $bookingsQuery->whereDate('updated_at', today())->get();
             } elseif ($range === 'weekly') {
+                $totalBookings = Booking::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
                 $bookings = $bookingsQuery->whereBetween('updated_at', [now()->startOfWeek(), now()->endOfWeek()])->get();
             } elseif ($range === 'monthly') {
-                $bookings = $bookingsQuery->whereMonth('updated_at', now()->month)->whereYear('updated_at', now()->year)->get();
+                $totalBookings = Booking::whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year)->count();
+                $bookings = $bookingsQuery->whereMonth('updated_at', now()->month)
+                    ->whereYear('updated_at', now()->year)->get();
             } elseif ($range === 'yearly') {
+                $totalBookings = Booking::whereYear('created_at', now()->year)->count();
                 $bookings = $bookingsQuery->whereYear('updated_at', now()->year)->get();
             } else {
-                // Default case to avoid empty results
+                // Default case if the range is invalid or not provided
+                $totalBookings = Booking::count();  // Total of all bookings
                 $bookings = $bookingsQuery->get();
             }
     
             \Log::info('Bookings found: ' . $bookings->count()); // Log how many bookings found
     
-
-            // Calculate totals
-            $totalBookings = $bookings->count();
+            // Calculate totals based on status and 'updated_at'
             $totalPending = $bookings->where('status', 'pending')->count();
             $totalConfirmed = $bookings->where('status', 'confirmed')->count();
             $totalCancelled = $bookings->where('status', 'cancelled')->count();
             $totalCompleted = $bookings->where('status', 'completed')->count();
-
+    
             \Log::info('Returning report data'); // Log the success
-
+    
             // Return the data as JSON
             return response()->json([
                 'totalBookings' => $totalBookings,
@@ -152,7 +166,7 @@ class AdminBookingReportController extends Controller
             return response()->json(['error' => 'Unable to fetch report data'], 500);
         }
     }
-
+    
 
 
 

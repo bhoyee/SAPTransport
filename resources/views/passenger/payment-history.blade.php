@@ -31,10 +31,15 @@
                     <td>₦{{ number_format($payment->amount, 2) }}</td> <!-- Render the Amount -->
 
                     <td>
-                        <span class="badge bg-{{ $payment->status == 'paid' ? 'success' : ($payment->status == 'refund-pending' ? 'warning' : 'danger') }}">
+                        <span class="badge bg-{{ 
+                            $payment->status == 'paid' ? 'success' : 
+                            ($payment->status == 'refund-pending' ? 'warning' : 
+                            ($payment->status == 'refunded' ? 'info' : 'danger')) 
+                        }}">
                             {{ ucfirst(str_replace('-', ' ', $payment->status)) }}
                         </span>
                     </td>
+
 
                     <td>
                         <!-- View Button -->

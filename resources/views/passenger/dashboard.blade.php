@@ -729,20 +729,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         payments.forEach(payment => {
-            const invoiceDate = new Date(payment.invoice_date).toLocaleDateString(); // Format the invoice date
-            const badgeClass = payment.status.toLowerCase() === 'paid' ? 'bg-success' : 'bg-danger';
+    const invoiceDate = new Date(payment.invoice_date).toLocaleDateString(); // Format the invoice date
 
-            const row = `
-                <tr>
-                    <td data-label="Booking Ref">${payment.booking.booking_reference}</td>
-                    <td data-label="Invoice Number">${payment.invoice_number}</td>
-                    <td data-label="Amount">₦${payment.amount}</td>
-                    <td data-label="Invoice Date">${invoiceDate}</td>
-                    <td data-label="Payment Status"><span class="badge ${badgeClass}">${payment.status}</span></td>
-                </tr>
-            `;
-            tableBody.innerHTML += row;
-        });
+    // Determine the badge class based on the payment status
+    let badgeClass = '';
+    switch (payment.status.toLowerCase()) {
+        case 'paid':
+            badgeClass = 'bg-success'; // Green for paid
+            break;
+        case 'refunded':
+            badgeClass = 'bg-info'; // Blue for refunded
+            break;
+        case 'unpaid':
+            badgeClass = 'bg-danger'; // Red for unpaid
+            break;
+        case 'refund-pending':
+            badgeClass = 'bg-warning'; // Yellow for refund pending
+            break;
+        default:
+            badgeClass = 'bg-secondary'; // Default if status is unknown
+    }
+
+    const row = `
+        <tr>
+            <td data-label="Booking Ref">${payment.booking.booking_reference}</td>
+            <td data-label="Invoice Number">${payment.invoice_number}</td>
+            <td data-label="Amount">₦${payment.amount}</td>
+            <td data-label="Invoice Date">${invoiceDate}</td>
+            <td data-label="Payment Status"><span class="badge ${badgeClass}">${payment.status}</span></td>
+        </tr>
+    `;
+    tableBody.innerHTML += row;
+});
+
     }
 
     // Function to get the correct class for booking status

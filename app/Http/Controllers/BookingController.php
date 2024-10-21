@@ -25,16 +25,15 @@ class BookingController extends Controller
         if (!Auth::check()) {
             return back()->with('error', 'You need to login before booking a trip.');
         }
-
+    
         $user = Auth::user();
-
+    
         // Check if the user has the 'passenger' role and if their email is verified
-        // Only 'passenger' role needs email verification, admins and consultants don't
         if ($user->hasRole('passenger') && $user->email_verified_at === null) {
             return redirect()->route('verification.notice')
                 ->with('error', 'You need to verify your email before booking a trip.');
         }
-
+    
         // Validate the form inputs
         $request->validate([
             'service_type' => 'required',
@@ -50,9 +49,9 @@ class BookingController extends Controller
             'return_pickup_date' => 'nullable|date',  // Only for round trip
             'return_pickup_time' => 'nullable'        // Only for round trip
         ]);
-
+    
         \Log::info('BookingController@store invoked.');
-
+    
         // Create the booking record
         $booking = Booking::create([
             'user_id' => Auth::id(),
@@ -69,43 +68,47 @@ class BookingController extends Controller
             'return_pickup_time' => $request->input('return_pickup_time'),
             'number_adults' => $request->input('number_adults'),
             'number_children' => $request->input('number_children'),
-            'created_by' => Auth::user()->email, // Add logged-in user's email to created_by field
-
+            'created_by' => $user->email, // Add logged-in user's email to created_by field
         ]);
-
-        \Log::info('Booking created successfully.', ['booking_id' => $booking->id]);
-
-        // Log the booking activity
-        ActivityLogger::log('Booking Created', 'Booking created for user: ' . $user->email . ', Booking Reference: ' . $booking->booking_reference);
-
-        \Log::info('Attempting to send email to: ' . $user->email);
-
-        // Send the confirmation email
-        try {
-            $status = $booking->status;
-            Mail::to($user->email)->send(new BookingConfirmation($booking, $user, $status));
-            \Log::info('Email sent successfully.');
-        } catch (\Exception $e) {
-            \Log::error('Failed to send email: ' . $e->getMessage());
-        }
-
-        // Log the successful booking completion
-        ActivityLogger::log('Booking Completed', 'Booking successfully completed for user: ' . $user->email);
-
-        // Push notification to all admin and consultant users
-        $adminConsultantUsers = User::role(['admin', 'consultant'])->get();
-        foreach ($adminConsultantUsers as $adminConsultant) {
-            Notification::create([
-                'user_id' => $adminConsultant->id,
-                'message' => 'A new booking has been made by ' . $user->name . '. Booking Reference: ' . $booking->booking_reference,
-                'type' => 'booking',
-                'status' => 'unread',
-                'related_user_name' => $user->name,
-            ]);
-        }
-
-        return back()->with(['success' => 'Booking successfully completed!', 'booking_reference' => $booking->booking_reference]);
+    
+        // Return response immediately to avoid blocking the user while processing other tasks
+        $response = response()->json(['success' => true, 'booking_reference' => $booking->booking_reference]);
+    
+        // Use register_shutdown_function to handle email, logging, and notifications after the response is sent
+        register_shutdown_function(function () use ($user, $booking) {
+            // Log the booking activity
+            ActivityLogger::log('Booking Created', 'Booking created for user: ' . $user->email . ', Booking Reference: ' . $booking->booking_reference);
+    
+            \Log::info('Attempting to send email to: ' . $user->email);
+    
+            // Send the confirmation email
+            try {
+                Mail::to($user->email)->send(new BookingConfirmation($booking, $user, $booking->status));
+                \Log::info('Email sent successfully.');
+            } catch (\Exception $e) {
+                \Log::error('Failed to send email: ' . $e->getMessage());
+            }
+    
+            // Log the successful booking completion
+            ActivityLogger::log('Booking Completed', 'Booking successfully completed for user: ' . $user->email);
+    
+            // Push notifications to all admin and consultant users
+            $adminConsultantUsers = User::role(['admin', 'consultant'])->get();
+            foreach ($adminConsultantUsers as $adminConsultant) {
+                Notification::create([
+                    'user_id' => $adminConsultant->id,
+                    'message' => 'A new booking has been made by ' . $user->name . '. Booking Reference: ' . $booking->booking_reference,
+                    'type' => 'booking',
+                    'status' => 'unread',
+                    'related_user_name' => $user->name,
+                ]);
+            }
+        });
+    
+        // Return the response immediately
+        return $response;
     }
+    
 
     public function checkStatus(Request $request)
     {
