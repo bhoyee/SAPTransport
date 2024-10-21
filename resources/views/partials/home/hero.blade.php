@@ -46,14 +46,7 @@
 
                 <div class="row justify-content-center">
 
-                    <!-- Left Column: Intro Text -->
-                    @if(session('message'))
-                        <div class="alert alert-warning">
-                            {{ session('message') }}
-                        </div>
-                    @endif
-
-
+        
                     <div class="col-md-6 d-flex flex-column justify-content-center align-items-left text-left">
 
                         <h1>The modern way to commute across cities</h1>
@@ -541,212 +534,182 @@
 
 
 
-
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-
-// Check for booking reference in the session and show success modal
-const bookingReference = "{{ session('booking_reference') }}";
-console.log('Booking reference from session:', bookingReference); // Debugging log
-if (bookingReference) {
-    $('#bookingSuccessModal').modal('show');
-}
-
-// Common date and time validation logic
-const airportForm = document.getElementById('airport-transfer-form');
-const charterForm = document.getElementById('charter-form');
-const bookStatusForm = document.getElementById('booking-status-form');
-const airportSubmitBtn = document.getElementById('submit-btn');
-const charterSubmitBtn = document.getElementById('ch-submit-btn');
-const bookSubmitBtn = document.getElementById('bk-submit-btn');
-const pickupDateInput = document.getElementById('pickup-date');
-const pickupTimeInput = document.getElementById('pickup-time');
-const ChpickupDateInput = document.getElementById('pickup-date-tab2');
-const ChpickupTimeInput = document.getElementById('pickup-time-tab2');
-const returnPickupDateInput = document.getElementById('return-pickup-date');
-const returnPickupTimeInput = document.getElementById('return-pickup-time');
-const today = new Date().toISOString().split('T')[0];
-
-// Disable past dates for pickup and return
-if (pickupDateInput) {
-    pickupDateInput.setAttribute('min', today);
-}
-if (returnPickupDateInput) {
-    returnPickupDateInput.setAttribute('min', today);
-}
-
-if (ChpickupDateInput) {
-    ChpickupDateInput.setAttribute('min', today);
-}
-// Restrict past times on the same day
-function restrictTime(dateInput, timeInput) {
-    const selectedDate = new Date(dateInput.value);
-    const now = new Date();
-    if (selectedDate.toDateString() === now.toDateString()) {
-        const currentTime = now.toTimeString().slice(0, 5);
-        timeInput.setAttribute('min', currentTime);
-    } else {
-        timeInput.removeAttribute('min');
+    document.addEventListener('DOMContentLoaded', function () {
+    // Show booking success modal if booking reference exists in session
+    const bookingReference = "{{ session('booking_reference') }}";
+    if (bookingReference) {
+        $('#bookingSuccessModal').modal('show');
     }
-}
 
-// Apply time restrictions based on date changes
-if (pickupDateInput) {
-    pickupDateInput.addEventListener('change', function () {
-        restrictTime(pickupDateInput, pickupTimeInput);
-    });
-}
-if (returnPickupDateInput) {
-    returnPickupDateInput.addEventListener('change', function () {
-        restrictTime(returnPickupDateInput, returnPickupTimeInput);
-    });
-}
+    // Date and time restrictions logic
+    const setupDateRestrictions = (dateInput, timeInput) => {
+        if (dateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.setAttribute('min', today);
 
-// Spinner on airport
-if (airportForm) {
-    airportForm.addEventListener('submit', function (event) {
-        airportSubmitBtn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Checking...";
-        airportSubmitBtn.disabled = true;
-    });
-}
+            dateInput.addEventListener('change', function () {
+                const selectedDate = new Date(dateInput.value);
+                const now = new Date();
+                if (selectedDate.toDateString() === now.toDateString()) {
+                    timeInput.setAttribute('min', now.toTimeString().slice(0, 5));
+                } else {
+                    timeInput.removeAttribute('min');
+                }
+            });
+        }
+    };
 
-// Spinner on Charter
-if (charterForm) {
-    charterForm.addEventListener('submit', function (event) {
-        charterSubmitBtn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Processing...";
-        charterSubmitBtn.disabled = true;
-    });
-}
+    setupDateRestrictions(document.getElementById('pickup-date'), document.getElementById('pickup-time'));
+    setupDateRestrictions(document.getElementById('return-pickup-date'), document.getElementById('return-pickup-time'));
+    setupDateRestrictions(document.getElementById('pickup-date-tab2'), document.getElementById('pickup-time-tab2'));
 
-// Spinner on book status
-if (bookStatusForm) {
-    bookStatusForm.addEventListener('submit', function (event) {
-        bookSubmitBtn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Processing...";
-        bookSubmitBtn.disabled = true;
-    });
-}
+    // Generic AJAX submission handler for forms
+    const handleFormSubmission = (form, submitBtn, route) => {
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                submitBtn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Processing...";
+                submitBtn.disabled = true;
 
-// When the booking status result modal is closed
-$('#bookingStatusModal').on('hidden.bs.modal', function () {
-    bookSubmitBtn.disabled = false;
-    bookSubmitBtn.innerHTML = "Check Status"; // Replace "Check Status" with the original button text
-    document.getElementById('booking-reference').value = ""; // Clear the booking reference input
-});
+                const formData = new FormData(form);
 
-// Logic for Airport Pickup and Drop-Off
-const pickupBtn = document.getElementById('pickup-btn');
-const dropoffBtn = document.getElementById('dropoff-btn');
-const tripTypeInput = document.getElementById('trip_type');
-const pickupAddressInput = document.getElementById('pickup-address');
-const dropoffAddressInput = document.getElementById('dropoff-address');
-const pickupAddressGroup = document.getElementById('pickup-address-group');
-const dropoffAddressGroup = document.getElementById('dropoff-address-group');
+                fetch(route, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                    body: formData,
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('bookingSuccessModalLabel').innerHTML = 'Booking Successful!';
+                            document.querySelector('.modal-body').innerHTML = `
+                                <p>Your booking has been successfully completed.</p>
+                                <p><strong>Booking Reference:</strong> ${data.booking_reference}</p>`;
+                            $('#bookingSuccessModal').modal('show');
+                        } else {
+                            alert('An error occurred while processing your booking.');
+                        }
+                        submitBtn.innerHTML = "Proceed";
+                        submitBtn.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        submitBtn.innerHTML = "Proceed";
+                        submitBtn.disabled = false;
+                    });
+            });
+        }
+    };
 
-if (pickupBtn && dropoffBtn) {
-    pickupBtn.addEventListener('click', function () {
-        dropoffAddressGroup.style.display = 'block'; // Show Dropoff Address field
-        pickupAddressGroup.style.display = 'none'; // Hide Pickup Address field
+    // Setup form submissions for Airport Transfer and Charter
+    handleFormSubmission(document.getElementById('airport-transfer-form'), document.getElementById('submit-btn'), "{{ route('booking.store') }}");
+    handleFormSubmission(document.getElementById('charter-form'), document.getElementById('ch-submit-btn'), "{{ route('booking.store') }}");
 
-        this.classList.add('active');
-        dropoffBtn.classList.remove('active');
+    // Booking Status AJAX submission
+    const bookStatusForm = document.getElementById('booking-status-form');
+    const bookSubmitBtn = document.getElementById('bk-submit-btn');
+    if (bookStatusForm) {
+        bookStatusForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            bookSubmitBtn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Processing...";
+            bookSubmitBtn.disabled = true;
 
-        tripTypeInput.value = 'airport_pickup';
-        dropoffAddressInput.setAttribute('required', 'required');
-        pickupAddressInput.removeAttribute('required');
-    });
+            const bookingReference = document.getElementById('booking-reference').value;
 
-    dropoffBtn.addEventListener('click', function () {
-        dropoffAddressGroup.style.display = 'none'; // Hide Dropoff Address field
-        pickupAddressGroup.style.display = 'block'; // Show Pickup Address field
+            fetch('/check-booking-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                },
+                body: JSON.stringify({ booking_reference: bookingReference }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const bookingDetails = data.booking_reference
+                        ? `
+                            <p><strong>Booking Reference:</strong> ${data.booking_reference}</p>
+                            <p><strong>Booking Status:</strong> ${data.status}</p>
+                            <p><strong>Service Type:</strong> ${data.service_type}</p>
+                            <p><strong>Pickup/Drop-off Date:</strong> ${data.date}</p>
+                            <p><strong>Vehicle Type:</strong> ${data.vehicle_type}</p>`
+                        : '<p>No such booking reference number found.</p>';
 
-        this.classList.add('active');
-        pickupBtn.classList.remove('active');
-
-        tripTypeInput.value = 'airport_dropoff';
-        pickupAddressInput.setAttribute('required', 'required');
-        dropoffAddressInput.removeAttribute('required');
-    });
-}
-
-// Logic for Charter One-Way and Round-Trip
-const oneWayBtn = document.getElementById('one-way');
-const roundTripBtn = document.getElementById('round-trip');
-const charterTripTypeInput = document.getElementById('charter_trip_type');
-const returnFields = document.getElementById('return-fields');
-
-if (oneWayBtn && roundTripBtn) {
-    oneWayBtn.addEventListener('click', function () {
-        returnFields.style.display = 'none'; // Hide return fields for one-way
-        charterTripTypeInput.value = 'oneway';
-        this.classList.add('active');
-        roundTripBtn.classList.remove('active');
-    });
-
-    roundTripBtn.addEventListener('click', function () {
-        returnFields.style.display = 'block'; // Show return fields for round trip
-        charterTripTypeInput.value = 'round_trip';
-        this.classList.add('active');
-        oneWayBtn.classList.remove('active');
-    });
-}
-
-// Retrieve active tab from local storage
-const activeTab = localStorage.getItem('activeTab');
-if (activeTab) {
-    $(`#${activeTab}-tab`).tab('show'); // Show the previously active tab
-}
-
-// Store active tab in local storage when user clicks on a tab
-$('a[data-toggle="tab"]').on('click', function (e) {
-    localStorage.setItem('activeTab', $(e.target).attr('href').substring(1));
-});
-
-// AJAX Logic to handle Booking Status form submission
-if (bookStatusForm) {
-    bookStatusForm.addEventListener('submit', function (event) {
-        event.preventDefault(); // Prevent traditional form submission
-        const bookingReference = document.getElementById('booking-reference').value;
-        console.log('Submitting booking status form');
-        console.log('Booking reference entered:', bookingReference);
-        const url = '/check-booking-status';
-        console.log('Sending POST request to:', url);
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ booking_reference: bookingReference })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Data received:', data);
-            if (data.booking_reference) {
-                const bookingDetails = `
-                    <p><strong>Booking Reference:</strong> ${data.booking_reference}</p>
-                    <p><strong>Booking Status:</strong> ${data.status}</p>
-                    <p><strong>Service Type:</strong> ${data.service_type}</p>
-                    <p><strong>Pickup/Drop-off Date:</strong> ${data.date}</p>
-                    <p><strong>Vehicle Type:</strong> ${data.vehicle_type}</p>
-                `;
-                document.getElementById('booking-status-details').innerHTML = bookingDetails;
-            } else {
-                document.getElementById('booking-status-details').innerHTML = '<p>No such booking reference number found.</p>';
-            }
-
-            // Show the Booking Status Modal
-            $('#bookingStatusModal').modal('show');
-        })
-        .catch(error => {
-            console.error('Error during fetch request:', error);
+                    document.getElementById('booking-status-details').innerHTML = bookingDetails;
+                    $('#bookingStatusModal').modal('show');
+                    bookSubmitBtn.innerHTML = "Check Status";
+                    bookSubmitBtn.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error during fetch request:', error);
+                    bookSubmitBtn.innerHTML = "Check Status";
+                    bookSubmitBtn.disabled = false;
+                });
         });
+    }
+
+    // Airport Pickup and Drop-off toggle logic
+    const toggleTripType = (btn1, btn2, showElement, hideElement, tripTypeValue) => {
+        btn1.addEventListener('click', function () {
+            showElement.style.display = 'block';
+            hideElement.style.display = 'none';
+            btn1.classList.add('active');
+            btn2.classList.remove('active');
+            document.getElementById('trip_type').value = tripTypeValue;
+        });
+    };
+
+    toggleTripType(
+        document.getElementById('pickup-btn'),
+        document.getElementById('dropoff-btn'),
+        document.getElementById('dropoff-address-group'),
+        document.getElementById('pickup-address-group'),
+        'airport_pickup'
+    );
+
+    toggleTripType(
+        document.getElementById('dropoff-btn'),
+        document.getElementById('pickup-btn'),
+        document.getElementById('pickup-address-group'),
+        document.getElementById('dropoff-address-group'),
+        'airport_dropoff'
+    );
+
+    // Charter One-Way and Round-Trip logic
+    const oneWayBtn = document.getElementById('one-way');
+    const roundTripBtn = document.getElementById('round-trip');
+    const returnFields = document.getElementById('return-fields');
+    if (oneWayBtn && roundTripBtn) {
+        oneWayBtn.addEventListener('click', function () {
+            returnFields.style.display = 'none';
+            document.getElementById('charter_trip_type').value = 'oneway';
+            oneWayBtn.classList.add('active');
+            roundTripBtn.classList.remove('active');
+        });
+
+        roundTripBtn.addEventListener('click', function () {
+            returnFields.style.display = 'block';
+            document.getElementById('charter_trip_type').value = 'round_trip';
+            roundTripBtn.classList.add('active');
+            oneWayBtn.classList.remove('active');
+        });
+    }
+
+    // Save active tab in localStorage and retrieve it on reload
+    const activeTab = localStorage.getItem('activeTab');
+    if (activeTab) {
+        $(`#${activeTab}-tab`).tab('show');
+    }
+
+    $('a[data-toggle="tab"]').on('click', function (e) {
+        localStorage.setItem('activeTab', $(e.target).attr('href').substring(1));
     });
-}
-
 });
-
 
 </script>
+
 
 

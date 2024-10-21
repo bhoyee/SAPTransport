@@ -35,4 +35,12 @@ class Payment extends Model
     {
         return $this->belongsTo(Booking::class);
     }
+
+    // In App\Models\Payment.php
+
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class, 'booking_id', 'booking_id');
+    }
+
 }

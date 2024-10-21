@@ -69,7 +69,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Booking::class);
     }
-
+    
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'user_id');
+    }
+    
     /**
      * Accessor for gender: Capitalize the first letter.
      */

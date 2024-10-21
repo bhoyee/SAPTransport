@@ -228,14 +228,26 @@
 						        <ul class="submenu-list list-unstyled">
 							
 								<li class="submenu-item">
-    <a class="submenu-link" href="{{ route('admin.payment.search') }}">Make Payment</a>
-</li>
+									<a class="submenu-link" href="{{ route('admin.payment.search') }}">Make Payment</a>
+								</li>
+								<li class="submenu-item">
+									<a class="submenu-link" href="{{ route('admin.payment.cash') }}">Record Cash Payment</a>
+								</li>
 
-							        <li class="submenu-item"><a class="submenu-link" href="{{ route('payment.history') }}">Manage Payments</a></li>
+
+
+								<li class="submenu-item">
+									<a class="submenu-link" href="{{ route('admin.payments.index') }}">Manage Payments</a>
+								</li>
 
 									<li class="submenu-item">
-									<a class="submenu-link" href="">Payments Report</a>
+									<a class="submenu-link" href="{{ route('admin.payments.report') }}">Payments Report</a>
 								</li>
+
+								<li class="submenu-item">
+									<a class="submenu-link" href="{{ route('admin.reports.userPaymentReport') }}">User Payments Report</a>
+								</li>
+
 
 						        </ul>
 
