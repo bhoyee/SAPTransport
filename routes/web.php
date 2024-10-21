@@ -55,6 +55,10 @@ Route::get('/contact', function () {
     return view('contact');
 });
 
+//check booking status
+Route::post('/check-booking-status', [BookingController::class, 'checkStatus']);
+
+
 // Registration Routes
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.post');
@@ -199,13 +203,6 @@ Route::get('/reports/user-payment-report', [UserPaymentReportController::class, 
 });
 
 
-// Route::get('/admin/payment/callback', [AdminPaymentController::class, 'handleGatewayCallback'])->name('admin.payment.callback');
-
-// Single callback route for both admin and user
-// Route::get('/payment/callback', [AdminPaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
-
-// Route::get('/payment/callback', [AdminPaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
-
  Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
 
 
@@ -274,7 +271,7 @@ Route::middleware(['auth', 'role:passenger'])->group(function () {
 });
 
 // Admin User Management Routes (Only for Admin Role)
-Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
+    Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::get('/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
     Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
@@ -328,10 +325,6 @@ Route::middleware(['auth', 'role:passenger'])->group(function () {
     Route::post('/invoice/pay', [PaymentController::class, 'pay'])->name('invoice.pay');
 });
 
-// Route::get('/invoice/paid/{invoiceId}', [PaymentController::class, 'paidInvoice'])->name('invoice.paid');
-// Route::get('/invoice/failed', [PaymentController::class, 'failedInvoice'])->name('invoice.failed');
-
-
 // Clear Cache Route (for Admin Use)
 Route::get('/clear-cache', function () {
     Artisan::call('config:clear');
@@ -341,12 +334,6 @@ Route::get('/clear-cache', function () {
     return "Caches cleared";
 });
 
-// routes to make payment without login 
-// Route::get('/pay', [PaymentController::class, 'showPaymentPage'])->name('payment.show');
-// Route::get('/pay/search', [PaymentController::class, 'searchBooking'])->name('payment.search');
-// Route::post('/pay/process', [PaymentController::class, 'processPayment'])->name('payment.process');
-
-// Route::post('/walkinpay/process', [WalkinPayController::class, 'processPayment'])->name('payment.process');
 
 Route::get('/pay', [WalkinPayController::class, 'search'])->name('payment.search');
 
