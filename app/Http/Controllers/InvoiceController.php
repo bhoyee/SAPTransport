@@ -13,16 +13,57 @@ use App\Services\ActivityLogger;
 class InvoiceController extends Controller
 {
     // Fetch unpaid invoices for logged-in users (passengers)
-    public function unpaidPayments()
+    public function unpaidPayments(Request $request)
     {
-        // Fetch all unpaid invoices for the logged-in user
+        // Log the request type
+        Log::info('unpaidPayments method triggered', ['is_ajax' => $request->ajax()]);
+    
+        if ($request->ajax()) {
+            // Log before fetching invoices
+            Log::info('Fetching unpaid invoices for user', ['user_id' => Auth::id()]);
+    
+            $unpaidInvoices = Invoice::with('booking')
+                ->whereHas('booking', function ($query) {
+                    $query->where('user_id', Auth::id());
+                })
+                ->where('status', 'Unpaid')  // Ensure 'Unpaid' matches your database enum
+                ->get();
+    
+            // Log the unpaid invoices fetched
+            Log::info('Unpaid invoices fetched', ['invoice_count' => $unpaidInvoices->count()]);
+    
+            // Convert data for DataTable
+            $data = $unpaidInvoices->map(function($invoice) {
+                return [
+                    'booking_reference' => $invoice->booking->booking_reference,
+                    'invoice_number' => $invoice->invoice_number,
+                    'created_at' => $invoice->booking->created_at,
+                    'service_type' => $invoice->booking->service_type,
+                    'amount' => $invoice->amount,
+                    'status' => $invoice->status,
+                    'id' => $invoice->id,
+                    'booking_id' => $invoice->booking->id,
+                    'user_email' => $invoice->booking->user->email,
+                ];
+            });
+    
+            // Log the response data before returning
+            Log::info('Returning unpaid invoice data', ['data' => $data]);
+    
+            return response()->json(['data' => $data]);
+        }
+    
+        // Log for non-AJAX requests
+        Log::info('Non-AJAX request for unpaidPayments view');
+    
+        // Regular non-AJAX response
         $unpaidInvoices = Invoice::with('booking')
             ->whereHas('booking', function ($query) {
                 $query->where('user_id', Auth::id());
             })
-            ->where('status', 'Unpaid')  // Ensure 'Unpaid' matches your database enum
+            ->where('status', 'Unpaid')
             ->get();
-
+    
         return view('passenger.makepayments', compact('unpaidInvoices'));
     }
 
