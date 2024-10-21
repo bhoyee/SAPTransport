@@ -620,13 +620,20 @@
     // Booking Status AJAX submission
     const bookStatusForm = document.getElementById('booking-status-form');
     const bookSubmitBtn = document.getElementById('bk-submit-btn');
+
     if (bookStatusForm) {
         bookStatusForm.addEventListener('submit', function (event) {
             event.preventDefault();
-            bookSubmitBtn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Processing...";
-            bookSubmitBtn.disabled = true;
+
+            // Reset previous modal content
+            document.getElementById('booking-status-details').innerHTML = "";
 
             const bookingReference = document.getElementById('booking-reference').value;
+
+            console.log('Submitting booking reference:', bookingReference);
+
+            bookSubmitBtn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Processing...";
+            bookSubmitBtn.disabled = true;
 
             fetch('/check-booking-status', {
                 method: 'POST',
@@ -636,29 +643,42 @@
                 },
                 body: JSON.stringify({ booking_reference: bookingReference }),
             })
-                .then(response => response.json())
-                .then(data => {
-                    const bookingDetails = data.booking_reference
-                        ? `
-                            <p><strong>Booking Reference:</strong> ${data.booking_reference}</p>
-                            <p><strong>Booking Status:</strong> ${data.status}</p>
-                            <p><strong>Service Type:</strong> ${data.service_type}</p>
-                            <p><strong>Pickup/Drop-off Date:</strong> ${data.date}</p>
-                            <p><strong>Vehicle Type:</strong> ${data.vehicle_type}</p>`
-                        : '<p>No such booking reference number found.</p>';
+            .then(response => response.json())
+            .then(data => {
+                console.log('Response received: ', data);
 
+                // Response status is "success"
+                if (data.status === 'success' || data.status === 'pending') {
+                    // Populate the modal with the actual booking details
+                    const bookingDetails = `
+                        <p><strong>Booking Reference:</strong> ${data.booking_reference}</p>
+                        <p><strong>Booking Status:</strong> ${data.status}</p> <!-- Now using data.status to show booking status -->
+                        <p><strong>Service Type:</strong> ${data.service_type}</p>
+                        <p><strong>Pickup/Drop-off Date:</strong> ${data.date}</p>
+                        <p><strong>Vehicle Type:</strong> ${data.vehicle_type}</p>
+                    `;
                     document.getElementById('booking-status-details').innerHTML = bookingDetails;
+
+                    // Show the modal using jQuery
                     $('#bookingStatusModal').modal('show');
-                    bookSubmitBtn.innerHTML = "Check Status";
-                    bookSubmitBtn.disabled = false;
-                })
-                .catch(error => {
-                    console.error('Error during fetch request:', error);
-                    bookSubmitBtn.innerHTML = "Check Status";
-                    bookSubmitBtn.disabled = false;
-                });
+
+                } else {
+                    // Handle error: No such booking reference number found
+                    document.getElementById('booking-status-details').innerHTML = '<p>No such booking reference number found.</p>';
+                    $('#bookingStatusModal').modal('show');
+                }
+
+                bookSubmitBtn.innerHTML = "Check Status";
+                bookSubmitBtn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error during fetch request:', error);
+                bookSubmitBtn.innerHTML = "Check Status";
+                bookSubmitBtn.disabled = false;
+            });
         });
     }
+
 
     // Airport Pickup and Drop-off toggle logic
     const toggleTripType = (btn1, btn2, showElement, hideElement, tripTypeValue) => {
