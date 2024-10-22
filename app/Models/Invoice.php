@@ -30,4 +30,10 @@ class Invoice extends Model
     {
         return $this->belongsTo(User::class, 'generated_by');
     }
+    public function payment()
+    {
+        return $this->hasOne(Payment::class, 'booking_id', 'booking_id'); // Link payments through booking_id
+    }
+    
+
 }

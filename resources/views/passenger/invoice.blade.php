@@ -29,11 +29,18 @@
                     <p>
                         <strong>Status: 
                         <span class="badge 
-                            @if(trim(strtolower($invoice->status)) === 'paid') bg-success 
-                            @else bg-danger 
-                            @endif fs-4">  <!-- Bootstrap's font-size utility class -->
+                            @if(trim(strtolower($invoice->status)) === 'paid') 
+                                bg-success
+                            @elseif(trim(strtolower($invoice->status)) === 'unpaid') 
+                                bg-danger
+                            @elseif(trim(strtolower($invoice->status)) === 'refunded') 
+                                bg-info
+                            @else 
+                                bg-secondary
+                            @endif fs-4">
                             {{ ucfirst($invoice->status) }}
                         </span>
+
 
                         </strong>
                     </p>
@@ -89,8 +96,12 @@
             <div class="row mt-4">
                 <div class="col-md-6">
                     <h5 class="fw-bold">Payment Details</h5>
-                    <p>Payment Method: {{ $invoice->payment_method ?? 'Not Provided' }}</p>
-                    <p>Card Number: **** **** **** 1234</p>
+                    @if($invoice->payment && $invoice->payment->payment_method)
+                        <p>Payment Method: {{ $invoice->payment->payment_method }}</p>
+                    @else
+                        <p>Payment Method: Not Provided</p>
+                    @endif
+
                 </div>
                 <div class="col-md-6 text-end">
                     <h5 class="fw-bold">Summary</h5>

@@ -14,6 +14,8 @@ class BookingEditController extends Controller
     public function edit($id)
     {
         try {
+            \Log::info("Edit method accessed for booking ID: " . $id);
+
             // Fetch the booking based on the ID
             $booking = Booking::findOrFail($id);
 
@@ -126,6 +128,9 @@ class BookingEditController extends Controller
     public function show($id, Request $request)
     {
         try {
+
+            \Log::info("Show method accessed for booking ID: " . $id);
+
             // Fetch the booking with the related invoice
             $booking = Booking::with('invoice')->findOrFail($id);
 

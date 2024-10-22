@@ -69,14 +69,24 @@
             <p>Invoice Number: {{ $invoice->invoice_number }}</p>
             <p>Issue Date: {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d M Y') }}</p>
             <p>Due Date: {{ \Carbon\Carbon::parse($invoice->due_date)->format('d M Y') }}</p>
-            <p>Due Amount: ₦{{ number_format($invoice->amount, 2) }}</p>
+            <p>Due Amount: NGN{{ number_format($invoice->amount, 2) }}</p>
 
             <!-- Invoice Status -->
             <p>
                 <strong>Status:
-                    <span style="color: {{ $invoice->status === 'paid' ? 'green' : 'red' }};">
-                        {{ ucfirst($invoice->status) }}
-                    </span>
+                <span style="color: 
+                    @if(trim(strtolower($invoice->status)) === 'paid') 
+                        green
+                    @elseif(trim(strtolower($invoice->status)) === 'unpaid') 
+                        red
+                    @elseif(trim(strtolower($invoice->status)) === 'refunded') 
+                        skyblue
+                    @else 
+                        gray
+                    @endif;">
+                    {{ ucfirst($invoice->status) }}
+                </span>
+
                 </strong>
             </p>
         </div>
@@ -124,13 +134,16 @@
     <!-- Payment Details -->
     <div class="text-end">
         <h5 class="fw-bold">Payment Details</h5>
-        <p>Payment Method: {{ $invoice->payment_method ?? 'Not Provided' }}</p>
-        <p>Card Number: **** **** **** 1234</p>
+        @if($invoice->payment && $invoice->payment->payment_method)
+                        <p>Payment Method: {{ $invoice->payment->payment_method }}</p>
+                    @else
+                        <p>Payment Method: Not Provided</p>
+                    @endif
         <h5 class="fw-bold">Summary</h5>
-        <p>Subtotal: ₦{{ number_format($invoice->subtotal ?? $invoice->amount, 2) }}</p>
-        <p>Taxable: ₦{{ number_format($invoice->taxable ?? 0, 2) }}</p>
-        <p>Discount: ₦{{ number_format($invoice->discount ?? 0, 2) }}</p>
-        <p class="fw-bold">Total: ₦{{ number_format($invoice->amount, 2) }}</p>
+        <p>Subtotal: NGN {{ number_format($invoice->subtotal ?? $invoice->amount, 2) }}</p>
+        <p>Taxable: NGN {{ number_format($invoice->taxable ?? 0, 2) }}</p>
+        <p>Discount: NGN {{ number_format($invoice->discount ?? 0, 2) }}</p>
+        <p class="fw-bold">Total: NGN {{ number_format($invoice->amount, 2) }}</p>
     </div>
 
     <!-- Notes -->
