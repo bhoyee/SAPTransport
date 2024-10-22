@@ -22,46 +22,11 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($payments as $payment)
-                <tr>
-                    <td>{{ $payment->booking->booking_reference }}</td>
-                    <td>{{ $payment->booking->invoice->invoice_number ?? 'N/A' }}</td>
-                    <td>{{ \Carbon\Carbon::parse($payment->booking->created_at)->format('d M, Y') }}</td>
-                    <td>{{ $payment->booking->service_type }}</td>
-                    <td>₦{{ number_format($payment->amount, 2) }}</td> <!-- Render the Amount -->
-
-                    <td>
-                        <span class="badge bg-{{ 
-                            $payment->status == 'paid' ? 'success' : 
-                            ($payment->status == 'refund-pending' ? 'warning' : 
-                            ($payment->status == 'refunded' ? 'info' : 'danger')) 
-                        }}">
-                            {{ ucfirst(str_replace('-', ' ', $payment->status)) }}
-                        </span>
-                    </td>
-
-
-                    <td>
-                        <!-- View Button -->
-                        <a href="{{ route('booking.view', ['id' => $payment->booking->id]) }}" class="btn btn-primary btn-sm">
-                            View
-                        </a>
-
-                        <!-- Refund Button -->
-                        @if($payment->status == 'paid')
-                            <button class="btn btn-danger btn-sm" onclick="showRefundModal('{{ $payment->id }}')">
-                                Request Refund
-                            </button>
-                        @endif
-                    </td>
-                </tr>
-                @endforeach
+                <!-- The body will be filled dynamically via AJAX -->
             </tbody>
         </table>
     </div>
 </div>
-
-<!-- Refund Modal -->
 
 <!-- Refund Modal -->
 <div class="modal fade" id="refundModal" tabindex="-1" role="dialog" aria-labelledby="refundModalLabel" aria-hidden="true">
@@ -93,33 +58,68 @@
     </div>
 </div>
 
-
-
 @endsection
 
 @push('scripts')
+<!-- Include Moment.js for date formatting -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
 <script>
     $(document).ready(function() {
-        $('#payment-history-table').DataTable({
+        // Initialize the DataTable with AJAX source
+        let table = $('#payment-history-table').DataTable({
             responsive: true,
             paging: true,
             searching: true,
             ordering: true,
             lengthChange: true,
+            ajax: {
+                url: "{{ route('payment.history') }}", // Route that returns the JSON data
+                type: 'GET',
+                dataSrc: 'data', // Data source is the 'data' array in the JSON response
+            },
+            columns: [
+                { data: 'booking.booking_reference' }, // Booking reference
+                { data: 'booking.invoice.invoice_number', defaultContent: 'N/A' }, // Invoice number, default to 'N/A'
+                { data: 'booking.created_at', render: function(data) { 
+                    return moment(data).format('D MMM, YYYY'); // Format the date using moment.js
+                }},
+                { data: 'booking.service_type' }, // Service type
+                { data: 'amount', render: function(data) {
+                    return '₦' + parseFloat(data).toLocaleString(); // Format the amount with commas
+                }},
+                { data: 'status', render: function(data) {
+                    let badgeClass = data === 'paid' ? 'success' : data === 'refund-pending' ? 'warning' : data === 'refunded' ? 'info' : 'danger';
+                    return `<span class="badge bg-${badgeClass}">${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
+                }},
+                { data: null, render: function(data, type, row) {
+                    let actions = `
+                        <a href="/booking/view/${row.booking.id}" class="btn btn-primary btn-sm">View</a>
+                    `;
+                    if (row.status === 'paid') {
+                        actions += `<button class="btn btn-danger btn-sm" onclick="showRefundModal('${row.id}')">Request Refund</button>`;
+                    }
+                    return actions;
+                }}
+            ]
         });
-    });
 
-    function showRefundModal(paymentId) {
-        $('#refundPaymentId').val(paymentId);
-        $('#refundModal').modal('show');
-    }
+        // Function to show the refund modal
+        window.showRefundModal = function(paymentId) {
+            $('#refundPaymentId').val(paymentId);
+            $('#refundModal').modal('show');
+        }
 
-            // Show spinner and disable the Confirm Refund button on form submit
-            $('#refundForm').on('submit', function() {
+        // Show spinner and disable the Confirm Refund button on form submit
+        $('#refundForm').on('submit', function() {
             $('#confirmRefundButton').prop('disabled', true); // Disable the button
             $('#refundSpinner').removeClass('d-none'); // Show the spinner
         });
+
+        // Optional: Poll the table to reload every 30 seconds to ensure real-time updates
+        setInterval(function() {
+            table.ajax.reload(null, false); // false to keep current paging
+        }, 30000); // Reload every 30 seconds
+    });
 </script>
 @endpush
-
-
