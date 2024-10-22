@@ -179,30 +179,40 @@ class BookingController extends Controller
     
     public function cancelBooking(Request $request, $id)
     {
+        \Log::info("Cancel request received for booking ID: {$id}, method: {$request->method()}");
+    
         try {
             // Find the booking by its ID
             $booking = Booking::findOrFail($id);
-
+    
+            // Log the current status of the booking
+            \Log::info("Booking found with status: {$booking->status}");
+    
             // Check if the booking is cancelable (only pending status can be cancelled)
             if ($booking->status !== 'pending') {
+                \Log::info("Booking cannot be cancelled, current status is: {$booking->status}");
                 return response()->json(['error' => 'Booking cannot be cancelled.'], 400);
             }
-
+    
             // Update the booking status to cancelled
             $booking->update(['status' => 'cancelled']);
-
+    
+            // Log the success of the status update
+            \Log::info("Booking ID: {$id} status updated to cancelled");
+    
             // Log the user activity for cancellation
             ActivityLogger::log('Booking Cancelled', 'Booking cancelled by user: ' . auth()->user()->email . ', Booking Reference: ' . $booking->booking_reference);
-
+    
             $user = auth()->user(); // Get the authenticated user
-
+    
             // Send cancellation email to the user
             try {
                 Mail::to($user->email)->send(new BookingCancellation($booking, $user));
+                \Log::info("Cancellation email sent to user: {$user->email}");
             } catch (\Exception $e) {
                 \Log::error('Failed to send cancellation email to user: ' . $e->getMessage());
             }
-
+    
             // Notify admin and consultants about the cancellation
             $adminConsultantUsers = User::role(['admin', 'consultant'])->get();
             foreach ($adminConsultantUsers as $adminConsultant) {
@@ -213,32 +223,65 @@ class BookingController extends Controller
                     'status' => 'unread',
                     'related_user_name' => $user->name,
                 ]);
+                \Log::info("Notification sent to admin/consultant ID: {$adminConsultant->id}");
             }
-
+    
             // Send cancellation email to admin using config-based admin email
             try {
                 $adminEmail = config('mail.admin_email');  // Fetch email from config
                 Mail::to($adminEmail)->send(new BookingCancellationAdminNotification($booking, $adminConsultantUsers));
+                \Log::info("Cancellation email sent to admin: {$adminEmail}");
             } catch (\Exception $e) {
                 \Log::error('Failed to send cancellation email to admin: ' . $e->getMessage());
             }
-
+    
             return response()->json(['success' => true, 'message' => 'Booking cancelled successfully.']);
         } catch (\Exception $e) {
             \Log::error('Error cancelling booking: ' . $e->getMessage());
             return response()->json(['error' => 'An error occurred while cancelling the booking.'], 500);
         }
     }
+    
+    
 
-    public function myBookings()
+    public function myBookings(Request $request)
     {
+
         $userId = auth()->id();
 
-        // Fetch bookings and order by 'created_at' in descending order (most recent first)
-        $bookings = Booking::where('user_id', $userId)
-                    ->orderBy('created_at', 'desc') // Add the orderBy clause
-                    ->get();
+        // Log user ID
+        Log::info('Fetching bookings for user', ['user_id' => $userId]);
 
-        return view('passenger.my-bookings', compact('bookings'));
+        try {
+            // Fetch bookings and order by 'created_at' in descending order (most recent first)
+            $bookings = Booking::where('user_id', $userId)
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+
+            // Log the number of bookings fetched
+            Log::info('Bookings fetched', ['booking_count' => $bookings->count()]);
+
+            // If this is an AJAX request, return JSON data for DataTables
+            if ($request->ajax()) {
+                Log::info('AJAX request detected, returning JSON data for DataTables');
+
+                // Log the bookings being returned
+                Log::info('Returning bookings data', ['bookings' => $bookings->toArray()]);
+
+                return response()->json(['data' => $bookings]);
+            }
+
+            // Log that it is a non-AJAX request
+            Log::info('Non-AJAX request, returning view with bookings');
+
+            // Otherwise, return the view
+            return view('passenger.my-bookings', compact('bookings'));
+
+        } catch (\Exception $e) {
+            // Log any errors that occur
+            Log::error('Error fetching bookings', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to load data'], 500);
+        }
     }
+    
 }

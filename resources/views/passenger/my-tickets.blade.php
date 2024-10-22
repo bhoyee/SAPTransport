@@ -10,6 +10,7 @@
             <table id="tickets-table" class="table table-striped table-bordered table-responsive">
                 <thead>
                     <tr>
+                        <th>S/N</th> <!-- Added S/N column -->
                         <th>Department</th>
                         <th>Subject</th>
                         <th>Status</th>
@@ -20,6 +21,7 @@
                 <tbody>
                     @foreach($tickets as $ticket)
                     <tr>
+                        <td>{{ $loop->iteration }}</td> <!-- Serial number based on loop iteration -->
                         <td>{{ ucfirst($ticket->department) }}</td>
                         <td>
                             <strong>#{{ $ticket->ticket_num }}</strong><br>
@@ -32,7 +34,7 @@
                         </td>
                         <td>{{ \Carbon\Carbon::parse($ticket->updated_at)->format('d M Y H:i') }}</td> <!-- 24-hour format -->
                         <td>
-                        <a href="{{ route('viewTicket', $ticket->id) }}" class="btn btn-primary btn-sm">View</a>
+                            <a href="{{ route('viewTicket', $ticket->id) }}" class="btn btn-primary btn-sm">View</a>
                         </td>
                     </tr>
                     @endforeach
@@ -46,12 +48,14 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        // Initialize DataTable with custom ordering by 'updated_at'
         $('#tickets-table').DataTable({
             responsive: true,
             paging: true,
             searching: true,
             ordering: true,
             lengthChange: true,
+            order: [[4, 'desc']], // Order by 'Last Updated' (5th column, 0-indexed as 4)
         });
     });
 </script>

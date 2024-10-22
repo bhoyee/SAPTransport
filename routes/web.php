@@ -102,13 +102,16 @@ Route::fallback(function () {
 });
 
 // Passenger Dashboard Routes (Protected by Role)
-Route::middleware(['auth', 'session.timeout', 'role:passenger'])->group(function () {
+Route::middleware(['auth', 'role:passenger'])->group(function () {
     Route::get('/passenger/dashboard', [PassengerController::class, 'dashboard'])->name('passenger.dashboard');
     Route::get('/passenger/recent-bookings', [PassengerHomeController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
     Route::get('/passenger/payment-history', [PassengerHomeController::class, 'getPaymentHistory']);
     Route::get('/passenger/dashboard-data', [PassengerHomeController::class, 'fetchDashboardData'])->name('passenger.dashboard.data');
     Route::get('/passenger/makepayments', [InvoiceController::class, 'unpaidPayments'])->name('passenger.makepayments');
     Route::get('/passenger/invoice/{id}', [InvoiceController::class, 'showInvoice'])->name('passenger.invoice');
+    
+
+    
     Route::get('/passenger/invoice/download/{id}', [InvoiceController::class, 'downloadInvoice'])->name('passenger.downloadInvoice');
     Route::get('/passenger/bookings/chart-data', [PassengerHomeController::class, 'getChartData'])->name('passenger.bookings.chartData');
     Route::get('/passenger/activities', [PassengerHomeController::class, 'getUserActivities'])->name('passenger.activities');
@@ -301,7 +304,10 @@ Route::prefix('passenger')->middleware(['auth', 'role:passenger'])->group(functi
 
 // Route::middleware(['auth', 'role:passenger'])->group(function () {
     Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-bookings');
-    Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking'])->middleware('auth');
+    // Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking'])->middleware('auth');
+
+    Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking']);
+
     Route::get('/booking/{id}/edit', [BookingEditController::class, 'edit'])->name('booking.edit');
     Route::put('/booking/{id}', [BookingEditController::class, 'update'])->name('booking.update');
     Route::get('/booking/{id}/view', [BookingEditController::class, 'show'])->name('booking.view');

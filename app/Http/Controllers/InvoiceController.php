@@ -71,17 +71,21 @@ class InvoiceController extends Controller
     public function showInvoice($id)
     {
         $user = Auth::user();  // Fetch the logged-in user
-        $invoice = Invoice::with('booking')->findOrFail($id);
-
+        $invoice = Invoice::with(['booking', 'payment'])->findOrFail($id);
+    
+        // Log the invoice object to see if payment is loaded
+        \Log::info('Invoice data:', ['invoice' => $invoice]);
+    
         // Check if the user is an admin, consultant, or the owner of the invoice
         if (!$this->canAccessInvoice($invoice, $user)) {
             return redirect()->route('passenger.makepayments')->with('error', 'Unauthorized access to invoice.');
         }
-
+    
         $booking = $invoice->booking;
-
+    
         return view('passenger.invoice', compact('user', 'invoice', 'booking'));
     }
+    
 
     // Download an invoice
     public function downloadInvoice($id)
@@ -99,36 +103,46 @@ class InvoiceController extends Controller
     }
 
     // Fetch all invoices for logged-in users, admins, and consultants
-    public function index()
+
+    // View a specific invoice
+
+    public function index(Request $request)
     {
         $user = Auth::user();
-
-        // Admins and consultants should view all invoices
+    
+        // Log the user details and role
+        Log::info('Fetching invoices', [
+            'user_id' => $user->id,
+            'user_role' => $user->getRoleNames(),
+        ]);
+    
+        // Fetch invoices based on user role
         if ($user->hasRole(['admin', 'consultant'])) {
             $invoices = Invoice::with('booking')->get();
+            // Log the number of invoices fetched for admin/consultant
+            Log::info('Invoices fetched for admin/consultant', ['invoice_count' => $invoices->count()]);
         } else {
             // Passengers only view their own invoices
             $invoices = Invoice::with('booking')->whereHas('booking', function ($query) {
                 $query->where('user_id', Auth::id());
             })->get();
+            // Log the number of invoices fetched for passenger
+            Log::info('Invoices fetched for passenger', ['invoice_count' => $invoices->count()]);
         }
-
+    
+        // Log whether the request is an AJAX request
+        if ($request->ajax()) {
+            Log::info('AJAX request detected, returning JSON data for DataTable');
+            // Log the data being returned for AJAX
+            Log::info('JSON data being returned', ['data' => $invoices]);
+            return response()->json(['data' => $invoices]);
+        }
+    
+        // Log that it's a regular request and the view is being returned
+        Log::info('Non-AJAX request, returning the view with invoices');
         return view('passenger.invoices', compact('invoices'));
     }
-
-    // View a specific invoice
-    public function view($id)
-    {
-        $invoice = Invoice::with('booking')->findOrFail($id);
-        $user = Auth::user();
-        $booking = $invoice->booking;
-
-        if (!$this->canAccessInvoice($invoice, $user)) {
-            return redirect()->route('passenger.dashboard')->with('error', 'Unauthorized access to invoice.');
-        }
-
-        return view('passenger.invoice', compact('invoice', 'user', 'booking'));
-    }
+    
 
     // Handle payments
     public function pay(Request $request)
