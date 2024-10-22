@@ -216,7 +216,6 @@ Route::prefix('staff')->middleware(['auth', 'role:consultant'])->group(function 
 });
 
 
-
 // Notification Routes (Accessible to Authenticated Users)
 Route::middleware(['auth'])->group(function () {
     Route::get('/notifications/recent', [NotificationController::class, 'fetchRecentNotifications'])->name('notifications.recent');
@@ -294,16 +293,13 @@ Route::middleware(['auth', 'role:admin|consultant'])->group(function () {
 });
 
 
-// Staff Routes (Only for Consultants/Staff)
-Route::prefix('staff')->middleware(['auth', 'role:consultant'])->group(function () {
-    Route::get('/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
-    Route::get('/support', [StaffSupportController::class, 'index'])->name('staff.support');
-});
 
 // Booking and Payment Routes (Both for Admins and Passengers)
 Route::post('/book-airport-transfer', [BookingController::class, 'store'])->name('booking.store');
 
-Route::middleware(['auth', 'role:passenger'])->group(function () {
+Route::prefix('passenger')->middleware(['auth', 'role:passenger'])->group(function () {
+
+// Route::middleware(['auth', 'role:passenger'])->group(function () {
     Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-bookings');
     Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking'])->middleware('auth');
     Route::get('/booking/{id}/edit', [BookingEditController::class, 'edit'])->name('booking.edit');

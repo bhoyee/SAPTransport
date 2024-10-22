@@ -53,25 +53,51 @@ class PaymentController extends Controller
     }
 
     // Show payment history page with role-based access
-    public function paymentHistory()
+
+    public function paymentHistory(Request $request)
     {
         $user = Auth::user();
-
+    
+        // Log the user and their role
+        Log::info('Payment history requested', [
+            'user_id' => $user->id,
+            'user_role' => $user->getRoleNames()
+        ]);
+    
+        // Fetch payments based on user role
         if ($user->hasRole('passenger')) {
-            // Passengers only see their own payments
             $payments = Payment::with('booking', 'booking.invoice')
                 ->where('user_id', $user->id)
                 ->orderBy('payment_date', 'desc')
-                ->paginate(10);
+                ->get();
+    
+            // Log the number of payments fetched for passenger
+            Log::info('Payments fetched for passenger', ['payment_count' => $payments->count()]);
         } elseif ($user->hasRole('consultant') || $user->hasRole('admin')) {
-            // Consultants and admins can see all payment records
             $payments = Payment::with('booking', 'booking.invoice')
                 ->orderBy('payment_date', 'desc')
-                ->paginate(10);
+                ->get();
+    
+            // Log the number of payments fetched for consultant/admin
+            Log::info('Payments fetched for consultant/admin', ['payment_count' => $payments->count()]);
         }
-
+    
+        // Log if the request is AJAX or not
+        if ($request->ajax()) {
+            Log::info('AJAX request detected, returning JSON data for DataTable');
+    
+            // Log the payment data that will be sent back in JSON
+            Log::info('JSON data', ['data' => $payments]);
+    
+            return response()->json(['data' => $payments]);
+        }
+    
+        // Log returning the view for non-AJAX request
+        Log::info('Non-AJAX request, returning the view with payments');
+    
         return view('passenger.payment-history', compact('payments'));
     }
+    
 
     // Request refund for a specific payment
 
