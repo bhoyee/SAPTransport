@@ -8,6 +8,7 @@ use App\Models\User;
 use PDF; // Assuming you're using dompdf
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class UserReportController extends Controller
 {
@@ -89,23 +90,58 @@ class UserReportController extends Controller
         );
     }
 
-    public function showReportPage()
-    {
-        // Update the role-based queries using Spatie's role system
-        $totalUsers = User::where('status', '!=', 'deleted')->count();
+        public function showReportPage()
+        {
+            // Query for statistics
+            $totalUsers = User::where('status', '!=', 'deleted')->count();
+            $totalPassengers = User::role('passenger')->where('status', '!=', 'deleted')->count();
+            $totalStaff = User::role('consultant')->where('status', '!=', 'deleted')->count();
+            $unverifiedUsers = User::where('status', '!=', 'deleted')
+                ->whereNull('email_verified_at')
+                ->whereDoesntHave('roles', function($query) {
+                    $query->whereIn('name', ['consultant', 'admin']);
+                })
+                ->count();
         
-        $totalPassengers = User::role('passenger')->where('status', '!=', 'deleted')->count();
+            // Return the view with the initial data
+            return view('admin.users.report', compact('totalUsers', 'totalPassengers', 'totalStaff', 'unverifiedUsers'));
+        }
         
-        $totalStaff = User::role('consultant')->where('status', '!=', 'deleted')->count();
+        // This method is called via AJAX to fetch updated stats in real time
+        public function fetchStats()
+        {
+            try {
+                // Log the stats fetching process
+                Log::info('Fetching real-time user statistics.');
         
-        // Total unverified users excluding 'consultant' and 'admin' roles
-        $unverifiedUsers = User::where('status', '!=', 'deleted')
-            ->whereNull('email_verified_at')
-            ->whereDoesntHave('roles', function($query) {
-                $query->whereIn('name', ['consultant', 'admin']); // Use roles from Spatie's system
-            })
-            ->count();
+                // Query for updated statistics
+                $totalUsers = User::where('status', '!=', 'deleted')->count();
+                $totalPassengers = User::role('passenger')->where('status', '!=', 'deleted')->count();
+                $totalStaff = User::role('consultant')->where('status', '!=', 'deleted')->count();
+                $unverifiedUsers = User::where('status', '!=', 'deleted')
+                    ->whereNull('email_verified_at')
+                    ->whereDoesntHave('roles', function($query) {
+                        $query->whereIn('name', ['consultant', 'admin']);
+                    })
+                    ->count();
+        
+                // Return JSON response
+                return response()->json([
+                    'totalUsers' => $totalUsers,
+                    'totalPassengers' => $totalPassengers,
+                    'totalStaff' => $totalStaff,
+                    'unverifiedUsers' => $unverifiedUsers
+                ]);
+            } catch (\Exception $e) {
+                // Log the error and return an error response
+                Log::error('Error fetching real-time user statistics', ['error' => $e->getMessage()]);
+        
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error fetching user statistics.'
+                ], 500);
+            }
+        }
+        
 
-        return view('admin.users.report', compact('totalUsers', 'totalPassengers', 'totalStaff', 'unverifiedUsers'));
-    }
 }
