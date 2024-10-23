@@ -130,6 +130,13 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('users/report', [UserReportController::class, 'showReportPage'])->name('admin.users.report');
     Route::get('users/fetch-stats', [UserReportController::class, 'fetchStats'])->name('admin.users.fetch-stats');
 
+    //admin delete user page 
+    Route::get('users/deleted-users', [AdminUserController::class, 'showDeletedUsers'])->name('admin.users.deleted-users'); // To display the page
+    // Route::get('users/deleted', [AdminUserController::class, 'showDeletedUsers'])->name('admin.users.deleted'); // To display the page
+    Route::get('users/fetch-deleted-stats', [AdminUserController::class, 'fetchDeletedStats'])->name('admin.users.fetch-deleted-stats'); // For the card
+    Route::get('users/deleted-list', [AdminUserController::class, 'getDeletedUsers'])->name('admin.users.deleted-list'); // For the DataTable
+    Route::post('users/permanent-delete', [AdminUserController::class, 'permanentDelete'])->name('admin.users.permanent-delete'); // For permanent deletion
+
 
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show'); // Add this route
 
