@@ -2,55 +2,42 @@
 
 @section('content')
 <h1 class="app-page-title">User Management</h1>
-<p style="font-size: small; font-weight: bold;">Manage all registered users here. Note: Active Users include (admin) while the rest doesn't 
-</p>
 
 <!-- Statistics Cards -->
-<div class="row mb-4">
+<div class="row mb-4" id="user-stats">
+    <!-- Active Passengers (Success) -->
     <div class="col-md-4">
-        <div class="card">
+        <div class="card text-white bg-success">
             <div class="card-body text-center">
                 <h5 class="card-title">Active Passengers</h5>
-                <h2>{{ $activePassengers }}</h2>
-                <small class="text-success">Active</small>
+                <h2 id="activePassengers">{{ $activePassengers }}</h2>
+                <small class="text-white">Active</small>
             </div>
         </div>
     </div>
+
+    <!-- Active Staff (Info) -->
     <div class="col-md-4">
-        <div class="card">
+        <div class="card text-white bg-info">
             <div class="card-body text-center">
                 <h5 class="card-title">Active Staffs</h5>
-                <h2>{{ $activeConsultants }}</h2>
-                <small class="text-success">Active</small>
+                <h2 id="activeConsultants">{{ $activeConsultants }}</h2>
+                <small class="text-white">Active</small>
             </div>
         </div>
     </div>
+
+    <!-- Suspended Users (Danger) -->
     <div class="col-md-4">
-        <div class="card">
+        <div class="card text-white bg-danger">
             <div class="card-body text-center">
                 <h5 class="card-title">Suspended Users</h5>
-                <h2>{{ $suspendedUsers }}</h2>
-                <small class="text-danger">Suspended</small>
+                <h2 id="suspendedUsers">{{ $suspendedUsers }}</h2>
+                <small class="text-white">Suspended</small>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Display Success Message -->
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
-<!-- Display Error Message -->
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
 
 <!-- DataTable -->
 <div class="app-card app-card-details shadow-sm mb-4">
@@ -58,58 +45,15 @@
         <table id="users-table" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
             <thead>
                 <tr>
+                    <th>S/N</th>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>Role</th>
                     <th>Status</th>
                     <th>Created At</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-    @foreach ($users as $user)
-        <tr>
-            <td>{{ $user->name }}</td>
-            <td>{{ $user->email }}</td>
-            <td>
-                @if($user->getRoleNames()->isNotEmpty())
-                    {{ $user->getRoleNames()->first() === 'consultant' ? 'Staff' : ucfirst($user->getRoleNames()->first()) }}
-                @else
-                    No Role Assigned
-                @endif
-            </td>
-            <td>
-                @if($user->status === 'active')
-                    <span class="badge bg-success">Active</span>
-                @elseif($user->status === 'inactive')
-                    <span class="badge bg-warning">Inactive</span>
-                @elseif($user->status === 'suspend')
-                    <span class="badge bg-danger">Suspended</span>
-                @else
-                    <span class="badge bg-secondary">Deleted</span>
-                @endif
-            </td>
-            <td>{{ $user->created_at->format('Y-m-d H:i:s') }}</td>
-            <td>
-                <a href="{{ route('admin.users.show', $user->id) }}" class="btn btn-sm btn-primary">View</a>
-                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-user-id="{{ $user->id }}">Delete</button>
-
-                <!-- Suspend/Activate Form with Spinner -->
-                <form action="{{ route('admin.users.suspend', $user->id) }}" method="POST" class="suspend-form" style="display: inline-block;">
-                    @csrf
-                    <button type="submit" class="btn btn-sm {{ $user->status === 'suspend' ? 'btn-secondary' : 'btn-warning' }} suspend-btn">
-                    {{ $user->status === 'suspend' ? 'Activate' : 'Suspend' }}
-                    </button>
-                    <button class="btn btn-sm btn-warning suspend-spinner" type="button" disabled style="display: none;">
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        Processing...
-                    </button>
-                </form>
-            </td>
-        </tr>
-    @endforeach
-</tbody>
-
+            <tbody></tbody> <!-- Table body will be populated via AJAX -->
         </table>
     </div>
 </div>
@@ -127,7 +71,7 @@
                 <p><strong>Note:</strong> Information deleted cannot be recovered.</p>
             </div>
             <div class="modal-footer">
-                <form method="POST" action="{{ route('admin.users.delete') }}" id="deleteUserForm">
+                <form method="POST" id="deleteUserForm">
                     @csrf
                     <input type="hidden" name="user_id" id="delete-user-id" value="">
                     <button type="submit" class="btn btn-danger" id="delete-user-btn">Yes, Delete</button>
@@ -146,48 +90,95 @@
 
 @endsection
 
-@push('styles')
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.6/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.bootstrap5.min.css">
-@endpush
-
 @push('scripts')
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/2.1.6/js/dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/2.1.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/3.0.3/js/responsive.bootstrap5.min.js"></script>
+<script>
+$(document).ready(function() {
+    let table = $('#users-table').DataTable({
+        responsive: true,
+        pageLength: 10,
+        order: [[4, "desc"]], // Order by Created At column (descending)
+        ajax: {
+            url: "{{ route('admin.users.index') }}", // The route to get user data via AJAX
+            dataSrc: 'data', // Look for the 'data' array in the JSON response
+            error: function(xhr, error, thrown) {
+                console.error('Error fetching users:', error, thrown); // Log any errors to the console
+            }
+        },
+        columns: [
+            { 
+                data: null, // S/N column
+                orderable: true, // Make S/N column sortable
+                searchable: false, // Disable searching for S/N
+                render: function (data, type, row, meta) {
+                    // S/N based on the order of the created_at field
+                    return meta.row + 1;
+                }
+            },
+            { data: 'name' },
+            { data: 'email' },
+            { data: 'status', render: function(data) {
+                let badgeClass = data === 'active' ? 'bg-success' : data === 'suspend' ? 'bg-danger' : 'bg-warning';
+                return `<span class="badge ${badgeClass}">${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
+            }},
+            { data: 'created_at' },
+            { data: 'actions', orderable: false, searchable: false } // Action buttons
+        ],
+        drawCallback: function(settings) {
+            // Renumber the S/N column based on the current page
+            let api = this.api();
+            let startIndex = api.page.info().start;
 
-    <script>
-        $(document).ready(function() {
-            $('#users-table').DataTable({
-                responsive: true,
-                autoWidth: false,
-                pageLength: 10,
-                order: [[ 4, "desc" ]], // Order by Created At column (descending)
+            // Reassign S/N in case of sorting, pagination, etc.
+            api.column(0, { page: 'current' }).nodes().each(function(cell, i) {
+                cell.innerHTML = startIndex + i + 1;
             });
+        }
+    });
 
-            // Capture the user ID when the modal is opened
-            $('#deleteModal').on('show.bs.modal', function (event) {
-                var button = $(event.relatedTarget); // Button that triggered the modal
-                var userId = button.data('user-id'); // Extract info from data-* attributes
-                var modal = $(this);
-                modal.find('#delete-user-id').val(userId); // Set the user ID in the form
-            });
+    // Periodically reload the DataTable every 30 seconds
+    setInterval(function() {
+        table.ajax.reload(null, false); // Reload DataTable without resetting pagination
+    }, 30000); // 30 seconds
 
-            // Show spinner on delete form submit
-            $('#deleteUserForm').on('submit', function() {
+    // Modal logic for delete button
+    $('#deleteModal').on('show.bs.modal', function(event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        var userId = button.data('user-id'); // Extract info from data-* attributes
+        $('#delete-user-id').val(userId); // Set the user ID in the form
+    });
+
+    // Handle Delete Form submission via AJAX
+    $('#deleteUserForm').on('submit', function(e) {
+        e.preventDefault(); // Prevent default form submission
+
+        let form = $(this);
+        let userId = $('#delete-user-id').val();
+
+        $.ajax({
+            url: "{{ route('admin.users.delete') }}", // The route to delete the user
+            method: 'POST',
+            data: form.serialize(),
+            beforeSend: function() {
                 $('#delete-user-btn').hide();
                 $('#delete-spinner').show();
-            });
-
-            // Show spinner on suspend button click
-            $('.suspend-form').on('submit', function() {
-                $(this).find('.suspend-btn').hide();
-                $(this).find('.suspend-spinner').show();
-            });
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#deleteModal').modal('hide');
+                    table.ajax.reload(null, false); // Reload DataTable without resetting pagination
+                } else {
+                    alert('Failed to delete user: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error deleting user:', error);
+            },
+            complete: function() {
+                $('#delete-user-btn').show();
+                $('#delete-spinner').hide();
+            }
         });
-    </script>
+    });
+});
+</script>
 @endpush
