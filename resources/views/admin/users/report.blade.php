@@ -2,45 +2,46 @@
 
 @section('content')
 <h1 class="app-page-title">Generate User Report</h1>
-<p style="font-size: small; font-weight: bold;">Note: Total Users include (admin) while the rest doesn't .</p>
+<p style="font-size: small; font-weight: bold;">Note: Total Users include (admin) while the rest doesn't.</p>
+
 <!-- Cards for Statistics -->
 <div class="row mb-4">
-    <!-- Total Users Card -->
+    <!-- Total Users Card (Success) -->
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card text-center bg-light">
+        <div class="card text-center bg-success text-white">
             <div class="card-body">
                 <h5 class="card-title">Total Users</h5>
-                <p class="card-text" style="font-size: 24px;">{{ $totalUsers }}</p>
+                <p class="card-text" id="totalUsers" style="font-size: 24px;">{{ $totalUsers }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Total Passengers Card -->
+    <!-- Total Passengers Card (Secondary) -->
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card text-center bg-light">
+        <div class="card text-center bg-secondary text-white">
             <div class="card-body">
                 <h5 class="card-title">Total Passengers</h5>
-                <p class="card-text" style="font-size: 24px;">{{ $totalPassengers }}</p>
+                <p class="card-text" id="totalPassengers" style="font-size: 24px;">{{ $totalPassengers }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Total Staff (Consultants) Card -->
+    <!-- Total Staff (Consultants) Card (Info) -->
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card text-center bg-light">
+        <div class="card text-center bg-info text-white">
             <div class="card-body">
                 <h5 class="card-title">Total Staff</h5>
-                <p class="card-text" style="font-size: 24px;">{{ $totalStaff }}</p>
+                <p class="card-text" id="totalStaff" style="font-size: 24px;">{{ $totalStaff }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Total Unverified Users Card -->
+    <!-- Total Unverified Users Card (Warning) -->
     <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card text-center bg-light">
+        <div class="card text-center bg-warning text-dark">
             <div class="card-body">
                 <h5 class="card-title">Unverified Users</h5>
-                <p class="card-text" style="font-size: 24px;">{{ $unverifiedUsers }}</p>
+                <p class="card-text" id="unverifiedUsers" style="font-size: 24px;">{{ $unverifiedUsers }}</p>
             </div>
         </div>
     </div>
@@ -49,7 +50,6 @@
 <!-- Form for generating PDF report -->
 <div class="app-card app-card-details shadow-sm mb-4">
     <div class="app-card-body p-4">
-
         <!-- Success Message -->
         <div id="success-message" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -94,9 +94,7 @@
             </div>
 
             <!-- Button and Spinner -->
-            <button type="submit" class="btn btn-primary mt-3" id="generate-pdf-btn">
-                Generate PDF
-            </button>
+            <button type="submit" class="btn btn-primary mt-3" id="generate-pdf-btn">Generate PDF</button>
             <button class="btn btn-primary mt-3" type="button" id="generate-pdf-spinner" disabled style="display: none;">
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 Generating PDF...
@@ -107,6 +105,35 @@
 @endsection
 
 @push('scripts')
+
+<!-- Real-time Stats Fetching Script -->
+<script>
+    // Function to fetch real-time stats and update the cards
+    function fetchStats() {
+        $.ajax({
+            url: "{{ route('admin.users.fetch-stats') }}", // Correct route name here
+            method: 'GET',
+            success: function(response) {
+                // Update card values with the fetched data
+                $('#totalUsers').text(response.totalUsers);
+                $('#totalPassengers').text(response.totalPassengers);
+                $('#totalStaff').text(response.totalStaff);
+                $('#unverifiedUsers').text(response.unverifiedUsers);
+            },
+            error: function(xhr, status, error) {
+                console.error('Failed to fetch stats:', error);
+            }
+        });
+    }
+
+    // Fetch the stats when the page loads and every 30 seconds
+    $(document).ready(function() {
+        fetchStats(); // Fetch the stats when the page loads
+        setInterval(fetchStats, 30000); // Fetch stats every 30 seconds
+    });
+</script>
+
+<!-- PDF Generation Script -->
 <script>
     document.getElementById('generate-pdf-form').addEventListener('submit', function(event) {
         event.preventDefault(); // Prevent default form submission
@@ -122,7 +149,7 @@
         // Prepare form data
         let formData = new FormData(this);
 
-        // Send AJAX request
+        // Send AJAX request to generate the PDF
         fetch('{{ route('admin.users.report.pdf') }}', {
             method: 'POST',
             headers: {
@@ -183,4 +210,5 @@
         });
     });
 </script>
+
 @endpush
