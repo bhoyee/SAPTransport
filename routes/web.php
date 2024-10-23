@@ -128,6 +128,8 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/users/{user}', [AdminUserController::class, 'delete'])->name('admin.users.delete');
     Route::post('users/report/pdf', [UserReportController::class, 'generatePDF'])->name('admin.users.report.pdf');
     Route::get('users/report', [UserReportController::class, 'showReportPage'])->name('admin.users.report');
+    Route::get('users/fetch-stats', [UserReportController::class, 'fetchStats'])->name('admin.users.fetch-stats');
+
 
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show'); // Add this route
 
