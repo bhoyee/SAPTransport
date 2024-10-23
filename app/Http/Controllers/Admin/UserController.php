@@ -230,4 +230,87 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'An error occurred while creating the user.');
         }
     }
+
+    // admin delete user page 
+
+
+    public function showDeletedUsers()
+    {
+        Log::info('Fetching total number of temporarily deleted users.');
+        
+        try {
+            $totalDeletedUsers = User::where('status', 'deleted')->count();
+            Log::info('Total deleted users fetched successfully.', ['totalDeletedUsers' => $totalDeletedUsers]);
+
+            return view('admin.users.deleted-users', compact('totalDeletedUsers'));
+        } catch (\Exception $e) {
+            Log::error('Error fetching total deleted users.', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Unable to fetch deleted users at this time.');
+        }
+    }
+
+    public function fetchDeletedStats()
+    {
+        Log::info('Fetching real-time total of deleted users.');
+
+        try {
+            $totalDeletedUsers = User::where('status', 'deleted')->count();
+            Log::info('Real-time total deleted users fetched successfully.', ['totalDeletedUsers' => $totalDeletedUsers]);
+
+            return response()->json(['totalDeletedUsers' => $totalDeletedUsers]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching real-time deleted user stats.', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Error fetching real-time stats.'], 500);
+        }
+    }
+
+    public function getDeletedUsers()
+    {
+        Log::info('Fetching list of temporarily deleted users.');
+
+        try {
+            $deletedUsers = User::where('status', 'deleted')->orderBy('updated_at', 'desc')->get();
+
+            $formattedUsers = $deletedUsers->map(function($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'status' => ucfirst($user->status),
+                    'created_by' => $user->created_by // Assuming you store this
+                ];
+            });
+
+            Log::info('Deleted users fetched successfully.', ['totalDeletedUsers' => count($deletedUsers)]);
+
+            return response()->json(['data' => $formattedUsers]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching deleted users list.', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Error fetching deleted users list.'], 500);
+        }
+    }
+
+    public function permanentDelete(Request $request)
+    {
+        Log::info('Attempting to permanently delete user.', ['user_id' => $request->user_id]);
+
+        try {
+            $user = User::find($request->user_id);
+
+            if ($user) {
+                $user->delete();
+                Log::info('User permanently deleted successfully.', ['user_id' => $user->id]);
+
+                return response()->json(['success' => true]);
+            } else {
+                Log::warning('User not found for permanent deletion.', ['user_id' => $request->user_id]);
+                return response()->json(['success' => false, 'message' => 'User not found.']);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error permanently deleting user.', ['error' => $e->getMessage(), 'user_id' => $request->user_id]);
+            return response()->json(['success' => false, 'message' => 'Error deleting user.'], 500);
+        }
+    }
+
 }
