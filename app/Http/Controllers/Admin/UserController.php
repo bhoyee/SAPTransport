@@ -10,30 +10,50 @@ use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Fetch active passengers, consultants, and suspended users using Spatie's role system
-        $activePassengers = User::role('passenger')
-            ->where('status', 'active')
-            ->count();
+        if ($request->ajax()) {
+            \Log::info('AJAX request received for user data.');
+            
+            // Fetch all users for the DataTable, excluding those with status 'deleted'
+            $users = User::select('id', 'name', 'email', 'phone', 'status', 'created_at')
+                ->where('status', '!=', 'deleted')  // Exclude users with 'deleted' status
+                ->get();
     
-        $activeConsultants = User::role('consultant')
-            ->where('status', 'active')
-            ->count();
+            // Log the users being fetched
+            \Log::info('Users fetched:', ['users' => $users->toArray()]);
     
+            // Format the data for DataTables
+            $formattedUsers = $users->map(function($user) {
+                return [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'status' => $user->status,
+                    'created_at' => $user->created_at->format('Y-m-d H:i:s'),
+                    'actions' => '<a href="' . route('admin.users.show', $user->id) . '" class="btn btn-primary btn-sm">View</a>' .
+                                 '<button class="btn btn-danger btn-sm" data-user-id="' . $user->id . '" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>'
+                ];
+            });
+    
+            \Log::info('Formatted users for DataTables:', ['formattedUsers' => $formattedUsers]);
+    
+            return response()->json(['data' => $formattedUsers]);
+        }
+    
+        // Fetch statistics for the cards
+        $activePassengers = User::role('passenger')->where('status', 'active')->count();
+        $activeConsultants = User::role('consultant')->where('status', 'active')->count();
         $suspendedUsers = User::where('status', 'suspend')->count();
     
-        // Fetch all users for the DataTable, excluding those with status 'deleted'
-        $users = User::select('id', 'name', 'email', 'phone', 'status', 'created_at')
-            ->where('status', '!=', 'deleted')  // Exclude users with 'deleted' status
-            ->get();
-    
-        return view('admin.users.index', compact('activePassengers', 'activeConsultants', 'suspendedUsers', 'users'));
+        // Render the view
+        return view('admin.users.index', compact('activePassengers', 'activeConsultants', 'suspendedUsers'));
     }
+    
     
     public function show(User $user)
     {
@@ -95,30 +115,39 @@ class UserController extends Controller
 
     public function delete(Request $request)
     {
+        \Log::info('Delete request received for user ID: ' . $request->user_id);
+    
+        // Find the user by the provided user_id
         $user = User::find($request->user_id);
-
+    
         if ($user) {
             try {
+                \Log::info('User found. Proceeding with deletion.', ['user_id' => $user->id, 'user_email' => $user->email]);
+    
                 // Log the deletion in the user_deletes table
                 UserDelete::create([
                     'user_id' => $user->id,
                     'deleted_by' => Auth::user()->email,
                     'deleted_at' => now(),
                 ]);
-
+    
                 // Update the user's status to 'deleted'
                 $user->status = 'deleted';
                 $user->save();
-
-                return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
+    
+                \Log::info('User status updated to deleted.', ['user_id' => $user->id]);
+    
+                return response()->json(['success' => true, 'message' => 'User deleted successfully.']);
             } catch (\Exception $e) {
-                \Log::error('Error deleting user: ' . $e->getMessage());
-                return redirect()->route('admin.users.index')->with('error', 'An error occurred while deleting the user.');
+                \Log::error('Error deleting user: ' . $e->getMessage(), ['user_id' => $user->id]);
+                return response()->json(['success' => false, 'message' => 'An error occurred while deleting the user.'], 500);
             }
         }
-
-        return redirect()->route('admin.users.index')->with('error', 'User not found.');
+    
+        \Log::warning('User not found.', ['user_id' => $request->user_id]);
+        return response()->json(['success' => false, 'message' => 'User not found.'], 404);
     }
+    
 
     public function suspend(User $user)
     {
