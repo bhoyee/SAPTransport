@@ -20,50 +20,11 @@
                     <th>Action</th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach($payments as $index => $payment)
-                    <tr>
-                        <td>{{ $index + 1 }}</td> <!-- Serial Number -->
-                        <td>{{ $payment->booking->booking_reference ?? 'N/A' }}</td>
-                        <td>₦{{ number_format($payment->amount, 2) }}</td>
-                        <td>
-                            @if($payment->status === 'paid')
-                                <span class="badge bg-success">Paid</span>
-                            @elseif($payment->status === 'unpaid')
-                                <span class="badge bg-danger">Unpaid</span>
-                            @elseif($payment->status === 'refund-pending')
-                                <span class="badge bg-warning">Refund Pending</span>
-                            @elseif($payment->status === 'refunded')
-                                <span class="badge bg-info">Refunded</span>
-                            @endif
-                        </td>
-                        <td>{{ \Carbon\Carbon::parse($payment->payment_date)->format('d M, Y') }}</td>
-                        <td>{{ ucfirst($payment->payment_method) }}</td>
-                        <td>{{ $payment->payment_reference }}</td>
-
-                        <td>
-    @if($payment->status === 'refund-pending')
-        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#refundModal" data-id="{{ $payment->id }}">
-            Process Refund
-        </button>
-    @elseif($payment->status === 'refunded')
-        <button class="btn btn-info btn-sm" disabled>Refunded</button>
-    @else
-        <span>No Actions</span>
-    @endif
-</td>
-
-
-          
-                    </tr>
-                @endforeach
-            </tbody>
+            <tbody></tbody>
         </table>
     </div>
 </div>
 
-<!-- Refund Confirmation Modal -->
-<!-- Refund Confirmation Modal -->
 <!-- Refund Confirmation Modal -->
 <!-- Refund Confirmation Modal -->
 <div class="modal fade" id="refundModal" tabindex="-1" aria-labelledby="refundModalLabel" aria-hidden="true">
@@ -95,153 +56,159 @@
     </div>
 </div>
 
-
 @endsection
 
 @push('scripts')
-
 <script>
 $(document).ready(function() {
-    $('#payments-table').DataTable({
+    // DataTable initialization
+    let table = $('#payments-table').DataTable({
         responsive: true,
         paging: true,
         searching: true,
-        order: [[5, 'desc']] // Orders by payment date (descending)
+        order: [[4, 'desc']], // Orders by payment date (descending)
+        ajax: {
+            url: "{{ route('admin.payments.fetch') }}", // Fetching the payment data
+            method: 'GET',
+            dataSrc: 'data', // DataTable expects 'data' in the JSON response
+            error: function(xhr, error, thrown) {
+                console.error('Error fetching payments:', error, thrown);
+            }
+        },
+        columns: [
+            { data: null }, // S/N will be populated by DataTable itself
+            { data: 'booking_reference' },  // Booking Reference
+            { data: 'amount', render: function(data) { return `₦${parseFloat(data).toFixed(2)}`; }},  // Amount
+            { data: 'status', render: function(data) { // Status column
+                if (data === 'paid') return '<span class="badge bg-success">Paid</span>';
+                else if (data === 'unpaid') return '<span class="badge bg-danger">Unpaid</span>';
+                else if (data === 'refund-pending') return '<span class="badge bg-warning">Refund Pending</span>';
+                else if (data === 'refunded') return '<span class="badge bg-info">Refunded</span>';
+            }},
+            { data: 'payment_date', render: function(data) { return new Date(data).toLocaleDateString(); }},  // Payment Date
+            { data: 'payment_method', render: function(data) { return data.charAt(0).toUpperCase() + data.slice(1); }},  // Payment Method
+            { data: 'payment_reference' },  // Payment Reference
+            { data: null, render: function(data) {  // Action buttons
+                if (data.status === 'refund-pending') {
+                    return `<button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#refundModal" data-id="${data.id}">Process Refund</button>`;
+                } else if (data.status === 'refunded') {
+                    return `<button class="btn btn-info btn-sm" disabled>Refunded</button>`;
+                } else {
+                    return '<span>No Actions</span>';
+                }
+            }}
+        ],
+        drawCallback: function(settings) {
+            let api = this.api();
+            let startIndex = api.page.info().start;
+            api.column(0, { page: 'current' }).nodes().each(function(cell, i) {
+                cell.innerHTML = startIndex + i + 1;
+            });
+        }
     });
 
-    // Modal triggers
+    // Set interval to refresh the DataTable every 30 seconds
+    setInterval(function() {
+        table.ajax.reload(null, false); // Reload DataTable without resetting pagination
+    }, 30000); // 30 seconds
+    
+    // Modal trigger
     $('#refundModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget); // Button that triggered the modal
-        var paymentId = button.data('id'); // Extract payment ID from data-id attribute
-        $('#refund-payment-id').val(paymentId); // Set the hidden field value
+        var button = $(event.relatedTarget);
+        var paymentId = button.data('id');
+        $('#refund-payment-id').val(paymentId);
     });
 
-    // Confirm Refund with Spinner
+    // Process Refund AJAX
     $('#confirm-refund').on('click', function() {
-        var paymentId = $('#refund-payment-id').val();
-        var refundButton = $(this);
-        var refundSpinner = $('#confirm-refund-spinner');
-        
-        // Show spinner and disable the button
+        let paymentId = $('#refund-payment-id').val();
+        let refundButton = $(this);
+        let refundSpinner = $('#confirm-refund-spinner');
         refundSpinner.show();
         refundButton.prop('disabled', true);
-        
-        processRefund(paymentId, refundButton, refundSpinner); // Process refund
+
+        $.ajax({
+            url: "{{ url('admin/payments') }}/" + paymentId + "/refund",
+            type: 'POST',
+            data: { _token: '{{ csrf_token() }}' },
+            success: function(response) {
+                refundSpinner.hide();
+                refundButton.prop('disabled', false);
+                if (response.success) {
+                    alert('Refund processed successfully.');
+                    table.ajax.reload(); // Reload DataTable after success
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr) {
+                refundSpinner.hide();
+                refundButton.prop('disabled', false);
+                alert('An error occurred. Please try again.');
+            }
+        });
     });
 
-    // Decline Refund with Spinner
+    // Decline Refund AJAX
     $('#decline-refund').on('click', function() {
-        var paymentId = $('#refund-payment-id').val();
-        var declineButton = $(this);
-        var declineSpinner = $('#decline-refund-spinner');
-
-        // Show spinner and disable the button
+        let paymentId = $('#refund-payment-id').val();
+        let declineButton = $(this);
+        let declineSpinner = $('#decline-refund-spinner');
         declineSpinner.show();
         declineButton.prop('disabled', true);
 
-        declineRefund(paymentId, declineButton, declineSpinner); // Decline refund
+        $.ajax({
+            url: "{{ url('admin/payments') }}/" + paymentId + "/refund/decline",
+            type: 'POST',
+            data: { _token: '{{ csrf_token() }}' },
+            success: function(response) {
+                declineSpinner.hide();
+                declineButton.prop('disabled', false);
+                if (response.success) {
+                    alert('Refund declined successfully.');
+                    table.ajax.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr) {
+                declineSpinner.hide();
+                declineButton.prop('disabled', false);
+                alert('An error occurred. Please try again.');
+            }
+        });
     });
 
-    // Refund Cash with Spinner
+    // Refund Cash AJAX
     $('#refund-cash').on('click', function() {
-        var paymentId = $('#refund-payment-id').val();
-        var refundCashButton = $(this);
-        var refundCashSpinner = $('#refund-cash-spinner');
-
-        // Show spinner and disable the button
+        let paymentId = $('#refund-payment-id').val();
+        let refundCashButton = $(this);
+        let refundCashSpinner = $('#refund-cash-spinner');
         refundCashSpinner.show();
         refundCashButton.prop('disabled', true);
 
-        refundCash(paymentId, refundCashButton, refundCashSpinner); // Refund cash
+        $.ajax({
+            url: "{{ url('admin/payments') }}/" + paymentId + "/refund/cash",
+            type: 'POST',
+            data: { _token: '{{ csrf_token() }}' },
+            success: function(response) {
+                refundCashSpinner.hide();
+                refundCashButton.prop('disabled', false);
+                if (response.success) {
+                    alert('Cash refunded successfully.');
+                    table.ajax.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr) {
+                refundCashSpinner.hide();
+                refundCashButton.prop('disabled', false);
+                alert('An error occurred. Please try again.');
+            }
+        });
     });
-
-    // Function to process refund via AJAX
-    function processRefund(paymentId, refundButton, refundSpinner) {
-        $.ajax({
-            url: "{{ url('admin/payments') }}/" + paymentId + "/refund", // Refund route using URL helper
-            type: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert(response.message);
-                    location.reload(); // Reload the page to update the status
-                } else {
-                    alert('Failed to process refund: ' + response.message);
-                }
-                // Reset button and spinner
-                refundSpinner.hide();
-                refundButton.prop('disabled', false);
-            },
-            error: function(xhr) {
-                var responseText = xhr.responseJSON ? xhr.responseJSON.message : 'An error occurred.';
-                alert('An error occurred: ' + responseText);
-                // Reset button and spinner
-                refundSpinner.hide();
-                refundButton.prop('disabled', false);
-            }
-        });
-    }
-
-    // Function to decline refund via AJAX
-    function declineRefund(paymentId, declineButton, declineSpinner) {
-        $.ajax({
-            url: "{{ url('admin/payments') }}/" + paymentId + "/refund/decline", // Route for declining refund
-            type: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert('Refund process declined successfully.');
-                    location.reload(); // Reload the page to update the status
-                } else {
-                    alert('Failed to decline refund: ' + response.message);
-                }
-                // Reset button and spinner
-                declineSpinner.hide();
-                declineButton.prop('disabled', false);
-            },
-            error: function(xhr) {
-                var responseText = xhr.responseJSON ? xhr.responseJSON.message : 'An error occurred.';
-                alert('An error occurred: ' + responseText);
-                // Reset button and spinner
-                declineSpinner.hide();
-                declineButton.prop('disabled', false);
-            }
-        });
-    }
-
-    // Function to process cash refund via AJAX
-    function refundCash(paymentId, refundCashButton, refundCashSpinner) {
-        $.ajax({
-            url: "{{ url('admin/payments') }}/" + paymentId + "/refund/cash", // Correct route for refunding cash payments
-            type: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert('Cash payment refunded successfully.');
-                    location.reload(); // Reload the page to update the status
-                } else {
-                    alert('Failed to refund cash payment: ' + response.message);
-                }
-                // Reset button and spinner
-                refundCashSpinner.hide();
-                refundCashButton.prop('disabled', false);
-            },
-            error: function(xhr) {
-                var responseText = xhr.responseJSON ? xhr.responseJSON.message : 'An error occurred.';
-                alert('An error occurred: ' + responseText);
-                // Reset button and spinner
-                refundCashSpinner.hide();
-                refundCashButton.prop('disabled', false);
-            }
-        });
-    }
 });
-</script>
 
+</script>
 @endpush

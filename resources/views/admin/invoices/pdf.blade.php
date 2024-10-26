@@ -55,6 +55,14 @@
         .text-end {
             text-align: right;
         }
+
+        .fw-bold {
+            font-weight: bold;
+        }
+
+        .fw-bold span {
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
@@ -126,7 +134,7 @@
             <td>{{ \Carbon\Carbon::parse($booking->pickup_date)->format('d M Y') }}</td>
             <td>{{ $booking->pickup_time }}</td>
             <td>{{ $booking->dropoff_address }}</td>
-            <td>₦{{ number_format($invoice->amount, 2) }}</td>
+            <td>NGN {{ number_format($invoice->amount, 2) }}</td>
         </tr>
         </tbody>
     </table>
@@ -135,10 +143,10 @@
     <div class="text-end">
         <h5 class="fw-bold">Payment Details</h5>
         @if($invoice->payment && $invoice->payment->payment_method)
-                        <p>Payment Method: {{ $invoice->payment->payment_method }}</p>
-                    @else
-                        <p>Payment Method: Not Provided</p>
-                    @endif
+            <p>Payment Method: {{ $invoice->payment->payment_method }}</p>
+        @else
+            <p>Payment Method: Not Provided</p>
+        @endif
         <h5 class="fw-bold">Summary</h5>
         <p>Subtotal: NGN {{ number_format($invoice->subtotal ?? $invoice->amount, 2) }}</p>
         <p>Taxable: NGN {{ number_format($invoice->taxable ?? 0, 2) }}</p>
