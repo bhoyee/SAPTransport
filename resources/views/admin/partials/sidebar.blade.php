@@ -299,8 +299,11 @@
 
 
 								<li class="submenu-item">
-    <a class="submenu-link" href="{{ route('admin.invoices.createCustomForm') }}">Create Custom Invoice</a>
-</li>
+									<a class="submenu-link" href="{{ route('admin.invoices.createCustomForm') }}">Create Custom Invoice</a>
+								</li>
+								<li class="submenu-item">
+									<a class="submenu-link" href="{{ route('admin.customInvoices') }}">Manage Custom Invoice</a>
+								</li>
 
 								
 						        </ul>

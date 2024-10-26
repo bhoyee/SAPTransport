@@ -69,7 +69,7 @@
 
     <div>
         <h5>Billed to</h5>
-        <p><strong>{{ $invoice->full_name }}</strong></p>
+        <p><strong>{{ $invoice->name }}</strong></p>
         <p>{{ $invoice->email }}</p>
         <p>{{ $invoice->phone }}</p>
 
@@ -99,7 +99,7 @@
             <td>{{ $invoice->pickup_time }}</td>
             <td>{{ $invoice->pickup_address }}</td>
             <td>{{ $invoice->dropoff_address }}</td>
-            <td>₦{{ number_format($invoice->amount, 2) }}</td>
+            <td>NGN {{ number_format($invoice->amount, 2) }}</td>
         </tr>
         </tbody>
     </table>

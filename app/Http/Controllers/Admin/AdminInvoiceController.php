@@ -303,6 +303,8 @@ class AdminInvoiceController extends Controller
             $salesInvoice->amount = $invoice->amount;
             $salesInvoice->status = $invoice->status;
             $salesInvoice->file_path = '';  // Provide a default value for `file_path`
+            $salesInvoice->generated_by = auth()->id(); // Add the current user's ID as the `generated_by`
+
             $salesInvoice->save();
         
             // Add to Payments table if needed
@@ -316,6 +318,187 @@ class AdminInvoiceController extends Controller
 
             $payment->save();
         }
+
+        // AdminInvoiceController.php
+
+    public function manageCustomInvoices()
+    {
+        return view('admin.invoices.custom-manage'); // Return the view for managing custom invoices
+    }
+
+    public function fetchCustomInvoices()
+    {
+        try {
+            // Fetch data from the walkin_invoices table
+            $customInvoices = WalkinInvoice::orderBy('created_at', 'desc')->get()
+                ->map(function ($invoice) {
+                    return [
+                        'id' => $invoice->id,
+                        'name' => $invoice->name,
+                        'email' => $invoice->email,
+                        'service_type' => $invoice->service_type,
+                        'invoice_number' => $invoice->invoice_number,
+                        'issue_date' => Carbon::parse($invoice->issue_date)->format('d M, Y'),
+                        'status' => $invoice->status,
+                    ];
+                });
+
+            return response()->json(['data' => $customInvoices]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching custom invoices: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to fetch custom invoices'], 500);
+        }
+    }
+
+    public function viewCustomInvoice($id)
+    {
+        try {
+            // Fetch the custom invoice from the walkin_invoices table
+            $invoice = WalkinInvoice::findOrFail($id);
+
+            // Return the view with the invoice data
+            return view('admin.invoices.custom-view', compact('invoice'));
+        } catch (\Exception $e) {
+            Log::error('Error fetching custom invoice: ' . $e->getMessage());
+            return redirect()->route('admin.customInvoices')->withErrors('Failed to load the custom invoice.');
+        }
+    }
+
+    public function downloadCustomInvoice($id)
+    {
+        try {
+            // Fetch the custom invoice from the walkin_invoices table
+            $invoice = WalkinInvoice::findOrFail($id);
+            
+            // Generate the PDF from the view
+            $pdf = \PDF::loadView('admin.invoices.walkIn-pdf', compact('invoice'));
+            
+            // Return the PDF as a download
+            return $pdf->download('custom_invoice_' . $invoice->invoice_number . '.pdf');
+        } catch (\Exception $e) {
+            Log::error('Error downloading custom invoice: ' . $e->getMessage());
+            return redirect()->back()->withErrors('Failed to download the custom invoice.');
+        }
+    }
+
+
+    public function editCustomInvoice($id)
+    {
+        try {
+            // Fetch the custom invoice from the walkin_invoices table
+            $invoice = WalkinInvoice::findOrFail($id);
+            return view('admin.invoices.custom-edit', compact('invoice'));
+        } catch (\Exception $e) {
+            Log::error('Error fetching custom invoice for editing: ' . $e->getMessage());
+            return redirect()->back()->withErrors('Failed to fetch the custom invoice for editing.');
+        }
+    }
+
+    public function updateCustomInvoice(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|email',
+            'phone' => 'required|string',
+            'issue_date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:issue_date',
+            'amount' => 'required|numeric|min:0',
+            'status' => 'required|in:Paid,Unpaid,Refunded',
+            'service_type' => 'required|string',
+            'pickup_date' => 'required|date',
+            'pickup_time' => 'required',
+            'pickup_address' => 'required|string',
+            'dropoff_address' => 'required|string',
+        ]);
+
+        try {
+            // Fetch the custom invoice from the walkin_invoices table
+            $invoice = WalkinInvoice::findOrFail($id);
+
+            // Update the walkin invoice fields
+            $invoice->name = $request->input('name');
+            $invoice->email = $request->input('email');
+            $invoice->phone = $request->input('phone');
+            $invoice->issue_date = $request->input('issue_date');
+            $invoice->due_date = $request->input('due_date');
+            $invoice->amount = $request->input('amount');
+            $invoice->status = $request->input('status');
+            $invoice->service_type = $request->input('service_type');
+            $invoice->pickup_date = $request->input('pickup_date');
+            $invoice->pickup_time = $request->input('pickup_time');
+            $invoice->pickup_address = $request->input('pickup_address');
+            $invoice->dropoff_address = $request->input('dropoff_address');
+            
+            // Check if there are corresponding records in invoices and payments tables
+            $existingInvoice = \App\Models\Invoice::where('walkin_invoice_id', $invoice->id)->first();
+            $existingPayment = \App\Models\Payment::where('walkin_invoice_id', $invoice->id)->first();
+
+            if ($existingInvoice) {
+                Log::info('Updating linked invoice with walkin_invoice_id: ' . $invoice->id);
+                $existingInvoice->amount = $request->input('amount');
+                $existingInvoice->status = $request->input('status');
+                $existingInvoice->save();
+            }
+
+            if ($existingPayment) {
+                Log::info('Updating linked payment with walkin_invoice_id: ' . $invoice->id);
+                $existingPayment->amount = $request->input('amount');
+                $existingPayment->status = strtolower($request->input('status')); // Ensure status is lowercase
+                $existingPayment->save();
+            }
+
+            // Save the updated walkin invoice
+            $invoice->save();
+
+            Log::info('Custom invoice updated successfully by admin: ' . auth()->user()->email);
+
+            return redirect()->route('admin.customInvoices.edit', $id)->with('success', 'Custom invoice updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error updating custom invoice: ' . $e->getMessage());
+            return redirect()->back()->withErrors('Failed to update the custom invoice.');
+        }
+    }
+
+    public function deleteCustomInvoice($id)
+    {
+        try {
+            // Log the incoming request
+            Log::info('Attempting to delete custom invoice with ID: ' . $id);
+    
+            // Find the custom invoice
+            $walkinInvoice = WalkinInvoice::findOrFail($id);
+    
+            // Log before checking related records
+            Log::info('Found custom invoice with ID: ' . $id);
+    
+            // Check if the custom invoice exists in the invoices and payments tables
+            $relatedInvoice = Invoice::where('walkin_invoice_id', $walkinInvoice->id)->first();
+            $relatedPayment = Payment::where('walkin_invoice_id', $walkinInvoice->id)->first();
+    
+            // Delete related records if they exist
+            if ($relatedInvoice) {
+                $relatedInvoice->delete();
+                Log::info('Deleted related invoice with ID: ' . $relatedInvoice->id);
+            }
+            if ($relatedPayment) {
+                $relatedPayment->delete();
+                Log::info('Deleted related payment with ID: ' . $relatedPayment->id);
+            }
+    
+            // Delete the custom invoice itself
+            $walkinInvoice->delete();
+            Log::info('Deleted custom invoice with ID: ' . $walkinInvoice->id);
+    
+            return response()->json(['success' => true, 'message' => 'Custom invoice and related records deleted successfully.']);
+        } catch (\Exception $e) {
+            Log::error('Error deleting custom invoice: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to delete the custom invoice'], 500);
+        }
+    }
+    
+
+
+
         
 
 
