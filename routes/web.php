@@ -30,6 +30,8 @@ use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\WalkinPayController;
 use App\Http\Controllers\Admin\PaymentReportController;
 use App\Http\Controllers\Admin\UserPaymentReportController;
+use App\Http\Controllers\Admin\AdminInvoiceController;
+
 
 
 
@@ -142,6 +144,8 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
 
     // Admin routes for managing bookings / Admin Booking Routes
     Route::get('/manage-bookings', [AdminBookingController::class, 'manageBookings'])->name('admin.bookings.manage');
+    Route::get('/bookings/fetch', [AdminBookingController::class, 'fetchBookings'])->name('admin.bookings.fetch');
+
     Route::post('/bookings/update-status/{id}', [AdminBookingController::class, 'updateBookingStatus'])->name('admin.bookings.updateStatus');
 
     Route::post('/bookings/{id}/complete', [AdminBookingController::class, 'completeBooking'])->name('admin.bookings.complete');
@@ -181,36 +185,55 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     // Route::get('/payments', [AdminPaymentController::class, 'managePayments'])->name('admin.payments.index');
     // Route::post('/payments/{id}/refund', [AdminPaymentController::class, 'processRefund'])->name('admin.payment.refund');
 
- // Manage payment route
- Route::get('/payments', [AdminPaymentController::class, 'managePayments'])->name('admin.payments.index');
+    // Manage payment route
+    Route::get('/payments', [AdminPaymentController::class, 'managePayments'])->name('admin.payments.index');
+
+    Route::get('/payments/fetch', [AdminPaymentController::class, 'fetchPayments'])->name('admin.payments.fetch');
+
+    //  admin invocie controller 
+
+    Route::get('/invoices/manage', [AdminInvoiceController::class, 'manageInvoices'])->name('admin.invoices.manage');
+    Route::get('/invoices/fetch', [AdminInvoiceController::class, 'fetchInvoices'])->name('admin.invoices.fetch');
+    Route::get('/invoices/fetchAll', [AdminInvoiceController::class, 'fetchAllInvoices'])->name('admin.invoices.fetchAll'); // Fetch all invoices for DataTable
+    Route::get('/invoices/{id}/view', [AdminInvoiceController::class, 'showInvoice'])->name('admin.invoices.view');
+    Route::get('/invoices/{id}/download', [AdminInvoiceController::class, 'downloadInvoice'])->name('admin.invoices.download');
+    // Route to show the edit form
+    Route::get('/invoices/{id}/edit', [AdminInvoiceController::class, 'edit'])->name('admin.invoices.edit');
+    // Route to handle the update request
+    Route::put('/invoices/{id}', [AdminInvoiceController::class, 'update'])->name('admin.invoices.update');
+    Route::delete('/invoices/{id}/delete', [AdminInvoiceController::class, 'deleteInvoice'])->name('admin.invoices.delete');
     
- // Process refund route
- Route::post('/payments/{id}/refund', [AdminPaymentController::class, 'processRefund'])->name('admin.payment.refund');
- 
- // Decline refund route
- Route::post('/payments/{id}/refund/decline', [AdminPaymentController::class, 'declineRefund'])->name('admin.payment.refund.decline');
+// Routes for custom invoice creation
+Route::get('/invoices/create-custom', [AdminInvoiceController::class, 'createCustomForm'])->name('admin.invoices.createCustomForm');
+Route::post('/invoices/create-custom', [AdminInvoiceController::class, 'createCustomInvoice'])->name('admin.invoices.createCustom');
 
- //cash payment routes
- //Route::get('/payments/cash', [AdminPaymentController::class, 'showCashPaymentForm'])->name('admin.payment.cash');
- Route::post('/payments/cash/update', [AdminPaymentController::class, 'recordCashPayment'])->name('admin.payment.cash.update');
- Route::get('/payment/cash', [AdminPaymentController::class, 'showCashPaymentForm'])->name('admin.payment.cash');
- Route::post('/payments/{id}/refund/cash', [AdminPaymentController::class, 'refundCash'])->name('admin.payments.refund.cash');
+    // Process refund route
+    Route::post('/payments/{id}/refund', [AdminPaymentController::class, 'processRefund'])->name('admin.payment.refund');
+    
+    // Decline refund route
+    Route::post('/payments/{id}/refund/decline', [AdminPaymentController::class, 'declineRefund'])->name('admin.payment.refund.decline');
 
-
-  // Show the payment report page
-  Route::get('/payments/report', [PaymentReportController::class, 'showPaymentReportPage'])->name('admin.payments.report');
-
-  // Fetch report data for cards (based on daily, weekly, monthly, yearly)
-  Route::get('/payments/report-data/{timeframe}', [PaymentReportController::class, 'fetchReportData'])->name('admin.payments.report.data');
-
-  // Generate PDF for payments report
-  Route::post('/payments/report/pdf', [PaymentReportController::class, 'generatePdf'])->name('admin.payments.report.pdf');
+    //cash payment routes
+    //Route::get('/payments/cash', [AdminPaymentController::class, 'showCashPaymentForm'])->name('admin.payment.cash');
+    Route::post('/payments/cash/update', [AdminPaymentController::class, 'recordCashPayment'])->name('admin.payment.cash.update');
+    Route::get('/payment/cash', [AdminPaymentController::class, 'showCashPaymentForm'])->name('admin.payment.cash');
+    Route::post('/payments/{id}/refund/cash', [AdminPaymentController::class, 'refundCash'])->name('admin.payments.refund.cash');
 
 
-  // Routes for User Payment Report
-// Route::get('/reports/user-payment-report', [UserPaymentReportController::class, 'index'])->name('admin.reports.user-payment');
-Route::post('/reports/user-payment-report/pdf', [UserPaymentReportController::class, 'generateUserPaymentReport'])->name('admin.reports.user-payment.pdf');
-Route::get('/reports/user-payment-report', [UserPaymentReportController::class, 'index'])->name('admin.reports.userPaymentReport');
+    // Show the payment report page
+    Route::get('/payments/report', [PaymentReportController::class, 'showPaymentReportPage'])->name('admin.payments.report');
+
+    // Fetch report data for cards (based on daily, weekly, monthly, yearly)
+    Route::get('/payments/report-data/{timeframe}', [PaymentReportController::class, 'fetchReportData'])->name('admin.payments.report.data');
+
+    // Generate PDF for payments report
+    Route::post('/payments/report/pdf', [PaymentReportController::class, 'generatePdf'])->name('admin.payments.report.pdf');
+
+
+    // Routes for User Payment Report
+    // Route::get('/reports/user-payment-report', [UserPaymentReportController::class, 'index'])->name('admin.reports.user-payment');
+    Route::post('/reports/user-payment-report/pdf', [UserPaymentReportController::class, 'generateUserPaymentReport'])->name('admin.reports.user-payment.pdf');
+    Route::get('/reports/user-payment-report', [UserPaymentReportController::class, 'index'])->name('admin.reports.userPaymentReport');
 
 });
 
