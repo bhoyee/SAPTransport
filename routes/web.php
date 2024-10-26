@@ -206,6 +206,17 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
 // Routes for custom invoice creation
 Route::get('/invoices/create-custom', [AdminInvoiceController::class, 'createCustomForm'])->name('admin.invoices.createCustomForm');
 Route::post('/invoices/create-custom', [AdminInvoiceController::class, 'createCustomInvoice'])->name('admin.invoices.createCustom');
+//routes to mange custom invoice 
+Route::get('/custom-invoices', [AdminInvoiceController::class, 'manageCustomInvoices'])->name('admin.customInvoices');
+Route::get('/custom-invoices/fetch', [AdminInvoiceController::class, 'fetchCustomInvoices'])->name('admin.customInvoices.fetch');
+Route::get('/custom-invoices/{id}/download', [AdminInvoiceController::class, 'downloadCustomInvoice'])->name('admin.customInvoices.download');
+
+Route::get('/custom-invoices/{id}/view', [AdminInvoiceController::class, 'viewCustomInvoice'])->name('admin.customInvoices.view');
+Route::get('/custom-invoices/{id}/edit', [AdminInvoiceController::class, 'editCustomInvoice'])->name('admin.customInvoices.edit');
+Route::delete('/custom-invoices/{id}/delete', [AdminInvoiceController::class, 'deleteCustomInvoice'])->name('admin.customInvoices.delete');
+
+// Route to handle the update request for a custom invoice
+Route::put('/custom-invoices/{id}', [AdminInvoiceController::class, 'updateCustomInvoice'])->name('admin.customInvoices.update');
 
     // Process refund route
     Route::post('/payments/{id}/refund', [AdminPaymentController::class, 'processRefund'])->name('admin.payment.refund');
