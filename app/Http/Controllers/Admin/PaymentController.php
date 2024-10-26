@@ -181,6 +181,31 @@ class PaymentController extends Controller
         return view('admin.payment.index', compact('payments'));
     }
 
+    // fetching realtime paymnt
+    public function fetchPayments()
+    {
+        // Fetch payments with necessary relationships
+        $payments = Payment::with(['booking', 'invoice'])  
+            ->orderBy('payment_date', 'desc')
+            ->get();
+
+        // Format the data as per DataTables requirements
+        $formattedPayments = $payments->map(function ($payment) {
+            return [
+                'id' => $payment->id,
+                'booking_reference' => $payment->booking->booking_reference ?? 'N/A',
+                'amount' => $payment->amount,
+                'status' => $payment->status,
+                'payment_date' => $payment->payment_date,
+                'payment_method' => ucfirst($payment->payment_method),
+                'payment_reference' => $payment->payment_reference,
+            ];
+        });
+
+        return response()->json(['data' => $formattedPayments]);
+    }
+
+
 
     // Process refund
 
