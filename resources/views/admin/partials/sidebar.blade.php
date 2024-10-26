@@ -110,6 +110,11 @@
 
                                 <li class="submenu-item"><a class="submenu-link" href="{{ route('admin.users.index') }}">Manage Users</a></li>
 
+								<li class="submenu-item">
+									<a class="submenu-link" href="{{ route('admin.users.deleted-users') }}">Deleted Users</a>
+								</li>
+
+
                                 <li class="submenu-item">
                                 <a class="submenu-link" href="{{ route('admin.users.report') }}">Users Report</a>
                                 </li>
