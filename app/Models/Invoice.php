@@ -34,6 +34,13 @@ class Invoice extends Model
     {
         return $this->hasOne(Payment::class, 'booking_id', 'booking_id'); // Link payments through booking_id
     }
+
+    public function generatedByUser()
+    {
+        return $this->belongsTo(User::class, 'generated_by');
+    }
+
+
     
 
 }
