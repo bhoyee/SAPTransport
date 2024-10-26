@@ -2,7 +2,6 @@
 
 @section('content')
 <style>
-    <style>
 /* General button styling to add space */
 .action-buttons .btn {
     margin-bottom: 5px;
@@ -25,7 +24,6 @@
 }
 </style>
 
-</style>
 <h1 class="app-page-title">Manage Bookings</h1>
 
 <!-- Display Success Message -->
@@ -46,85 +44,19 @@
                     <th>Booking Ref</th>
                     <th>Booking Date</th>
                     <th>Service Type</th>
-                    <!-- <th>Pickup Date</th> -->
                     <th>Status</th>
                     <th>Created By</th>
-                    <!-- <th>Updated At</th> -->
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($bookings as $index => $booking)
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $booking->booking_reference }}</td>
-                        <td>{{ \Carbon\Carbon::parse($booking->created_at)->format('Y-m-d') }}</td>
-                        <td>{{ $booking->service_type }}</td>
-                        <!-- <td>
-                            <span class="badge bg-{{ $booking->status == 'pending' ? 'warning' : ($booking->status == 'confirmed' ? 'primary' : 'success') }}">
-                                {{ ucfirst($booking->status) }}
-                            </span>
-                        </td> -->
-
-
-
-                     <td>
-                        <span class="badge 
-                            {{ $booking->status == 'pending' ? 'bg-warning' : 
-                            ($booking->status == 'expired' ? 'bg-secondary' : 
-                            ($booking->status == 'confirmed' ? 'bg-info' : 
-                            ($booking->status == 'cancelled' ? 'bg-danger' : 
-                            ($booking->status == 'completed' ? 'bg-success' : '')))) }}">
-                            {{ ucfirst($booking->status) }}
-                        </span>
-                    </td>
-
-
-                        <td>
-                            @if($booking->creator && $booking->creator->roles->isNotEmpty())
-                                {{ $booking->creator->roles->pluck('name')->first() }}
-                            @else
-                                N/A
-                            @endif
-                        </td>
-                        <!-- <td>{{ \Carbon\Carbon::parse($booking->updated_at)->format('Y-m-d') }}</td> -->
-                        <td>
-                            <!-- Action Buttons -->
-                            <div class="action-buttons">
-                                <a href="{{ route('admin.bookings.view', $booking->id) }}" class="btn btn-sm btn-info">View</a>
-                                <a href="{{ route('admin.bookings.edit', $booking->id) }}" class="btn btn-sm btn-warning">Edit</a>
-
-                                <!-- Only show the Cancel button if the booking is not cancelled -->
-                                @if($booking->status != 'cancelled')
-                                    <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal" data-booking-id="{{ $booking->id }}">Cancel</a>
-                                @endif
-
-                                <a href="#" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteModal" data-booking-id="{{ $booking->id }}">Delete</a>
-
-                                <!-- Show Complete button only if booking is confirmed -->
-                                @if ($booking->status == 'confirmed')
-                                <button class="btn btn-sm btn-success complete-btn" data-bs-toggle="modal" data-bs-target="#completeModal" data-booking-id="{{ $booking->id }}">Complete</button>
-
-                                    <!-- <form action="{{ route('admin.bookings.updateStatus', $booking->id) }}" method="POST" style="display: inline-block;">
-                                        @csrf
-                                        <input type="hidden" name="action" value="complete">
-                                        <button type="submit" class="btn btn-sm btn-success">Complete</button>
-                                    </form> -->
-                                @endif
-                            </div>
-                        </td>
-
-
-                    </tr>
-                @endforeach
+                <!-- DataTable will populate this via AJAX -->
             </tbody>
         </table>
     </div>
 </div>
 
-
 <!-- Cancel Confirmation Modal -->
-<!-- Cancel Modal -->
 <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -142,7 +74,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
@@ -188,7 +119,6 @@
     </div>
 </div>
 
-
 @endsection
 
 @push('styles')
@@ -204,23 +134,79 @@
 
 
     <script>
-   $(document).ready(function() {
-    $('#bookings-table').DataTable({
+$(document).ready(function() {
+    let table = $('#bookings-table').DataTable({
         responsive: true,
         autoWidth: false,
         pageLength: 10,
-        order: [[ 2, 'desc' ]], // Order by Booking Date column (descending)
+        order: [[3, 'desc']], // Order by Updated At column (descending)
+        ajax: {
+            url: "{{ route('admin.bookings.fetch') }}", // Use a route that fetches booking data in JSON format
+            method: 'GET',
+            dataSrc: 'data', // Assuming the JSON structure has a 'data' key
+            error: function(xhr, error, thrown) {
+                console.error('Error fetching bookings:', error, thrown);
+            }
+        },
         columnDefs: [
             { width: '5%', targets: 0 },  // S/N column
             { width: '10%', targets: 1 }, // Booking Ref column
             { width: '10%', targets: 2 }, // Booking Date column
-            { width: '10%', targets: 3 }, // Service Type column
-            { width: '10%', targets: 4 }, // Status column
-            { width: '10%', targets: 5 }, // Created By column
-            { width: '35%', targets: 6 }  // Action column (last column)
-        ]
+            { width: '10%', targets: 3 }, // Updated At column (make sure this matches server response)
+            { width: '10%', targets: 4 }, // Service Type column
+            { width: '10%', targets: 5 }, // Status column
+            { width: '10%', targets: 6 }, // Created By column
+            { width: '35%', targets: 7 }  // Action column (last column)
+        ],
+        columns: [
+            { data: null },  // S/N
+            { data: 'booking_reference' },  // Booking Reference
+            { data: 'created_at', render: function(data) { return new Date(data).toLocaleDateString(); } },  // Booking Date
+            { data: 'updated_at', render: function(data) { return new Date(data).toLocaleDateString(); } },  // Updated At
+            { data: 'service_type' },  // Service Type
+            { 
+                data: 'status',
+                render: function(data) {
+                    let badgeClass = data === 'pending' ? 'bg-warning' :
+                                     data === 'expired' ? 'bg-secondary' :
+                                     data === 'confirmed' ? 'bg-info' :
+                                     data === 'cancelled' ? 'bg-danger' :
+                                     data === 'completed' ? 'bg-success' : '';
+                    return `<span class="badge ${badgeClass}">${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
+                }
+            },  // Status with dynamic badges
+            { data: 'created_by' },  // Created By (assumes you load creator info)
+            { 
+                data: null,
+                orderable: false,
+                render: function(data) {
+                    return `
+                        <div class="action-buttons">
+                            <a href="/admin/bookings/${data.id}/view" class="btn btn-sm btn-info">View</a>
+                            <a href="/admin/bookings/${data.id}/edit" class="btn btn-sm btn-warning">Edit</a>
+                            ${data.status !== 'cancelled' && data.status !== 'completed' && data.status !== 'expired' ? 
+                                `<a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal" data-booking-id="${data.id}">Cancel</a>` : ''}
+                            <a href="#" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteModal" data-booking-id="${data.id}">Delete</a>
+                            ${data.status === 'confirmed' ? 
+                                `<button class="btn btn-sm btn-success complete-btn" data-bs-toggle="modal" data-bs-target="#completeModal" data-booking-id="${data.id}">Complete</button>` : ''}
+                        </div>
+                    `;
+                }
+            }  // Action buttons
+        ],
+        drawCallback: function(settings) {
+            let api = this.api();
+            let startIndex = api.page.info().start;
+            api.column(0, { page: 'current' }).nodes().each(function(cell, i) {
+                cell.innerHTML = startIndex + i + 1;
+            });
+        }
     });
 
+    // Set interval to refresh the DataTable every 30 seconds (real-time fetching)
+    setInterval(function() {
+        table.ajax.reload(null, false); // Reload DataTable without resetting pagination
+    }, 30000); // 30 seconds
 
          // When the modal is opened, get the booking ID from the cancel button
         $('#cancelModal').on('show.bs.modal', function(event) {

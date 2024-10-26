@@ -1,4 +1,4 @@
-@extends('layouts.passenger')
+@extends('admin.layouts.admin-layout')
 
 @section('title', 'Invoice')
 
@@ -8,11 +8,11 @@
         <div class="card-body">
             <!-- Header Section -->
             <div class="row invoice-header">
-            @if(session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
+                @if(session('success'))
+                    <div class="alert alert-success">
+                        {{ session('success') }}
+                    </div>
+                @endif
 
                 <div class="col-md-6">
                     <img src="{{ asset('img/logo.png') }}" alt="SAPTransport" class="img-fluid">
@@ -22,29 +22,26 @@
                     <p>Invoice Number: {{ $invoice->invoice_number }}</p>
                     <p>Issue Date: {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d M Y') }}</p>
                     <p>Due Date: {{ \Carbon\Carbon::parse($invoice->payment->booking->pickup_date)->format('d M Y') }}</p>
+
                     <p>Due Amount: ₦{{ number_format($invoice->amount, 2) }}</p>
 
                     <!-- Invoice Status -->
-              
                     <p>
                         <strong>Status: 
-                        <span class="badge 
-                            @if(trim(strtolower($invoice->status)) === 'paid') 
-                                bg-success
-                            @elseif(trim(strtolower($invoice->status)) === 'unpaid') 
-                                bg-danger
-                            @elseif(trim(strtolower($invoice->status)) === 'refunded') 
-                                bg-info
-                            @else 
-                                bg-secondary
-                            @endif fs-4">
-                            {{ ucfirst($invoice->status) }}
-                        </span>
-
-
+                            <span class="badge 
+                                @if(trim(strtolower($invoice->status)) === 'paid') 
+                                    bg-success
+                                @elseif(trim(strtolower($invoice->status)) === 'unpaid') 
+                                    bg-danger
+                                @elseif(trim(strtolower($invoice->status)) === 'refunded') 
+                                    bg-info
+                                @else 
+                                    bg-secondary
+                                @endif fs-4">
+                                {{ ucfirst($invoice->status) }}
+                            </span>
                         </strong>
                     </p>
-
                 </div>
             </div>
 
@@ -82,10 +79,10 @@
                     <tbody>
                         <tr>
                             <td>Transport Service</td>
-                            <td>{{ $booking->service_type }}</td>
-                            <td>{{ \Carbon\Carbon::parse($booking->pickup_date)->format('d M Y') }}</td>
-                            <td>{{ $booking->pickup_time }}</td>
-                            <td>{{ $booking->dropoff_address }}</td>
+                            <td>{{ $invoice->booking->service_type }}</td>
+                            <td>{{ \Carbon\Carbon::parse($invoice->booking->pickup_date)->format('d M Y') }}</td>
+                            <td>{{ $invoice->booking->pickup_time }}</td>
+                            <td>{{ $invoice->booking->dropoff_address }}</td>
                             <td>₦{{ number_format($invoice->amount, 2) }}</td>
                         </tr>
                     </tbody>
@@ -101,7 +98,6 @@
                     @else
                         <p>Payment Method: Not Provided</p>
                     @endif
-
                 </div>
                 <div class="col-md-6 text-end">
                     <h5 class="fw-bold">Summary</h5>
@@ -111,25 +107,6 @@
                     <p class="fw-bold">Total: ₦{{ number_format($invoice->amount, 2) }}</p>
                 </div>
             </div>
-
-            <!-- Pay Now Button (Paystack) -->
-            @if($invoice->status === 'unpaid')
-                <div class="text-end mt-4">
-                <form method="POST" action="{{ route('pay') }}" class="d-inline-block">
-                    @csrf
-                    <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
-                    <input type="hidden" name="email" value="{{ $invoice->booking->user->email }}">
-                    <input type="hidden" name="amount" value="{{ $invoice->amount * 100 }}"> {{-- Amount in kobo --}}
-                    <input type="hidden" name="reference" value="{{ $invoice->invoice_number }}"> {{-- Invoice number as reference --}}
-                    <button class="btn btn-success" type="submit" value="Pay Now!">
-                        <i class="fa fa-plus-circle"></i> Pay Now!
-                    </button>
-                </form>
-
-
-                    
-                </div>
-            @endif
 
             <!-- Notes and Signature -->
             <div class="row mt-4">
@@ -146,10 +123,13 @@
             <!-- Back and Download Buttons -->
             <div class="row mt-4">
                 <div class="col-md-6">
-                    <a href="{{ route('passenger.makepayments') }}" class="btn btn-secondary">Back to Payments</a>
+                    <a href="{{ route('admin.invoices.manage') }}" class="btn btn-secondary">Back to Invoices</a>
                 </div>
                 <div class="col-md-6 text-end">
-                    <a href="{{ route('passenger.downloadInvoice', $invoice->id) }}" class="btn btn-info">Download PDF</a>
+                    <button id="download-pdf-btn" class="btn btn-info">
+                        <span id="download-text">Download PDF</span>
+                        <span id="download-spinner" class="spinner-border spinner-border-sm" style="display: none;" role="status" aria-hidden="true"></span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -198,4 +178,22 @@
         }
     }
 </style>
+
+<script>
+    document.getElementById('download-pdf-btn').addEventListener('click', function() {
+        // Show spinner and hide the text
+        document.getElementById('download-text').style.display = 'none';
+        document.getElementById('download-spinner').style.display = 'inline-block';
+
+        // Trigger the download
+        window.location.href = "{{ route('admin.invoices.download', $invoice->id) }}";
+
+        // Set a timeout to hide the spinner after a delay (e.g., 3 seconds)
+        setTimeout(function() {
+            document.getElementById('download-text').style.display = 'inline-block';
+            document.getElementById('download-spinner').style.display = 'none';
+        }, 3000); // Adjust the delay based on your file size (3 seconds here)
+    });
+</script>
+
 @endsection
