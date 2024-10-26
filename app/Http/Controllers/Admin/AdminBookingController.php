@@ -156,7 +156,30 @@ class AdminBookingController extends Controller
   
           return view('admin.bookings.manage', compact('bookings'));
       }
-  
+      
+      // fetchBooking in real time
+      public function fetchBookings()
+      {
+          // Load related data (e.g., creator roles) and order by updated_at
+          $bookings = Booking::with(['creator.roles'])->orderBy('updated_at', 'desc')->get();
+      
+          // Map bookings to match the DataTable's expected structure
+          $formattedBookings = $bookings->map(function ($booking) {
+              return [
+                  'id' => $booking->id,
+                  'booking_reference' => $booking->booking_reference,
+                  'created_at' => $booking->created_at->toDateString(),
+                  'updated_at' => $booking->updated_at->toDateString(), // Ensure updated_at is included
+                  'service_type' => $booking->service_type,
+                  'status' => $booking->status,
+                  'created_by' => $booking->creator ? $booking->creator->roles->pluck('name')->first() : 'N/A'
+              ];
+          });
+      
+          return response()->json(['data' => $formattedBookings]);
+      }
+      
+    
       public function updateBookingStatus(Request $request, $id)
       {
           // Find the booking by ID
