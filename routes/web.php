@@ -31,6 +31,7 @@ use App\Http\Controllers\WalkinPayController;
 use App\Http\Controllers\Admin\PaymentReportController;
 use App\Http\Controllers\Admin\UserPaymentReportController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
+use App\Http\Controllers\Admin\AdminReportController;
 
 
 
@@ -217,6 +218,11 @@ Route::delete('/custom-invoices/{id}/delete', [AdminInvoiceController::class, 'd
 
 // Route to handle the update request for a custom invoice
 Route::put('/custom-invoices/{id}', [AdminInvoiceController::class, 'updateCustomInvoice'])->name('admin.customInvoices.update');
+
+Route::get('/reports/sales', [AdminReportController::class, 'showSalesReport'])->name('admin.salesReport');
+Route::get('/reports/sales/fetch', [AdminReportController::class, 'fetchSalesData'])->name('admin.salesReport.fetch');
+
+Route::get('/reports/sales/download', [AdminReportController::class, 'downloadSalesReport'])->name('admin.salesReport.download');
 
     // Process refund route
     Route::post('/payments/{id}/refund', [AdminPaymentController::class, 'processRefund'])->name('admin.payment.refund');
