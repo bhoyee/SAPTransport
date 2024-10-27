@@ -338,6 +338,7 @@ class AdminInvoiceController extends Controller
                         'email' => $invoice->email,
                         'service_type' => $invoice->service_type,
                         'invoice_number' => $invoice->invoice_number,
+                        'amount'=> $invoice->amount,
                         'issue_date' => Carbon::parse($invoice->issue_date)->format('d M, Y'),
                         'status' => $invoice->status,
                     ];

@@ -20,6 +20,7 @@
                         <th>Email</th>
                         <th>Service Type</th>
                         <th>Invoice Number</th>
+                        <th>Amount</th>
                         <th>Issue Date</th>
                         <th>Status</th>
                         <th>Action</th>
@@ -80,6 +81,7 @@ $(document).ready(function() {
             { data: 'email' },
             { data: 'service_type' },
             { data: 'invoice_number' },
+            { data: 'amount' },
             { data: 'issue_date' },
             { data: 'status', render: function(data) {
                 if (data === 'Paid') return '<span class="badge bg-success">Paid</span>';
