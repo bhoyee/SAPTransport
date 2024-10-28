@@ -11,10 +11,12 @@ class Contact extends Model
 
     protected $table = 'contact';
 
+
     protected $fillable = [
         'ticket_num', 'status', 'department', 'priority', 'attachment',
-        'fullname', 'email_address', 'subject', 'message'
+        'fullname', 'email_address', 'subject', 'message', 'category' // added 'category'
     ];
+    
     
 
     // Relationship with TicketReply
