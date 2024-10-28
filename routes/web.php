@@ -32,6 +32,7 @@ use App\Http\Controllers\Admin\PaymentReportController;
 use App\Http\Controllers\Admin\UserPaymentReportController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminReportController;
+use App\Http\Controllers\Admin\SupportTicketController;
 
 
 
@@ -224,6 +225,13 @@ Route::get('/reports/sales/fetch', [AdminReportController::class, 'fetchSalesDat
 
 Route::get('/reports/sales/download', [AdminReportController::class, 'downloadSalesReport'])->name('admin.salesReport.download');
 
+// managing support ticketing
+Route::get('/support-tickets', [SupportTicketController::class, 'index'])->name('admin.support-tickets.index');
+Route::get('/support-tickets/{id}/view', [SupportTicketController::class, 'view'])->name('admin.support-tickets.view');
+Route::delete('/support-tickets/{id}', [SupportTicketController::class, 'delete'])->name('admin.support-tickets.delete');
+Route::post('/support-tickets/{id}/reply', [SupportTicketController::class, 'reply'])->name('admin.support-tickets.reply');
+Route::patch('/support-tickets/{id}/update-status', [SupportTicketController::class, 'updateStatus'])->name('support-tickets.updateStatus');
+
     // Process refund route
     Route::post('/payments/{id}/refund', [AdminPaymentController::class, 'processRefund'])->name('admin.payment.refund');
     
@@ -258,6 +266,10 @@ Route::get('/reports/sales/download', [AdminReportController::class, 'downloadSa
  Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
 
 
+// Add this route for fetching new replies
+Route::get('/tickets/{id}/fetch-new-replies', [ContactController::class, 'fetchNewReplies'])->name('fetchNewReplies');
+Route::get('/tickets/fetch', [ContactController::class, 'fetchTickets'])->name('tickets.fetch');
+
 
 
 
@@ -273,6 +285,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notifications/recent', [NotificationController::class, 'fetchRecentNotifications'])->name('notifications.recent');
     Route::get('/notifications', [NotificationController::class, 'viewAll'])->name('notifications.index');
     Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::get('/notifications/{id}/fetch', [NotificationController::class, 'fetchNotification'])->name('notifications.fetch');
+    Route::get('/notifications/fetch-recent', [NotificationController::class, 'fetchUnredRecentNotifications'])->name('notifications.fetchRecent');
+
 });
 
 
