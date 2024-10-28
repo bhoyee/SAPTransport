@@ -142,86 +142,166 @@
 
 <!-- Notification JavaScript -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get the modal and elements
-        const customModal = document.getElementById('customModal');
-        const modalBody = document.getElementById('customModalBody');
-        const closeModal = document.querySelector('.close-modal');
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the modal and elements
+    const customModal = document.getElementById('customModal');
+    const modalBody = document.getElementById('customModalBody');
+    const closeModal = document.querySelector('.close-modal');
 
-        // When the user clicks on the close (X), close the modal
-        closeModal.onclick = function() {
+    // When the user clicks on the close (X), close the modal
+    closeModal.onclick = function() {
+        customModal.style.display = "none";
+    };
+
+    // When the user clicks anywhere outside the modal, close it
+    window.onclick = function(event) {
+        if (event.target === customModal) {
             customModal.style.display = "none";
         }
+    };
 
-        // When the user clicks anywhere outside the modal, close it
-        window.onclick = function(event) {
-            if (event.target === customModal) {
-                customModal.style.display = "none";
-            }
-        }
+    // Attach click event listener to notification items
+    // Event delegation for dynamically added notifications
+    document.getElementById('notifications-list').addEventListener('click', function(e) {
+        if (e.target.closest('.open-notification')) {
+            e.preventDefault();
 
-        // Attach click event listener to notification items
-        document.querySelectorAll('.open-notification').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
+            const notificationItem = e.target.closest('.open-notification');
+            const notificationId = notificationItem.getAttribute('data-id');
+            modalBody.innerHTML = "Loading..."; // Show loading state initially
 
-                const notificationId = this.getAttribute('data-id');
-                modalBody.innerHTML = "Loading..."; // Show loading state initially
+            // Open the custom modal
+            customModal.style.display = "flex";
 
-                // Open the custom modal
-                customModal.style.display = "flex"; // Make the modal visible
-
-                // Fetch the notification details and mark it as read
-                fetch(`/notifications/${notificationId}/read`, {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json',
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    modalBody.innerHTML = `<p>${data.message}</p>`;
-
-                    // Automatically mark as read and remove bold styling
-                    fetch(`/notifications/${notificationId}/mark-as-read`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Accept': 'application/json',
-                        }
-                    }).then(() => {
-                        // Remove bold class to show it's been read
-                        this.querySelector('.desc').classList.remove('fw-bold');
-
-                        // Dynamically update the unread count
-                        updateUnreadCount();
-                    });
-                })
-                .catch(error => {
-                    modalBody.innerHTML = `<p class="text-danger">Error loading notification. Please try again later.</p>`;
-                });
-            });
-        });
-
-        // Function to refresh the unread count dynamically
-        function updateUnreadCount() {
-            fetch('/notifications/recent', {
+            // Fetch the notification details
+            fetch(`/notifications/${notificationId}/fetch`, {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json'
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
                 }
             })
             .then(response => response.json())
             .then(data => {
-                const unreadCount = data.unreadCount;
-                if (unreadCount > 0) {
-                    document.querySelector('.icon-badge').textContent = unreadCount;
-                    document.querySelector('.icon-badge').style.display = 'inline-block';
-                } else {
-                    document.querySelector('.icon-badge').style.display = 'none';
-                }
+                if (data.error) throw new Error(data.error);
+
+                // Display the notification details
+                modalBody.innerHTML = `<p>${data.message}</p><small>Received: ${data.created_at}</small>`;
+
+                // Mark the notification as read
+                return fetch(`/notifications/${notificationId}/mark-as-read`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                    }
+                });
+            })
+            .then(() => {
+                // Remove bold styling to show it’s read
+                notificationItem.querySelector('.desc').classList.remove('fw-bold');
+
+                // Update unread count
+                updateUnreadCount();
+            })
+            .catch(error => {
+                modalBody.innerHTML = `<p class="text-danger">Error loading notification. Please try again later.</p>`;
+                console.error('Failed to load notification details:', error);
             });
         }
     });
+
+    // Poll for recent notifications every 15 seconds
+    setInterval(fetchRecentNotifications, 15000);
+
+    // Function to fetch the latest unread count and recent notifications from the server
+    function fetchRecentNotifications() {
+        fetch('/notifications/fetch-recent', {  // Make sure this route matches your setup
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Update the unread count
+            const unreadCount = data.unreadCount;
+            const badgeElement = document.querySelector('.icon-badge');
+
+            if (unreadCount > 0) {
+                badgeElement.textContent = unreadCount;
+                badgeElement.style.display = 'inline-block';
+            } else {
+                badgeElement.style.display = 'none';
+            }
+
+            // Optionally, update the recent notifications dropdown
+            const notificationsList = document.getElementById('notifications-list');
+            notificationsList.innerHTML = ''; // Clear current list
+
+            if (data.notifications.length > 0) {
+                data.notifications.forEach(notification => {
+                    notificationsList.innerHTML += `
+                        <div class="item p-3 open-notification" data-id="${notification.id}" data-bs-toggle="modal" data-bs-target="#notificationModal">
+                            <div class="row gx-2 justify-content-between align-items-center">
+                                <div class="col-auto">
+                                    <img class="profile-image" src="{{ asset('assets/images/profiles/profile-1.png') }}" alt="">
+                                </div>
+                                <div class="col">
+                                    <div class="info">
+                                        <div class="desc ${notification.status === 'unread' ? 'fw-bold' : ''}">
+                                            ${notification.message}
+                                        </div>
+                                        <div class="meta">${notification.created_at}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                notificationsList.innerHTML = '<p class="text-center p-3">No new notifications.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Failed to fetch recent notifications:', error);
+        });
+    }
+
+    // Call the function once to set the initial count on page load
+    fetchRecentNotifications();
+
+    // Function to fetch the latest unread count from the server
+    function updateUnreadCount() {
+        fetch('/notifications/recent', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Unread count response:', data); // Debugging log
+            const unreadCount = data.unreadCount;
+            const badgeElement = document.querySelector('.icon-badge');
+
+            // Update the badge with the latest unread count
+            if (unreadCount > 0) {
+                badgeElement.textContent = unreadCount;
+                badgeElement.style.display = 'inline-block';
+            } else {
+                badgeElement.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Failed to update the unread count:', error);
+        });
+    }
+    
+});
+
 </script>
