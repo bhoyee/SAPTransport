@@ -25,8 +25,8 @@
                         <td>{{ ucfirst($ticket->department) }}</td>
                         <td>
                             <strong>#{{ $ticket->ticket_num }}</strong><br>
-                            <p>{{ $ticket->subject }}</p>
-                        </td>
+                            <p>{{ $ticket->subject ?? ucfirst($ticket->category) }}</p> <!-- Display subject or category -->
+                            </td>
                         <td>
                             <span class="badge {{ $ticket->status == 'open' ? 'bg-danger' : 'bg-success' }}">
                                 {{ ucfirst($ticket->status) }}

@@ -258,27 +258,27 @@ class ContactController extends Controller
 
 
     public function fetchNewReplies($id, Request $request)
-{
-    $lastReplyTimestamp = $request->input('lastReplyTimestamp');
+    {
+        $lastReplyTimestamp = $request->input('lastReplyTimestamp');
 
-    // Fetch replies created after the last timestamp
-    $newReplies = TicketReply::with('user', 'ticket')
-        ->where('ticket_id', $id)
-        ->where('created_at', '>', $lastReplyTimestamp)
-        ->get()
-        ->map(function ($reply) {
-            return [
-                'id' => $reply->id,
-                'message' => $reply->message,
-                'user_name' => $reply->user->name ?? 'Unknown User',
-                'user_role' => $reply->user->email === $reply->ticket->email_address ? 'owner' : 'operator',
-                'created_at' => $reply->created_at->format('d M Y H:i'),
-                'timestamp' => $reply->created_at->format('Y-m-d H:i:s'),
-            ];
-        });
+        // Fetch replies created after the last timestamp
+        $newReplies = TicketReply::with('user', 'ticket')
+            ->where('ticket_id', $id)
+            ->where('created_at', '>', $lastReplyTimestamp)
+            ->get()
+            ->map(function ($reply) {
+                return [
+                    'id' => $reply->id,
+                    'message' => $reply->message,
+                    'user_name' => $reply->user->name ?? 'Unknown User',
+                    'user_role' => $reply->user->email === $reply->ticket->email_address ? 'owner' : 'operator',
+                    'created_at' => $reply->created_at->format('d M Y H:i'),
+                    'timestamp' => $reply->created_at->format('Y-m-d H:i:s'),
+                ];
+            });
 
-    return response()->json(['newReplies' => $newReplies]);
-}
+        return response()->json(['newReplies' => $newReplies]);
+    }
 
 
 }
