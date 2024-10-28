@@ -463,7 +463,7 @@
 
 						         </span>
 
-		                         <span class="nav-link-text">Support</span>
+		                         <span class="nav-link-text">Support Tickets</span>
 
 		                         <span class="submenu-arrow">
 
@@ -481,9 +481,12 @@
 
 						        <ul class="submenu-list list-unstyled">
 
-							        <li class="submenu-item"><a class="submenu-link" href="{{ route('passenger.open-ticket') }}">Open Ticket</a></li>
 
-							        <li class="submenu-item"><a class="submenu-link" href="{{ route('passenger.my-tickets') }}">My Support Tickets</a></li>
+								<li class="submenu-item">
+									<!-- resources/views/admin/partials/sidebar.blade.php -->
+<li class="submenu-item"><a class="submenu-link" href="{{ route('admin.support-tickets.index') }}">Manage Support Tickets</a></li>
+
+								</li>
 
 						        </ul>
 
