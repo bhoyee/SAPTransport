@@ -540,7 +540,9 @@
 
 						        <!--//Bootstrap Icons: https://icons.getbootstrap.com/ -->
 
-						        <a class="nav-link" href="{{ route('passenger.settings') }}">
+						        <a class="nav-link" href="{{ route('admin.settings') }}">
+
+
 
 							        <span class="nav-icon">
 
