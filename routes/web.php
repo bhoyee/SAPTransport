@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\UserPaymentReportController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\SupportTicketController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettings;
 
 
 
@@ -231,6 +232,13 @@ Route::get('/support-tickets/{id}/view', [SupportTicketController::class, 'view'
 Route::delete('/support-tickets/{id}', [SupportTicketController::class, 'delete'])->name('admin.support-tickets.delete');
 Route::post('/support-tickets/{id}/reply', [SupportTicketController::class, 'reply'])->name('admin.support-tickets.reply');
 Route::patch('/support-tickets/{id}/update-status', [SupportTicketController::class, 'updateStatus'])->name('support-tickets.updateStatus');
+
+
+// setting routes
+    Route::get('/settings', [AdminSettings::class, 'showSettings'])->name('admin.settings');
+    Route::post('/settings/change-password', [AdminSettings::class, 'changePassword'])->name('admin.settings.change-password');
+    Route::get('/settings/activity-log', [AdminSettings::class, 'fetchActivityLog'])->name('admin.settings.activity-log');
+
 
     // Process refund route
     Route::post('/payments/{id}/refund', [AdminPaymentController::class, 'processRefund'])->name('admin.payment.refund');
