@@ -139,7 +139,7 @@ $(document).ready(function() {
         responsive: true,
         autoWidth: false,
         pageLength: 10,
-        order: [[3, 'desc']], // Order by Updated At column (descending)
+        order: [[2, 'desc']], // Order by Booking Date column (descending)
         ajax: {
             url: "{{ route('admin.bookings.fetch') }}", // Use a route that fetches booking data in JSON format
             method: 'GET',
@@ -152,17 +152,17 @@ $(document).ready(function() {
             { width: '5%', targets: 0 },  // S/N column
             { width: '10%', targets: 1 }, // Booking Ref column
             { width: '10%', targets: 2 }, // Booking Date column
-            { width: '10%', targets: 3 }, // Updated At column (make sure this matches server response)
-            { width: '10%', targets: 4 }, // Service Type column
-            { width: '10%', targets: 5 }, // Status column
-            { width: '10%', targets: 6 }, // Created By column
-            { width: '35%', targets: 7 }  // Action column (last column)
+            // { width: '10%', targets: 3 }, // Updated At column (make sure this matches server response)
+            { width: '10%', targets: 3 }, // Service Type column
+            { width: '10%', targets: 4 }, // Status column
+            { width: '10%', targets: 5 }, // Created By column
+            { width: '35%', targets: 6 }  // Action column (last column)
         ],
         columns: [
             { data: null },  // S/N
             { data: 'booking_reference' },  // Booking Reference
             { data: 'created_at', render: function(data) { return new Date(data).toLocaleDateString(); } },  // Booking Date
-            { data: 'updated_at', render: function(data) { return new Date(data).toLocaleDateString(); } },  // Updated At
+            // { data: 'updated_at', render: function(data) { return new Date(data).toLocaleDateString(); } },  // Updated At
             { data: 'service_type' },  // Service Type
             { 
                 data: 'status',
