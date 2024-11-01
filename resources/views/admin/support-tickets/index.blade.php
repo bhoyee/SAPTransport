@@ -3,6 +3,7 @@
 @section('title', 'Manage Support Tickets')
 
 @section('content')
+
 <h1 class="app-page-title">Manage Support Tickets</h1>
 <div class="container mt-5">
     <div class="card">
@@ -52,6 +53,10 @@
 @endsection
 
 @push('scripts')
+
+
+
+
 <script>
     $(document).ready(function() {
         $('#tickets-table').DataTable({

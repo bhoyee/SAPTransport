@@ -3,8 +3,9 @@
 @section('content')
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css" rel="stylesheet">
 @endpush
-
 
 
     <h2>Welcome to the Admin Dashboard</h2>
@@ -222,8 +223,8 @@
                             <th>Booking Reference</th>
                             <th>Booking Date</th>
                             <th>Service Type</th>
-                             <th>Created By</th>
                             <th>Status</th>
+                            <th>Created By</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -234,7 +235,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Recent Payments Table -->
     <div class="col-md-12 mb-4">
         <div class="card">
@@ -261,7 +262,6 @@
         </div>
     </div>
 </div>
-
 
 @endsection
 
