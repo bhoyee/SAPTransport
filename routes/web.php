@@ -36,6 +36,9 @@ use App\Http\Controllers\Admin\SupportTicketController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettings;
 
 
+use App\Http\Controllers\Admin\TestDashboardController;
+
+use App\Http\Controllers\Admin\CalendarController;
 
 
 
@@ -43,6 +46,11 @@ use App\Http\Controllers\Admin\SettingsController as AdminSettings;
 Route::get('/', function () {
     return view('index');
 });
+
+Route::get('/home', function () {
+    return redirect('/');
+})->name('home');
+
 
 Route::get('/update', function () {
     return view('update');
@@ -124,7 +132,25 @@ Route::middleware(['auth', 'role:passenger'])->group(function () {
 
 // Admin Routes (Protected by Spatie's Role Middleware)
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    
+    // admin dashboard data 
+    Route::get('/test-dashboard', [App\Http\Controllers\Admin\TestDashboardController::class, 'index']);
+    Route::get('/dashboard-data', [App\Http\Controllers\Admin\TestDashboardController::class, 'getDashboardData']);
+    // Route::get('/chart-data', [App\Http\Controllers\Admin\TestDashboardController::class, 'getChartData']);
+    Route::get('/booking-volume-data', [App\Http\Controllers\Admin\TestDashboardController::class, 'getBookingVolumeData']);
+    Route::get('/booking-completion-rate-data', [TestDashboardController::class, 'getBookingCompletionRateData']); // New route for completion rate data
+    Route::get('/revenue-distribution-data', [App\Http\Controllers\Admin\TestDashboardController::class, 'getRevenueDistributionData']);
+    //calender
+    Route::get('/admin/calendar-events', [CalendarController::class, 'getEvents']);
+
+    // Routes for Recent Bookings and Recent Payments Data
+    Route::get('/recent-bookings-data', [TestDashboardController::class, 'getRecentBookingsData'])->name('admin.recent-bookings-data');
+    Route::get('/recent-payments-data', [TestDashboardController::class, 'getRecentPaymentsData'])->name('admin.recent-payments-data');
+
+
+
+
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::get('/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
     Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
@@ -233,6 +259,9 @@ Route::delete('/support-tickets/{id}', [SupportTicketController::class, 'delete'
 Route::post('/support-tickets/{id}/reply', [SupportTicketController::class, 'reply'])->name('admin.support-tickets.reply');
 Route::patch('/support-tickets/{id}/update-status', [SupportTicketController::class, 'updateStatus'])->name('support-tickets.updateStatus');
 
+//acct etting route
+// Route::get('/account', [AccountController::class, 'showAccountPage'])->name('admin.account');
+// Route::post('/account', [AccountController::class, 'updateAccount'])->name('admin.update-account');
 
 // setting routes
     Route::get('/settings', [AdminSettings::class, 'showSettings'])->name('admin.settings');
@@ -300,12 +329,12 @@ Route::middleware(['auth'])->group(function () {
 
 
 // Admin Dashboard Route without Middleware (Redirect if not Admin)
-Route::get('/admin/dashboard', function () {
-    if (Auth::check() && Auth::user()->hasRole('admin')) {
-        return view('admin.dashboard');
-    }
-    return redirect('/login')->with('error', 'Unauthorized access');
-})->name('admin.dashboard')->middleware('auth');
+// Route::get('/admin/dashboard', function () {
+//     if (Auth::check() && Auth::user()->hasRole('admin')) {
+//         return view('admin.dashboard');
+//     }
+//     return redirect('/login')->with('error', 'Unauthorized access');
+// })->name('admin.dashboard')->middleware('auth');
 
 // Contact Form Submission
 Route::post('/contact/submit', [ContactController::class, 'submit'])->name('contact.submit');
@@ -329,13 +358,23 @@ Route::post('/update-last-activity', function () {
 })->middleware('auth');
 
 
+
+Route::middleware(['auth', 'role:admin|consultant|passenger'])->group(function () {
+    Route::get('/account', [AccountController::class, 'showAccountPage'])->name('account.settings');
+    Route::post('/account/update', [AccountController::class, 'updateAccount'])->name('account.update');
+});
+
+
+
+
+
 // Passenger Routes (for managing settings, account, and tickets)
 Route::middleware(['auth', 'role:passenger'])->group(function () {
     Route::get('/passenger/settings', [SettingsController::class, 'showSettingsPage'])->name('passenger.settings');
     Route::post('/passenger/change-password', [SettingsController::class, 'changePassword'])->name('passenger.change-password');
 
-    Route::get('/passenger/account', [AccountController::class, 'showAccountPage'])->name('passenger.account');
-    Route::post('/passenger/account', [AccountController::class, 'updateAccount'])->name('passenger.update-account');
+    // Route::get('/passenger/account', [AccountController::class, 'showAccountPage'])->name('passenger.account');
+    // Route::post('/passenger/account', [AccountController::class, 'updateAccount'])->name('passenger.update-account');
 
     Route::get('/support/ticket', [ContactController::class, 'createTicketForm'])->name('passenger.open-ticket');
     Route::post('/support/ticket', [ContactController::class, 'storeTicket'])->name('contact.store');
