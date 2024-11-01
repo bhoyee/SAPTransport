@@ -12,13 +12,7 @@ class AccountController extends Controller
     public function showAccountPage()
     {
         $user = Auth::user();
-    
-        // Ensure only passengers can access this account page
-        if (!$user->hasRole('passenger')) {
-            return redirect()->route('home')->with('error', 'You do not have access to this page.');
-        }
-    
-        return view('passenger.account', compact('user'));
+        return view('passenger.account', compact('user')); // Ensure view path is 'passenger.account'
     }
     
     public function updateAccount(Request $request)
@@ -26,9 +20,9 @@ class AccountController extends Controller
         $user = Auth::user();
     
         // Ensure only passengers can update this account
-        if (!$user->hasRole('passenger')) {
-            return redirect()->route('home')->with('error', 'You do not have permission to update this account.');
-        }
+        // if (!$user->hasRole('passenger')) {
+        //     return redirect()->route('home')->with('error', 'You do not have permission to update this account.');
+        // }
     
         // Validate input
         $validator = Validator::make($request->all(), [
