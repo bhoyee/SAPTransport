@@ -1,4 +1,16 @@
-@extends('layouts.passenger')
+{{-- resources/views/account/settings.blade.php --}}
+
+@php
+    if (auth()->user()->hasRole('admin')) {
+        $layout = 'admin.layouts.admin-layout';
+    } elseif (auth()->user()->hasRole('consultant')) {
+        $layout = 'staff.layouts.staff-layout';
+    } else {
+        $layout = 'layouts.passenger';
+    }
+@endphp
+
+@extends($layout)
 
 @section('title', 'Account Settings')
 
@@ -9,7 +21,6 @@
     <div class="card">
         <div class="card-header">Update Profile</div>
         <div class="card-body">
-
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{ session('success') }}
@@ -28,7 +39,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('passenger.update-account') }}" method="POST" enctype="multipart/form-data" onsubmit="return showSpinner()">
+            <form action="{{ route('account.update') }}" method="POST" enctype="multipart/form-data" onsubmit="return showSpinner()">
                 @csrf
 
                 <!-- Full Name and Email (Read-Only) -->
@@ -70,7 +81,6 @@
 
 @push('scripts')
 <script>
-    // Add spinner to button when form is submitted
     function showSpinner() {
         const submitButton = document.getElementById('submitButton');
         submitButton.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Updating...";

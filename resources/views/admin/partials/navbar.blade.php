@@ -73,8 +73,9 @@
                 <img src="{{ Auth::user()->profile_image ? asset('storage/profile_images/' . Auth::user()->profile_image) : asset('/images/user.png') }}" alt="User Profile" class="img-thumbnail" width="150">
             </a>
             <ul class="dropdown-menu" aria-labelledby="user-dropdown-toggle">
-                <li><a class="dropdown-item" href="{{ route('passenger.account') }}">Account</a></li>
-                <li><a class="dropdown-item" href="{{ route('passenger.settings') }}">Settings</a></li>
+            <li><a class="dropdown-item" href="{{ route('account.settings') }}">Account</a></li>
+
+                <li><a class="dropdown-item" href="{{ route('admin.settings') }}">Settings</a></li>
                 <li>
                     <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Log Out</a>
                 </li>
