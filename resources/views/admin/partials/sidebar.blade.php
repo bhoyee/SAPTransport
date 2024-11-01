@@ -382,7 +382,7 @@
 
 			
 
-								<a class="nav-link submenu-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#submenu-reports" aria-expanded="false" aria-controls="submenu-reports">
+								<a class="nav-link submenu-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#submenu-message" aria-expanded="false" aria-controls="submenu-message">
 
 									<span class="nav-icon">
 
@@ -406,7 +406,7 @@
 
 								</a>
 
-								<div id="submenu-reports" class="collapse submenu submenu-reports" data-bs-parent="#menu-accordion">
+								<div id="submenu-message" class="collapse submenu submenu-message" data-bs-parent="#menu-accordion">
 
 									<ul class="submenu-list list-unstyled">
 
@@ -417,17 +417,7 @@
 									<li class="submenu-item">
 										<a class="submenu-link" href="">Manage Messages</a>
 									</li>
-									<li class="submenu-item">
-										<a class="submenu-link" href="">Booking Report</a>
-									</li>
-									<li class="submenu-item">
-									<a class="submenu-link" href="">Users Report</a>
-									</li>
-
-									<li class="submenu-item">
-										<a class="submenu-link" href="">Sales Report</a>
-									</li>
-
+						
 
 									
 									</ul>

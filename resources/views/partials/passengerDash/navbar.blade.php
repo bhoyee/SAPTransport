@@ -114,8 +114,8 @@
 				<!-- <img src="{{ asset('assets/images/user.png') }}" alt="user profile"> -->
 			</a>
 			<ul class="dropdown-menu" aria-labelledby="user-dropdown-toggle">
-				<li><a class="dropdown-item" href="{{ route('passenger.account') }}">Account</a></li>
-				<li><a class="dropdown-item" href="{{ route('passenger.settings') }}">Settings</a></li>
+            <li><a class="dropdown-item" href="{{ route('account.settings') }}">Account</a></li>
+            <li><a class="dropdown-item" href="{{ route('passenger.settings') }}">Settings</a></li>
 				<li>
 					<a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
 						Log Out
