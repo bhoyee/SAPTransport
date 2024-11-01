@@ -85,6 +85,9 @@ class SettingsController extends Controller
             return response()->json(['error' => 'Failed to load activity log data'], 500);
         }
     }
+
+
+    
     
 }
 
