@@ -267,6 +267,8 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
 <!-- DataTables CSS and JS -->
 <link href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css" rel="stylesheet">
@@ -306,10 +308,10 @@
     bookingVolumeChart = new Chart(bookingVolumeCtx, {
         type: 'line',
         data: {
-            labels: [],
+            labels: [],  // Update with actual data later
             datasets: [{
                 label: 'Bookings',
-                data: [],
+                data: [],  // Update with actual data later
                 borderColor: 'blue',
                 fill: false,
                 tension: 0.1
@@ -317,12 +319,46 @@
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,  // Allows charts to fill the container height
+            maintainAspectRatio: false,
+            plugins: {
+                datalabels: {
+                    display: true,  // Always display labels
+                    color: 'black',
+                    align: 'top',
+                    font: {
+                        weight: 'bold'
+                    },
+                    formatter: function(value, context) {
+                        return value;  // Show the value directly on each point
+                    }
+                }
+            },
+            tooltips: {
+                enabled: true,  // Enable tooltips on hover
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        // Display label and value in tooltip
+                        let label = data.datasets[tooltipItem.datasetIndex].label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += tooltipItem.yLabel;
+                        return label;
+                    }
+                }
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
+            },
             scales: {
                 x: { beginAtZero: true },
                 y: { beginAtZero: true }
             }
-        }
+        },
+        plugins: [ChartDataLabels]
     });
 
     const revenueCtx = document.getElementById('revenueDistributionChart').getContext('2d');
@@ -337,10 +373,36 @@
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false  // Allows charts to fill the container height
+            maintainAspectRatio: false,
+            plugins: {
+                datalabels: {
+                    display: true,
+                    color: 'white',
+                    font: {
+                        weight: 'bold'
+                    },
+                    formatter: function(value, context) {
+                        return value;  // Display value directly on pie slices
+                    }
+                }
+            },
+            tooltips: {
+                enabled: true,  // Enable tooltips on hover
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        let label = data.labels[tooltipItem.index] || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += data.datasets[0].data[tooltipItem.index];
+                        return label;
+                    }
+                }
             }
-        });
-    }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
 
         // Function to fetch chart data in real-time
         function fetchBookingVolumeData() {

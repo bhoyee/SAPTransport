@@ -258,7 +258,13 @@
 
                             </div>
 
-                            <button type="submit" class="btn btn-primary" id="submit-btn">Proceed</button>
+                            <!-- <button type="submit" class="btn btn-primary" id="submit-btn">Proceed</button> -->
+             
+<button type="submit" id="submit-btn" class="btn btn-primary" {{ $bookingStatus === 'closed' ? 'disabled' : '' }}>
+    {{ $bookingStatus === 'closed' ? 'No booking at the moment' : 'Proceed' }}
+</button>
+
+
 
                         </form>
 
@@ -388,7 +394,14 @@
 
                             </div>
 
-                            <button type="submit" id="ch-submit-btn" class="btn btn-primary">Proceed</button>
+                            <!-- <button type="submit" id="ch-submit-btn" class="btn btn-primary">Proceed</button> -->
+
+         
+<button type="submit" id="ch-submit-btn" class="btn btn-primary" {{ $bookingStatus === 'closed' ? 'disabled' : '' }}>
+    {{ $bookingStatus === 'closed' ? 'No booking at the moment' : 'Proceed' }}
+</button>
+
+
 
                         </form>
 
@@ -515,22 +528,114 @@
     </div>
 
 </div>
+<!-- Modal for No Booking Banner -->
+<!-- Modal -->
+<div class="modal fade" id="noBookingModal" tabindex="-1" aria-labelledby="noBookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="noBookingModalLabel">Booking Closed</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+           <h5><b> Presently we are not taking new bookings. Sorry for the inconvenience. </b></h5>
+            <p class="mt-3">For more details, please contact support.</p>
 
-
-
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="window.location.href='/contact'">Contact Support</button>
+        </div>
+        </div>
+  </div>
+</div>
 
 
 </section>
 
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.min.js"></script>
-
-
-
-
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+
+        console.log("DOM fully loaded and parsed");
+        /// this display no booking banner/modal
+        // Check if the booking status is passed correctly
+        const bookingStatus = "{{ $bookingStatus }}";
+        console.log("Booking Status:", bookingStatus); // Debugging log to check the status value
+
+        if (bookingStatus === 'closed') {
+            console.log("Booking is closed, showing the modal."); // Debugging log to confirm condition
+
+            // Use Bootstrap's modal show function
+            $('#noBookingModal').modal('show');
+        } else {
+            console.log("Booking is not closed.");
+        }
+
+        //checking the booking button status 
+// Function to check booking status and update UI
+// Function to check booking status and update UI for both buttons
+function checkBookingStatus() {
+    console.log("Checking booking status...");
+    fetch('/get-booking-status')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Booking status received:", data);
+
+            // Select the buttons by their IDs
+            const submitButton = document.getElementById('submit-btn');
+            const chSubmitButton = document.getElementById('ch-submit-btn');
+
+            // Update the buttons' state and text based on the booking status
+            if (data.status === 'closed') {
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = 'No booking at the moment';
+                }
+                if (chSubmitButton) {
+                    chSubmitButton.disabled = true;
+                    chSubmitButton.innerHTML = 'No booking at the moment';
+                }
+                
+                // Show modal if not already shown
+                if (!$('#noBookingModal').hasClass('show')) {
+                    $('#noBookingModal').modal('show');
+                }
+            } else if (data.status === 'open') {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Proceed';
+                }
+                if (chSubmitButton) {
+                    chSubmitButton.disabled = false;
+                    chSubmitButton.innerHTML = 'Proceed';
+                }
+                
+                // Hide modal if it is shown
+                if ($('#noBookingModal').hasClass('show')) {
+                    $('#noBookingModal').modal('hide');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking booking status:', error);
+        });
+}
+
+// Poll the server every 5 seconds
+setInterval(checkBookingStatus, 5000);
+
+// Initial check on page load
+checkBookingStatus();
+
+
+
     // Show booking success modal if booking reference exists in session
     const bookingReference = "{{ session('booking_reference') }}";
     if (bookingReference) {
@@ -736,9 +841,11 @@
     $('a[data-toggle="tab"]').on('click', function (e) {
         localStorage.setItem('activeTab', $(e.target).attr('href').substring(1));
     });
+
 });
 
 </script>
 
 
 
+@endpush

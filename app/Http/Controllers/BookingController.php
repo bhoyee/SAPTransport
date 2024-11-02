@@ -16,6 +16,7 @@ use App\Models\Notification;
 use App\Mail\BookingAdminNotification;
 use App\Mail\BookingCancellationAdminNotification;
 use App\Mail\BookingCancellation;
+use App\Models\Setting;
 
 class BookingController extends Controller
 {
@@ -138,26 +139,7 @@ class BookingController extends Controller
     
         // Search for the booking in the database using the reference number
         $booking = Booking::where('booking_reference', $bookingReference)->first();
-    
-        // if ($booking) {
-        //     \Log::info('Booking found: ' . json_encode($booking));
-    
-        //     return response()->json([
-        //         'status' => 'success',
-        //         'booking_reference' => $booking->booking_reference,
-        //         'service_type' => $booking->service_type,
-        //         'status' => $booking->status,
-        //         'date' => $booking->pickup_date, // or dropoff_date based on logic
-        //         'vehicle_type' => $booking->vehicle_type,
-        //     ]);
-        // } else {
-        //     \Log::error('No booking found with reference: ' . $bookingReference);
-    
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'No booking found with that reference number.'
-        //     ]);
-        // }
+
         if ($booking) {
             return response()->json([
                 'status' => 'success',  // This must be present
@@ -283,5 +265,16 @@ class BookingController extends Controller
             return response()->json(['error' => 'Failed to load data'], 500);
         }
     }
+
+    // getting booking button status 
+    public function getBookingStatus()
+    {
+        $setting = Setting::where('key', 'booking_status')->first();
+        if ($setting) {
+            return response()->json(['status' => $setting->value]);
+        }
+        return response()->json(['status' => 'unknown'], 404);
+    }
+    
     
 }

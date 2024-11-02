@@ -10,12 +10,16 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\ActivityLog;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
+use App\Models\Setting;
 
 class SettingsController extends Controller
 {
     public function showSettings()
     {
-        return view('admin.settings');
+        $settings = Setting::all();
+        return view('admin.settings', compact('settings'));
+        // return view('admin.settings.index', compact('settings'));
+
     }
     public function changePassword(Request $request)
     {
@@ -88,6 +92,15 @@ class SettingsController extends Controller
 
 
     
+        // enable and disable booking button
+        public function update(Request $request, $id)
+        {
+            $setting = Setting::findOrFail($id);
+            $setting->value = $request->input('value');
+            $setting->save();
+    
+            return redirect()->route('admin.settings')->with('success', 'Setting updated successfully.');
+        }
     
 }
 
