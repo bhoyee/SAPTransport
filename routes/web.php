@@ -34,22 +34,23 @@ use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\SupportTicketController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettings;
-
+use App\Http\Controllers\Admin\SettingController;
 
 use App\Http\Controllers\Admin\TestDashboardController;
 
 use App\Http\Controllers\Admin\CalendarController;
+use App\Http\Controllers\HomeController;
 
 
 
 // Public Routes
-Route::get('/', function () {
-    return view('index');
-});
 
-Route::get('/home', function () {
-    return redirect('/');
-})->name('home');
+
+
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home');
+
 
 
 Route::get('/update', function () {
@@ -129,6 +130,9 @@ Route::middleware(['auth', 'role:passenger'])->group(function () {
     Route::get('/passenger/bookings/chart-data', [PassengerHomeController::class, 'getChartData'])->name('passenger.bookings.chartData');
     Route::get('/passenger/activities', [PassengerHomeController::class, 'getUserActivities'])->name('passenger.activities');
 });
+
+Route::get('/get-booking-status', [BookingController::class, 'getBookingStatus'])->name('booking.status');
+
 
 // Admin Routes (Protected by Spatie's Role Middleware)
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
@@ -262,6 +266,11 @@ Route::patch('/support-tickets/{id}/update-status', [SupportTicketController::cl
 //acct etting route
 // Route::get('/account', [AccountController::class, 'showAccountPage'])->name('admin.account');
 // Route::post('/account', [AccountController::class, 'updateAccount'])->name('admin.update-account');
+
+Route::get('/setting', [SettingController::class, 'index'])->name('admin.settings.index');
+Route::put('/settings/{id}', [AdminSettings::class, 'update'])->name('admin.settings.update');
+
+
 
 // setting routes
     Route::get('/settings', [AdminSettings::class, 'showSettings'])->name('admin.settings');

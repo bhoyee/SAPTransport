@@ -12,7 +12,7 @@
         <div class="container mt-5">
             <div class="row">
                 <!-- Password Change Section -->
-                <div class="col-md-12 mb-5">
+                <div class="col-md-6 mb-5">
                     <h3>Change Password</h3>
                     <form id="password-change-form" action="{{ route('admin.settings.change-password') }}" method="POST">
                         @csrf
@@ -35,6 +35,74 @@
                     </form>
                     <div id="password-feedback" class="mt-3"></div>
                 </div>
+
+
+
+<!-- Display Enable / Disable Bookings Section -->
+<div class="col-md-6 mb-5">
+    <h2>Enable / Disable Bookings</h2>
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+        </div>
+    @endif
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Setting Key</th>
+                <th>Setting Value</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($settings as $setting)
+                <tr>
+                    <td>{{ $setting->key }}</td>
+                    <td>
+                        @if($setting->key === 'booking_status')
+                            <!-- Display badge based on the value -->
+                            <span class="badge bg-{{ $setting->value === 'closed' ? 'danger' : 'success' }}">
+                                {{ ucfirst($setting->value) }}
+                            </span>
+                           
+                     
+                        @else
+                            {{ $setting->value }}
+                        @endif
+                    </td>
+                    <td>
+                    <form action="{{ route('admin.settings.update', $setting->id) }}" method="POST" onsubmit="showSpinner(this)">
+    @csrf
+    @method('PUT')
+
+    @if($setting->key === 'booking_status')
+        <select name="value" class="form-control">
+            <option value="open" {{ $setting->value === 'open' ? 'selected' : '' }}>Enable Bookings</option>
+            <option value="closed" {{ $setting->value === 'closed' ? 'selected' : '' }}>Disable Bookings</option>
+        </select>
+    @else
+        <input type="text" name="value" value="{{ $setting->value }}" class="form-control">
+    @endif
+
+    <button type="submit" class="btn btn-primary mt-2">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+        <span class="button-text">Update</span>
+    </button>
+</form>
+
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+
+
+
             </div>
         </div>
 
@@ -154,6 +222,46 @@ $(document).ready(function() {
         document.getElementById('password-spinner').style.display = 'none';
     });
 });
+
+//booking buton status spinner 
+const forms = document.querySelectorAll('form');
+
+forms.forEach(form => {
+    form.addEventListener('submit', function (event) {
+        try {
+            showSpinner(form); // Call the showSpinner function on form submission
+        } catch (error) {
+            console.error('Error on form submit:', error);
+        }
+    });
+});
+
+    function showSpinner(form) {
+        console.log('Form submission initiated...');
+        const button = form.querySelector('button[type="submit"]');
+        if (!button) {
+            console.error('Submit button not found.');
+            return;
+        }
+
+        // Add a spinner element if not present
+        let spinner = button.querySelector('.spinner-border');
+        if (!spinner) {
+            spinner = document.createElement('span');
+            spinner.className = 'spinner-border spinner-border-sm';
+            spinner.setAttribute('role', 'status');
+            spinner.setAttribute('aria-hidden', 'true');
+            button.appendChild(spinner);
+        }
+
+        // Update the button text and disable it
+        button.textContent = 'Updating...';
+        button.appendChild(spinner); // Ensure spinner is visible
+        spinner.style.display = 'inline-block';
+        button.disabled = true;
+        
+        console.log('Spinner is shown, button text changed, and button disabled');
+    }
 
 });
 </script>

@@ -13,6 +13,8 @@ use Carbon\Carbon;
 
 class PassengerHomeController extends Controller
 {
+
+    
     // Fetch recent bookings for passengers, consultants, and admins
     public function getRecentBookings()
     {
