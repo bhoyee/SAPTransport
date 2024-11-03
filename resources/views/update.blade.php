@@ -120,7 +120,7 @@
     <div class="container">
         <!-- Last Updated Date -->
         <div class="last-updated">
-            Last Updated: October 4th, 2024
+            Last Updated: November 2nd, 2024
         </div>
         <!-- Countdown Timer -->
         <div class="countdown" id="countdown-timer">
@@ -224,6 +224,11 @@
                     <div class="card-body">
                         <h2 class="section-title">Daily Log</h2>
                         <ul class="list-group">
+                        <li class="list-group-item">
+                               Profile Image not showing on the server
+                                <span class="maintenance-badge">Maintenance</span>
+                                <span class="status">02/11/2024 at 16:45</span>
+                            </li>
                             <li class="list-group-item">
                                 Email verification entering spam folder
                                 <span class="maintenance-badge">Maintenance</span>
@@ -251,40 +256,50 @@
                             <li class="list-group-item">
                                 <span class="task">Backend API Development:</span>
                                 <ul>
-                                <li>Admin Login <span class="status in-progress">In Progress</span></li>
-                                   <li>Admin Dashboard <span class="status in-progress">In Progress</span></li>
-                                    <li>Login API <span class="status completed">Completed</span></li>
-                                    <li>Registration API <span class="status completed">Completed</span></li>
-                                    <li>Payment Gateway Integration <span class="status completed">Completed</span></li>
-                                    <li>PayStack Integration <span class="status completed">Completed</span></li>
-                                    <li>Payment History <span class="status completed">Completed</span><span class="new-badge">New</span></li>
-                                   
-                                    <!-- <li>Booking API <span class="status pending">Pending</span></li> -->
-                                    <li>Booking API <span class="status completed">Completed</span><span class="new-badge">New</span></li>
+                                <li>Staff API's <span class="status in-progress">In Progress</span></li>
+                                <li>Admin API's <span class="status completed">Completed</span></li>
+                                <li>Passenger API's <span class="status completed">Completed</span></li>
+                                <li>Payment Gateway Integration <span class="status completed">Completed</span></li>
+                                <li>PayStack Integration <span class="status completed">Completed</span></li>
 
                                 </ul>
                             </li>
                             <li class="list-group-item">
                                 <span class="task">Frontend Integration:</span>
                                 <ul>
-                                <li>Passenger Area <span class="status completed">Completed</span><span class="new-badge">New</span></li>
-                                <li> Booking Options: Book Airport Pickup/Drop-off, Book Charter Trip<span class="status completed">Completed</span><span class="new-badge">New</span></li>
-                                <li>  Booking Management: View invoices/receipts, Manage bookings, Manage payments <span class="status completed">Completed</span><span class="new-badge">New</span></li>
-                                <li>   Profile and Security: Manage profile and change password <span class="status completed">Completed</span><span class="new-badge">New</span></li>
-                                <li>    Support: Open support tickets, Send messages to support <span class="status completed">Completed</span><span class="new-badge">New</span></li>
-                                <li>   Dashboard: Overview of bookings, payments, trip history, and booking status <span class="status completed">Completed</span><span class="new-badge">New</span></li>
-
-
-                                    <!-- <li>Passenger: Payment Form Integration  <span class="status in-progress">In Progress</span></li> -->
-                                    <!-- <li>Passenger: My Trip / Bookings <span class="status pending">Pending</span></li>
-                                    <li>Passenger: Invoices / Receipts<span class="status pending">Pending</span></li>
-                                    <li>Passenger: Support / Ticket<span class="status pending">Pending</span></li> -->
-                                    <!-- <li>Passenger: Settings<span class="status pending">Pending</span></li> -->
+                                <span class="task">User Features (Passenger Area):</span>
+                                <ul  style="margin-bottom: 20px;">
+                                    <li>Booking Options: Book Airport Pickup/Drop-off, Book Charter Trip <span class="status completed">Completed</span></li>
+                                    <li>Booking Management: View invoices/receipts, Manage bookings, Manage payments <span class="status completed">Completed</span></li>
+                                    <li>Profile and Security: Manage profile and change password <span class="status completed">Completed</span></li>
+                                    <li>Support: Open support tickets, Send messages to support <span class="status completed">Completed</span></li>
+                                    <li>Dashboard: Overview of bookings, payments, trip history, and booking status <span class="status completed">Completed</span></li>
                                 </ul>
+                                <span class="task">Admin Features:</span>
+                                <ul  style="margin-bottom: 20px;">
+                                    <li>User Management: Create, manage, and delete staff users, Manage passengers <span class="status completed">Completed</span><span class="new-badge">New</span></li></li>
+                                    <li>Dashboard: Display booking and sales data <span class="status completed">Completed</span><span class="new-badge">New</span></li></li>
+                                    <li>Booking Management: Confirm, view, edit, and delete bookings <span class="status completed">Completed</span><span class="new-badge">New</span></li></li>
+                                    <li>Payment Management: View, process payments, manage receipts/invoices <span class="status completed">Completed</span><span class="new-badge">New</span></li></li>
+                                    <li>Messaging: Send, receive, and delete messages <span class="status pending">Pending</span></li>
+                                    <li>Ticketing: Managing Tecketing  <span class="status completed">Completed</span><span class="new-badge">New</span></li></li>
+                                    <li>Security: Change password functionality <span class="status completed">Completed</span><span class="new-badge">New</span></li></li>
+                                </ul>
+
+                                <span class="task">Consultant Features (Staff):</span>
+                                <ul  style="margin-bottom: 20px;">
+                                    <li>Dashboard: View reports and booking data analysis <span class="status in-progress">In Progress</span></li></li>
+                                    <li>Booking Management: Confirm, view, and edit bookings <span class="status in-progress">In Progress</span></li></li>
+                                    <li>User Management: View and edit passenger details <span class="status in-progress">In Progress</span></li></li>
+                                    <li>Payment Management: View and process payments <span class="status in-progress">In Progress</span></li></li>
+                                    <li>Messaging: Send and receive messages <span class="status in-progress">In Progress</span></li></li>
+                                    <li>Security: Change password functionality <span class="status in-progress">In Progress</span></li></li>
+                                </ul>
+                       
                             </li>
                             <li class="list-group-item">
                                 <span class="task">Testing and Bug Fixing:</span>
-                                <ul>
+                                <ul  style="margin-bottom: 20px;">
                                     <li>Unit Testing <span class="status in-progress">In Progress</span></li>
                                     <li>End-to-End Testing <span class="status pending">Pending</span></li>
                                 </ul>
@@ -307,8 +322,8 @@
                                 <ul>
                                     <li>Payment Form Integration (PayStack Integration) <span class="status completed">Completed</span></li>
                                     <li>Passenger Portal <span class="status completed">Completed</span></li>
-                                    <li>Admin Portal <span class="status in-progress">In Progress</span></li>
-                                    <li>Staff Portal <span class="status pending">Pending</span></li>
+                                    <li>Admin Portal <span class="status completed">Completed</span></li>
+                                    <li>Staff Portal <span class="status in-progress">In Progress</span></li>
                                 </ul>
                             </li>
                             <li class="list-group-item">
@@ -328,8 +343,8 @@
                             <li class="list-group-item">
                                 <span class="task">Deploy to Staging Server:</span>
                                 <ul>
-                                    <li>Setup Staging Environment <span class="status pending">Pending</span></li>
-                                    <li>Data Migration <span class="status pending">Pending</span></li>
+                                    <li>Setup Staging Environment <span class="status in-progress">In Progress</span></li>
+                                    <li>Data Migration <span class="status in-progress">In Progress</span></li>
                                 </ul>
                             </li>
                             <li class="list-group-item">
