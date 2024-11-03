@@ -1,4 +1,17 @@
-@extends('admin.layouts.admin-layout')
+{{-- resources/views/account/settings.blade.php --}}
+
+@php
+    if (auth()->user()->hasRole('admin')) {
+        $layout = 'admin.layouts.admin-layout';
+    } elseif (auth()->user()->hasRole('consultant')) {
+        $layout = 'staff.layouts.staff-layout';
+    } else {
+        $layout = 'layouts.passenger';
+    }
+@endphp
+
+@extends($layout)
+
 
 @section('content')
     <h1 class="app-page-title">Notifications</h1>

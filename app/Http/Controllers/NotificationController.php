@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Log;
 class NotificationController extends Controller
 {
     // Fetch recent notifications for the dropdown
-    // Fetch recent notifications for the dropdown
     public function fetchRecentNotifications()
     {
         $user = Auth::user();
@@ -139,19 +138,19 @@ class NotificationController extends Controller
 
 
     // Fetch notification details
-public function fetchNotification($id)
-{
-    try {
-        $notification = Notification::findOrFail($id);
-        return response()->json([
-            'message' => $notification->message,
-            'created_at' => $notification->created_at->format('d M, Y H:i:s')
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Failed to fetch notification details:', ['error' => $e->getMessage()]);
-        return response()->json(['error' => 'Failed to load notification details.'], 500);
+    public function fetchNotification($id)
+    {
+        try {
+            $notification = Notification::findOrFail($id);
+            return response()->json([
+                'message' => $notification->message,
+                'created_at' => $notification->created_at->format('d M, Y H:i:s')
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch notification details:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to load notification details.'], 500);
+        }
     }
-}
 
 // Mark notification as read
 
