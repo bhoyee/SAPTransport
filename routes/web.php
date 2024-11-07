@@ -155,19 +155,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
 
  
 
-    //  admin invocie controller 
 
-    Route::get('/invoices/manage', [AdminInvoiceController::class, 'manageInvoices'])->name('admin.invoices.manage');
-    Route::get('/invoices/fetch', [AdminInvoiceController::class, 'fetchInvoices'])->name('admin.invoices.fetch');
-    Route::get('/invoices/fetchAll', [AdminInvoiceController::class, 'fetchAllInvoices'])->name('admin.invoices.fetchAll'); // Fetch all invoices for DataTable
-    Route::get('/invoices/{id}/view', [AdminInvoiceController::class, 'showInvoice'])->name('admin.invoices.view');
-    Route::get('/invoices/{id}/download', [AdminInvoiceController::class, 'downloadInvoice'])->name('admin.invoices.download');
-    // Route to show the edit form
-    Route::get('/invoices/{id}/edit', [AdminInvoiceController::class, 'edit'])->name('admin.invoices.edit');
-    // Route to handle the update request
-    Route::put('/invoices/{id}', [AdminInvoiceController::class, 'update'])->name('admin.invoices.update');
-    Route::delete('/invoices/{id}/delete', [AdminInvoiceController::class, 'deleteInvoice'])->name('admin.invoices.delete');
-    
 // Routes for custom invoice creation
 Route::get('/invoices/create-custom', [AdminInvoiceController::class, 'createCustomForm'])->name('admin.invoices.createCustomForm');
 Route::post('/invoices/create-custom', [AdminInvoiceController::class, 'createCustomInvoice'])->name('admin.invoices.createCustom');
@@ -258,13 +246,6 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-// Admin Dashboard Route without Middleware (Redirect if not Admin)
-// Route::get('/admin/dashboard', function () {
-//     if (Auth::check() && Auth::user()->hasRole('admin')) {
-//         return view('admin.dashboard');
-//     }
-//     return redirect('/login')->with('error', 'Unauthorized access');
-// })->name('admin.dashboard')->middleware('auth');
 
 // Contact Form Submission
 Route::post('/contact/submit', [ContactController::class, 'submit'])->name('contact.submit');
@@ -384,9 +365,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|consultant'])->group(fun
 
        // Manage payment route
     Route::get('/payments', [AdminPaymentController::class, 'managePayments'])->name('admin.payments.index');
-
-    Route::get('/payments/fetch', [AdminPaymentController::class, 'fetchPayments'])->name('admin.payments.fetch');
-   
+    Route::get('/payments/fetch', [AdminPaymentController::class, 'fetchPayments'])->name('admin.payments.fetch'); 
     Route::get('/payment/search', [AdminPaymentController::class, 'searchBooking'])->name('admin.payment.search');
     Route::post('/pay', [AdminPaymentController::class, 'pay'])->name('admin.payment.pay');
    
@@ -396,16 +375,26 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|consultant'])->group(fun
 
        // Process refund route
     Route::post('/payments/{id}/refund', [AdminPaymentController::class, 'processRefund'])->name('admin.payment.refund');
-    
        // Decline refund route
     Route::post('/payments/{id}/refund/decline', [AdminPaymentController::class, 'declineRefund'])->name('admin.payment.refund.decline');
-   
        //cash payment routes
     Route::post('/payments/cash/update', [AdminPaymentController::class, 'recordCashPayment'])->name('admin.payment.cash.update');
     Route::get('/payment/cash', [AdminPaymentController::class, 'showCashPaymentForm'])->name('admin.payment.cash');
     Route::post('/payments/{id}/refund/cash', [AdminPaymentController::class, 'refundCash'])->name('admin.payments.refund.cash');
    
+    //  admin invocie controller 
 
+    Route::get('/invoices/manage', [AdminInvoiceController::class, 'manageInvoices'])->name('admin.invoices.manage');
+    Route::get('/invoices/fetch', [AdminInvoiceController::class, 'fetchInvoices'])->name('admin.invoices.fetch');
+    Route::get('/invoices/fetchAll', [AdminInvoiceController::class, 'fetchAllInvoices'])->name('admin.invoices.fetchAll'); // Fetch all invoices for DataTable
+    Route::get('/invoices/{id}/view', [AdminInvoiceController::class, 'showInvoice'])->name('admin.invoices.view');
+    Route::get('/invoices/{id}/download', [AdminInvoiceController::class, 'downloadInvoice'])->name('admin.invoices.download');
+    // Route to show the edit form
+    Route::get('/invoices/{id}/edit', [AdminInvoiceController::class, 'edit'])->name('admin.invoices.edit');
+    // Route to handle the update request
+    Route::put('/invoices/{id}', [AdminInvoiceController::class, 'update'])->name('admin.invoices.update');
+    Route::delete('/invoices/{id}/delete', [AdminInvoiceController::class, 'deleteInvoice'])->name('admin.invoices.delete');
+    
 });
 
 
