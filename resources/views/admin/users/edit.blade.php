@@ -1,4 +1,11 @@
-@extends('admin.layouts.admin-layout')
+@php
+    $layout = auth()->user()->hasRole('admin') 
+        ? 'admin.layouts.admin-layout' 
+        : 'staff.layouts.staff-layout';
+    $isConsultant = auth()->user()->hasRole('consultant');
+@endphp
+
+@extends($layout)
 
 @section('content')
 <h1 class="app-page-title">Edit User</h1>
@@ -36,15 +43,22 @@
                 </select>
             </div>
 
-            <!-- Role -->
-            <div class="form-group mb-3">
-                <label for="role">Role</label>
-                <select id="role" class="form-control" name="role" required>
-                    <option value="passenger" {{ $user->role == 'passenger' ? 'selected' : '' }}>Passenger</option>
-                    <option value="consultant" {{ $user->role == 'consultant' ? 'selected' : '' }}>Staff</option>
-                    <option value="admin" {{ $user->role == 'admin' ? 'selected' : '' }}>Admin</option>
-                </select>
-            </div>
+            <!-- Role (conditionally readonly for consultants) -->
+        <!-- Role -->
+<div class="form-group mb-3">
+    <label for="role">Role</label>
+    <select id="role" class="form-control" name="role" 
+            {{ auth()->user()->hasRole('consultant') ? 'disabled' : '' }} required>
+        <option value="passenger" {{ $user->role == 'passenger' ? 'selected' : '' }}>Passenger</option>
+        <option value="consultant" {{ $user->role == 'consultant' ? 'selected' : '' }}>Staff</option>
+        <option value="admin" {{ $user->role == 'admin' ? 'selected' : '' }}>Admin</option>
+    </select>
+    <!-- Hidden role field to ensure it's submitted -->
+    @if(auth()->user()->hasRole('consultant'))
+        <input type="hidden" name="role" value="{{ $user->role }}">
+    @endif
+</div>
+
 
             <!-- Status -->
             <div class="form-group mb-3">
@@ -58,16 +72,11 @@
 
             <!-- Submit and Back Buttons -->
             <div class="mt-3">
-                <!-- Update User Button -->
                 <button type="submit" class="btn btn-primary" id="update-user-btn">Update User</button>
-
-                <!-- Spinner Button (Hidden by default) -->
                 <button class="btn btn-primary" type="button" id="loading-spinner" disabled style="display: none;">
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     Updating...
                 </button>
-
-                <!-- Back Button -->
                 <a href="{{ route('admin.users.show', $user->id) }}" class="btn btn-secondary">Back</a>
             </div>
         </form>
@@ -78,9 +87,7 @@
 @push('scripts')
 <script>
     document.getElementById('update-user-form').addEventListener('submit', function() {
-        // Hide the "Update User" button
         document.getElementById('update-user-btn').style.display = 'none';
-        // Show the spinner button
         document.getElementById('loading-spinner').style.display = 'inline-block';
     });
 </script>

@@ -155,58 +155,6 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
 
 
 
-    Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
-    Route::get('/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
-    Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
-    Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
-    Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
-    Route::delete('/users/{user}', [AdminUserController::class, 'delete'])->name('admin.users.delete');
-    Route::post('users/report/pdf', [UserReportController::class, 'generatePDF'])->name('admin.users.report.pdf');
-    Route::get('users/report', [UserReportController::class, 'showReportPage'])->name('admin.users.report');
-    Route::get('users/fetch-stats', [UserReportController::class, 'fetchStats'])->name('admin.users.fetch-stats');
-
-    //admin delete user page 
-    Route::get('users/deleted-users', [AdminUserController::class, 'showDeletedUsers'])->name('admin.users.deleted-users'); // To display the page
-    // Route::get('users/deleted', [AdminUserController::class, 'showDeletedUsers'])->name('admin.users.deleted'); // To display the page
-    Route::get('users/fetch-deleted-stats', [AdminUserController::class, 'fetchDeletedStats'])->name('admin.users.fetch-deleted-stats'); // For the card
-    Route::get('users/deleted-list', [AdminUserController::class, 'getDeletedUsers'])->name('admin.users.deleted-list'); // For the DataTable
-    Route::post('users/permanent-delete', [AdminUserController::class, 'permanentDelete'])->name('admin.users.permanent-delete'); // For permanent deletion
-
-
-    Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show'); // Add this route
-
-    // Admin routes for managing bookings / Admin Booking Routes
-    Route::get('/manage-bookings', [AdminBookingController::class, 'manageBookings'])->name('admin.bookings.manage');
-    Route::get('/bookings/fetch', [AdminBookingController::class, 'fetchBookings'])->name('admin.bookings.fetch');
-
-    Route::post('/bookings/update-status/{id}', [AdminBookingController::class, 'updateBookingStatus'])->name('admin.bookings.updateStatus');
-
-    Route::post('/bookings/{id}/complete', [AdminBookingController::class, 'completeBooking'])->name('admin.bookings.complete');
-
-    Route::get('/bookings/{id}/view', [AdminBookingController::class, 'viewBooking'])->name('admin.bookings.view');
-    Route::get('/bookings/{id}/edit', [AdminBookingController::class, 'editBooking'])->name('admin.bookings.edit');
-    Route::put('/admin/bookings/{id}', [AdminBookingController::class, 'updateBooking'])->name('admin.bookings.update');
-    Route::post('/bookings/{id}/cancel', [AdminBookingController::class, 'cancelBooking'])->name('admin.bookings.cancel');
-    Route::delete('/bookings/{id}/delete', [AdminBookingController::class, 'deleteBooking'])->name('admin.bookings.delete');
-    Route::post('/bookings/{id}/update-status', [BookingController::class, 'updateBookingStatus'])->name('admin.bookings.updateStatus');
-
-    // Route to load the search page where the admin enters the booking reference
-    Route::get('/admin/bookings/confirm', [AdminBookingController::class, 'searchBooking'])->name('admin.bookings.confirm-search');
-
-    // Route to handle the search and display the booking info if found
-    Route::post('/admin/bookings/confirm-search', [AdminBookingController::class, 'searchBooking'])->name('admin.bookings.confirm-search-post');
-
-    // Route to confirm a booking (requires the booking ID)
-    Route::post('/admin/bookings/{id}/confirm', [AdminBookingController::class, 'confirmBooking'])->name('admin.bookings.confirm');
-
-    //admin booking report routes 
-    Route::get('/bookings/report', [AdminBookingReportController::class, 'index'])->name('admin.bookings.report');
-    Route::post('/bookings/report/pdf', [AdminBookingReportController::class, 'generatePdf'])->name('admin.bookings.report.pdf');
-    // Route::get('/bookings/report-data/{range}', [AdminBookingReportController::class, 'getReportData']);
-
-    Route::get('/bookings/report-data/{range}', [AdminBookingReportController::class, 'getReportData'])->name('admin.bookings.report.data');
-    Route::post('/admin/bookings/report/pdf', [AdminBookingReportController::class, 'generatePdf'])->name('admin.bookings.report.pdf');
-
 
     Route::get('/payment/search', [AdminPaymentController::class, 'searchBooking'])->name('admin.payment.search');
     Route::post('/pay', [AdminPaymentController::class, 'pay'])->name('admin.payment.pay');
@@ -394,25 +342,117 @@ Route::middleware(['auth', 'role:passenger'])->group(function () {
 
 // Admin User Management Routes (Only for Admin Role)
     Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
+    // Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    // Route::get('/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
+    // Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
+    // Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
+    // Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+   
+
+    // Admin Report Management
+    // Route::get('users/report', [UserReportController::class, 'showReportPage'])->name('admin.users.report');
+    // Route::post('users/report/pdf', [UserReportController::class, 'generatePDF'])->name('admin.users.report.pdf');
+
+    
+    // Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    // Route::get('/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
+    // Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
+    // Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
+    // Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+    // Route::delete('/users/{user}', [AdminUserController::class, 'delete'])->name('admin.users.delete');
+    // Route::post('users/report/pdf', [UserReportController::class, 'generatePDF'])->name('admin.users.report.pdf');
+    // Route::get('users/report', [UserReportController::class, 'showReportPage'])->name('admin.users.report');
+    // Route::get('users/fetch-stats', [UserReportController::class, 'fetchStats'])->name('admin.users.fetch-stats');
+
+    // //admin delete user page 
+    // Route::get('users/deleted-users', [AdminUserController::class, 'showDeletedUsers'])->name('admin.users.deleted-users'); // To display the page
+    // // Route::get('users/deleted', [AdminUserController::class, 'showDeletedUsers'])->name('admin.users.deleted'); // To display the page
+    // Route::get('users/fetch-deleted-stats', [AdminUserController::class, 'fetchDeletedStats'])->name('admin.users.fetch-deleted-stats'); // For the card
+    // Route::get('users/deleted-list', [AdminUserController::class, 'getDeletedUsers'])->name('admin.users.deleted-list'); // For the DataTable
+    Route::post('users/permanent-delete', [AdminUserController::class, 'permanentDelete'])->name('admin.users.permanent-delete'); // For permanent deletion
+    // restore temporary deleted users
+    Route::post('/users/restore', [AdminUserController::class, 'restore'])->name('admin.users.restore');
+
+        //admin delete user page 
+        Route::get('users/deleted-users', [AdminUserController::class, 'showDeletedUsers'])->name('admin.users.deleted-users'); // To display the page
+        // Route::get('users/deleted', [AdminUserController::class, 'showDeletedUsers'])->name('admin.users.deleted'); // To display the page
+        Route::get('users/fetch-deleted-stats', [AdminUserController::class, 'fetchDeletedStats'])->name('admin.users.fetch-deleted-stats'); // For the card
+        Route::get('users/deleted-list', [AdminUserController::class, 'getDeletedUsers'])->name('admin.users.deleted-list'); // For the DataTable
+        // Route::post('users/permanent-delete', [AdminUserController::class, 'permanentDelete'])->name('admin.users.permanent-delete'); // For permanent deletion
+    
+    
+
+    // Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show'); // Add this route
+    
+});
+
+// Admin and Staff (Admins and Consultants) routes
+Route::middleware(['auth', 'role:admin|consultant'])->group(function () {
+    Route::get('/admin/book-for-someone', [AdminBookingController::class, 'showBookingForm'])->name('admin.bookForSomeone');
+    Route::post('/admin/check-user', [AdminBookingController::class, 'checkUser']);
+    Route::post('/admin/make-booking', [AdminBookingController::class, 'store']);
+
+
+    //create and manage users
+
+    Route::post('users/report/pdf', [UserReportController::class, 'generatePDF'])->name('admin.users.report.pdf');
+
+    
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::get('/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
     Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
     Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+    Route::delete('/users/{user}', [AdminUserController::class, 'delete'])->name('admin.users.delete');
+    Route::post('users/report/pdf', [UserReportController::class, 'generatePDF'])->name('admin.users.report.pdf');
+    Route::get('users/report', [UserReportController::class, 'showReportPage'])->name('admin.users.report');
+    Route::get('users/fetch-stats', [UserReportController::class, 'fetchStats'])->name('admin.users.fetch-stats');
+
     Route::post('/users/delete', [AdminUserController::class, 'delete'])->name('admin.users.delete');
     Route::post('/users/{user}/suspend', [AdminUserController::class, 'suspend'])->name('admin.users.suspend');
 
-    // Admin Report Management
-    Route::get('users/report', [UserReportController::class, 'showReportPage'])->name('admin.users.report');
-    Route::post('users/report/pdf', [UserReportController::class, 'generatePDF'])->name('admin.users.report.pdf');
-    
+     //Route::get('/admin/users', [UserReportController::class, 'showUserManagementPage'])->name('admin.users.index');
+     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index'); // For AJAX loading
+     Route::get('/admin/users', [UserReportController::class, 'showUserManagementPage'])->name('admin.users.management'); // For user management page
+     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show'); // Add this route
 });
 
-// Booking for Admin and Staff (Admins and Consultants)
-Route::middleware(['auth', 'role:admin|consultant'])->group(function () {
-    Route::get('/admin/book-for-someone', [AdminBookingController::class, 'showBookingForm'])->name('admin.bookForSomeone');
-    Route::post('/admin/check-user', [AdminBookingController::class, 'checkUser']);
-    Route::post('/admin/make-booking', [AdminBookingController::class, 'store']);
+Route::prefix('admin')->middleware(['auth', 'role:admin|consultant'])->group(function () {
+    // Routes for booking management
+ 
+    // Admin routes for managing bookings / Admin Booking Routes
+    Route::get('/manage-bookings', [AdminBookingController::class, 'manageBookings'])->name('admin.bookings.manage');
+    Route::get('/bookings/fetch', [AdminBookingController::class, 'fetchBookings'])->name('admin.bookings.fetch');
+
+    Route::post('/bookings/update-status/{id}', [AdminBookingController::class, 'updateBookingStatus'])->name('admin.bookings.updateStatus');
+
+    Route::post('/bookings/{id}/complete', [AdminBookingController::class, 'completeBooking'])->name('admin.bookings.complete');
+
+    Route::get('/bookings/{id}/view', [AdminBookingController::class, 'viewBooking'])->name('admin.bookings.view');
+    Route::get('/bookings/{id}/edit', [AdminBookingController::class, 'editBooking'])->name('admin.bookings.edit');
+    Route::put('/admin/bookings/{id}', [AdminBookingController::class, 'updateBooking'])->name('admin.bookings.update');
+    Route::post('/bookings/{id}/cancel', [AdminBookingController::class, 'cancelBooking'])->name('admin.bookings.cancel');
+    Route::delete('/bookings/{id}/delete', [AdminBookingController::class, 'deleteBooking'])->name('admin.bookings.delete');
+    Route::post('/bookings/{id}/update-status', [BookingController::class, 'updateBookingStatus'])->name('admin.bookings.updateStatus');
+
+    // Route to load the search page where the admin enters the booking reference
+    Route::get('/admin/bookings/confirm', [AdminBookingController::class, 'searchBooking'])->name('admin.bookings.confirm-search');
+
+    // Route to handle the search and display the booking info if found
+    Route::post('/admin/bookings/confirm-search', [AdminBookingController::class, 'searchBooking'])->name('admin.bookings.confirm-search-post');
+
+    // Route to confirm a booking (requires the booking ID)
+    Route::post('/admin/bookings/{id}/confirm', [AdminBookingController::class, 'confirmBooking'])->name('admin.bookings.confirm');
+
+    //admin booking report routes 
+    Route::get('/bookings/report', [AdminBookingReportController::class, 'index'])->name('admin.bookings.report');
+    Route::post('/bookings/report/pdf', [AdminBookingReportController::class, 'generatePdf'])->name('admin.bookings.report.pdf');
+    // Route::get('/bookings/report-data/{range}', [AdminBookingReportController::class, 'getReportData']);
+
+    Route::get('/bookings/report-data/{range}', [AdminBookingReportController::class, 'getReportData'])->name('admin.bookings.report.data');
+    Route::post('/admin/bookings/report/pdf', [AdminBookingReportController::class, 'generatePdf'])->name('admin.bookings.report.pdf');
+
+
 });
 
 

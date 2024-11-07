@@ -111,29 +111,27 @@ class UserReportController extends Controller
         public function fetchStats()
         {
             try {
-                // Log the stats fetching process
                 Log::info('Fetching real-time user statistics.');
         
-                // Query for updated statistics
-                $totalUsers = User::where('status', '!=', 'deleted')->count();
-                $totalPassengers = User::role('passenger')->where('status', '!=', 'deleted')->count();
-                $totalStaff = User::role('consultant')->where('status', '!=', 'deleted')->count();
-                $unverifiedUsers = User::where('status', '!=', 'deleted')
-                    ->whereNull('email_verified_at')
-                    ->whereDoesntHave('roles', function($query) {
-                        $query->whereIn('name', ['consultant', 'admin']);
-                    })
-                    ->count();
+                // Query for total active passengers
+                $totalPassengers = User::role('passenger')->where('status', 'active')->count();
         
-                // Return JSON response
+                // Query for inactive passengers
+                $inactivePassengers = User::role('passenger')->where('status', 'inactive')->count();
+        
+                // Query for active consultants
+                $totalStaff = User::role('consultant')->where('status', 'active')->count();
+        
+                // Query for suspended users
+                $suspendedUsers = User::where('status', 'suspend')->count();
+        
                 return response()->json([
-                    'totalUsers' => $totalUsers,
                     'totalPassengers' => $totalPassengers,
+                    'inactivePassengers' => $inactivePassengers,
                     'totalStaff' => $totalStaff,
-                    'unverifiedUsers' => $unverifiedUsers
+                    'suspendedUsers' => $suspendedUsers
                 ]);
             } catch (\Exception $e) {
-                // Log the error and return an error response
                 Log::error('Error fetching real-time user statistics', ['error' => $e->getMessage()]);
         
                 return response()->json([
@@ -142,6 +140,21 @@ class UserReportController extends Controller
                 ], 500);
             }
         }
+        
+        public function showUserManagementPage()
+        {
+            $totalPassengers = User::role('passenger')->where('status', 'active')->count();
+            $inactivePassengers = User::role('passenger')->where('status', 'inactive')->count();
+            $totalStaff = User::role('consultant')->where('status', 'active')->count();
+            $suspendedUsers = User::where('status', 'suspend')->count();
+        
+            return view('admin.users.index', compact(
+                'totalPassengers', 'inactivePassengers', 'totalStaff', 'suspendedUsers'
+            ));
+        }
+        
+        
+        
         
 
 }

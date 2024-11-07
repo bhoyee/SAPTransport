@@ -16,4 +16,9 @@ class UserDelete extends Model
         'deleted_by',
         'deleted_at',
     ];
+    // In UserDelete.php
+    public function deletedBy()
+    {
+        return $this->belongsTo(User::class, 'deleted_by', 'email'); // Adjusted to fetch by 'email' in the User model
+    }
 }

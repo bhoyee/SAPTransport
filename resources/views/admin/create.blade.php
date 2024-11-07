@@ -1,4 +1,11 @@
-@extends('admin.layouts.admin-layout')
+@php
+    $layout = auth()->user()->hasRole('admin') 
+        ? 'admin.layouts.admin-layout' 
+        : 'staff.layouts.staff-layout';
+@endphp
+
+@extends($layout)
+
 
 @section('content')
 <h1 class="app-page-title">Add Users</h1>
@@ -91,8 +98,12 @@
                                     class="form-control @error('role') is-invalid @enderror" 
                                     name="role" required>
                                 <option value="passenger" {{ old('role') == 'passenger' ? 'selected' : '' }}>Passenger</option>
-                                <option value="consultant" {{ old('role') == 'consultant' ? 'selected' : '' }}>Staff</option>
-                                <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                                
+                                {{-- Hide Staff and Admin options if the logged-in user is a consultant --}}
+                                @if(!auth()->user()->hasRole('consultant'))
+                                    <option value="consultant" {{ old('role') == 'consultant' ? 'selected' : '' }}>Staff</option>
+                                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                                @endif
                             </select>
                             @error('role')
                                 <span class="invalid-feedback" role="alert">
@@ -100,6 +111,7 @@
                                 </span>
                             @enderror
                         </div>
+
 
                         <div class="form-group mb-3">
                             <label for="gender">Gender</label>
