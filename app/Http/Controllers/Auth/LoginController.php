@@ -62,6 +62,8 @@ class LoginController extends Controller
 
             // Proceed with the logic based on the user's role using Spatie's `hasRole()`
             if ($user->hasRole('passenger')) {
+                \Log::info(Auth::user()->roles);
+
                 // Passengers must have verified email
                 if ($user->email_verified_at === null) {
                     Log::info('Redirecting to verification.notice', ['email' => $user->email]);
@@ -84,6 +86,8 @@ class LoginController extends Controller
                 return redirect()->route('passenger.dashboard');
 
             } elseif ($user->hasRole('admin')) {
+                \Log::info(Auth::user()->roles);
+
                 // Admins do not need email verification, log and redirect
                 Log::info('Admin logged in', ['email' => $user->email]);
 
@@ -95,6 +99,8 @@ class LoginController extends Controller
                 return redirect()->route('admin.dashboard');
 
             } elseif ($user->hasRole('consultant')) {
+                \Log::info(Auth::user()->roles);
+
                 // Consultants do not need email verification, log and redirect
                 Log::info('Consultant logged in', ['email' => $user->email]);
 

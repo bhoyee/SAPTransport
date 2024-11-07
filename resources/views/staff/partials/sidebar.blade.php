@@ -48,7 +48,7 @@
 
 					        <!--//Bootstrap Icons: https://icons.getbootstrap.com/ -->
 
-					        <a class="nav-link active" href="{{ route('admin.dashboard') }}">
+					        <a class="nav-link active" href="{{ route('staff.dashboard') }}">
 
 
 						        <span class="nav-icon">
@@ -110,10 +110,7 @@
 
                                 <li class="submenu-item"><a class="submenu-link" href="{{ route('admin.users.index') }}">Manage Users</a></li>
 
-								<li class="submenu-item">
-									<a class="submenu-link" href="{{ route('admin.users.deleted-users') }}">Deleted Users</a>
-								</li>
-
+					
 
                           
 						        </ul>

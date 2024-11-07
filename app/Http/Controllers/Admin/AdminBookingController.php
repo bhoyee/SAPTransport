@@ -165,19 +165,24 @@ class AdminBookingController extends Controller
       
           // Map bookings to match the DataTable's expected structure
           $formattedBookings = $bookings->map(function ($booking) {
+              // Retrieve the role name and replace 'consultant' with 'Staff'
+              $role = $booking->creator ? $booking->creator->roles->pluck('name')->first() : 'N/A';
+              $displayRole = ($role === 'consultant') ? 'Staff' : ucfirst($role);
+      
               return [
                   'id' => $booking->id,
                   'booking_reference' => $booking->booking_reference,
                   'created_at' => $booking->created_at->toDateString(),
-                  'updated_at' => $booking->updated_at->toDateString(), // Ensure updated_at is included
+                  'updated_at' => $booking->updated_at->toDateString(),
                   'service_type' => $booking->service_type,
                   'status' => $booking->status,
-                  'created_by' => $booking->creator ? $booking->creator->roles->pluck('name')->first() : 'N/A'
+                  'created_by' => $displayRole
               ];
           });
       
           return response()->json(['data' => $formattedBookings]);
       }
+      
       
     
       public function updateBookingStatus(Request $request, $id)
@@ -401,7 +406,9 @@ class AdminBookingController extends Controller
             $invoice->generated_by = auth()->id();
             $invoice->invoice_number = $invoiceNumber;
             $invoice->invoice_date = now();
-            $invoice->amount = $request->price;
+            // $invoice->amount = $request->price;
+            $invoice->amount = number_format((float) $request->price, 2, '.', '');
+
             $invoice->status = 'Unpaid';
             $invoice->file_path = '/path/to/invoice_' . $invoiceNumber . '.pdf'; // Update this with actual file path
             $invoice->save();

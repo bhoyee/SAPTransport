@@ -28,10 +28,11 @@
                     <th>Phone</th>
                     <th>Status</th>
                     <th>Created By</th>
+                    <th>Deleted By</th>
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody></tbody> <!-- Table body will be populated via AJAX -->
+            <tbody></tbody>
         </table>
     </div>
 </div>
@@ -54,8 +55,6 @@
                     <input type="hidden" name="user_id" id="delete-user-id" value="">
                     <button type="submit" class="btn btn-danger" id="delete-user-btn">Yes, Delete</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
-
-                    <!-- Spinner -->
                     <button class="btn btn-danger" type="button" id="delete-spinner" disabled style="display: none;">
                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                         Deleting...
@@ -74,7 +73,7 @@ $(document).ready(function() {
     // Function to fetch the latest stats for the total number of deleted users
     function fetchTotalDeletedUsers() {
         $.ajax({
-            url: "{{ route('admin.users.fetch-deleted-stats') }}", // Route to get the latest deleted stats
+            url: "{{ route('admin.users.fetch-deleted-stats') }}",
             method: 'GET',
             success: function(response) {
                 $('#totalDeletedUsers').text(response.totalDeletedUsers);
@@ -85,105 +84,93 @@ $(document).ready(function() {
         });
     }
 
-    // Fetch the latest stats when the page loads
+    // Fetch stats on page load
     fetchTotalDeletedUsers();
 
-    // DataTable for Deleted Users
+    // Initialize DataTable for Deleted Users
     let table = $('#deleted-users-table').DataTable({
         responsive: true,
         pageLength: 10,
-        order: [[5, "desc"]], // Order by updated_at column (descending)
+        order: [[5, "desc"]],
         ajax: {
-            url: "{{ route('admin.users.deleted-list') }}", // Route to get deleted users data via AJAX
-            dataSrc: 'data', // The 'data' array in the JSON response
+            url: "{{ route('admin.users.deleted-list') }}",
+            dataSrc: 'data',
             error: function(xhr, error, thrown) {
-                console.error('Error fetching deleted users:', error, thrown); // Log errors
+                console.error('Error fetching deleted users:', error, thrown);
             }
         },
         columns: [
-            { 
-                data: null, // S/N column
-                orderable: false,
-                searchable: false,
-                render: function (data, type, row, meta) {
-                    return meta.row + 1; // S/N numbering starting from 1
-                }
-            },
+            { data: null, orderable: false, searchable: false, render: function (data, type, row, meta) { return meta.row + 1; }},
             { data: 'name' },
             { data: 'email' },
             { data: 'phone' },
-            { 
-                data: 'status',
-                render: function(data) {
-                    if (data === 'Deleted') {
-                        return `<span class="badge bg-danger">${data}</span>`;
-                    }
-                    return `<span class="badge bg-secondary">${data}</span>`;
-                }
-            },
+            { data: 'status', render: function(data) { return `<span class="badge bg-danger">${data}</span>`; }},
             { data: 'created_by' },
-            { 
-                data: null,
-                orderable: false,
-                searchable: false,
-                render: function (data, type, row, meta) {
-                    return `<button class="btn btn-danger btn-sm" data-user-id="${row.id}" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>`;
+            { data: 'deleted_by' },
+            { data: null, orderable: false, searchable: false, render: function (data, type, row, meta) {
+                    return `<button class="btn btn-success btn-sm restore-user-btn" data-user-id="${row.id}">Restore</button>
+                            <button class="btn btn-danger btn-sm" data-user-id="${row.id}" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>`;
                 }
             }
         ],
         drawCallback: function(settings) {
             let api = this.api();
             let startIndex = api.page.info().start;
-            api.column(0, { page: 'current' }).nodes().each(function(cell, i) {
-                cell.innerHTML = startIndex + i + 1;
-            });
+            api.column(0, { page: 'current' }).nodes().each(function(cell, i) { cell.innerHTML = startIndex + i + 1; });
         }
     });
 
-    // Periodically reload the DataTable every 30 seconds
+    // Periodically reload the DataTable and stats every 30 seconds
     setInterval(function() {
-        table.ajax.reload(null, false); // Reload DataTable without resetting pagination
-        fetchTotalDeletedUsers(); // Update the card with the latest total deleted users count
-    }, 30000); // 30 seconds
+        table.ajax.reload(null, false);
+        fetchTotalDeletedUsers();
+    }, 30000);
 
-    // Capture the user ID when the modal is opened
+    // Handle Permanent Delete
     $('#deleteModal').on('show.bs.modal', function(event) {
         var button = $(event.relatedTarget);
         var userId = button.data('user-id');
         $('#delete-user-id').val(userId);
     });
 
-    // Handle Permanent Delete Form submission via AJAX
     $('#permanentDeleteUserForm').on('submit', function(e) {
-        e.preventDefault(); // Prevent default form submission
-
-        let form = $(this);
+        e.preventDefault();
         let userId = $('#delete-user-id').val();
-
         $.ajax({
-            url: "{{ route('admin.users.permanent-delete') }}", // Route to permanently delete the user
+            url: "{{ route('admin.users.permanent-delete') }}",
             method: 'POST',
-            data: form.serialize(),
-            beforeSend: function() {
-                $('#delete-user-btn').hide();
-                $('#delete-spinner').show();
-            },
+            data: $(this).serialize(),
+            beforeSend: function() { $('#delete-user-btn').hide(); $('#delete-spinner').show(); },
             success: function(response) {
                 if (response.success) {
                     $('#deleteModal').modal('hide');
-                    table.ajax.reload(null, false); // Reload DataTable without resetting pagination
-                    fetchTotalDeletedUsers(); // Update the total deleted users count
-                } else {
-                    alert('Failed to delete user: ' + response.message);
-                }
+                    table.ajax.reload(null, false);
+                    fetchTotalDeletedUsers();
+                } else { alert('Failed to delete user: ' + response.message); }
             },
-            error: function(xhr, status, error) {
-                console.error('Error permanently deleting user:', error);
+            error: function(xhr, status, error) { console.error('Error permanently deleting user:', error); },
+            complete: function() { $('#delete-user-btn').show(); $('#delete-spinner').hide(); }
+        });
+    });
+
+    // Restore user
+    $('#deleted-users-table').on('click', '.restore-user-btn', function() {
+        let userId = $(this).data('user-id');
+        let button = $(this);
+        button.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Restoring...').prop('disabled', true);
+
+        $.ajax({
+            url: "{{ route('admin.users.restore') }}",
+            method: 'POST',
+            data: { _token: '{{ csrf_token() }}', user_id: userId },
+            success: function(response) {
+                if (response.success) {
+                    table.ajax.reload(null, false);
+                    fetchTotalDeletedUsers();
+                } else { alert('Failed to restore user: ' + response.message); }
             },
-            complete: function() {
-                $('#delete-user-btn').show();
-                $('#delete-spinner').hide();
-            }
+            error: function(xhr, status, error) { console.error('Error restoring user:', error); alert('An error occurred while restoring the user.'); },
+            complete: function() { button.html('Restore').prop('disabled', false); }
         });
     });
 });

@@ -19,17 +19,25 @@ class UserController extends Controller
     {
         if ($request->ajax()) {
             \Log::info('AJAX request received for user data.');
-            
-            // Fetch all users for the DataTable, excluding those with status 'deleted'
-            $users = User::select('id', 'name', 'email', 'phone', 'status', 'created_at')
-                ->where('status', '!=', 'deleted')  // Exclude users with 'deleted' status
-                ->get();
     
-            // Log the users being fetched
+            // Filter users based on role
+            if (auth()->user()->hasRole('consultant')) {
+                // If the user is a consultant, only fetch users with the 'passenger' role
+                $users = User::role('passenger')
+                    ->select('id', 'name', 'email', 'phone', 'status', 'created_at')
+                    ->where('status', '!=', 'deleted')
+                    ->get();
+            } else {
+                // If the user is an admin, fetch all users excluding those with 'deleted' status
+                $users = User::select('id', 'name', 'email', 'phone', 'status', 'created_at')
+                    ->where('status', '!=', 'deleted')
+                    ->get();
+            }
+    
             \Log::info('Users fetched:', ['users' => $users->toArray()]);
     
             // Format the data for DataTables
-            $formattedUsers = $users->map(function($user) {
+            $formattedUsers = $users->map(function ($user) {
                 return [
                     'name' => $user->name,
                     'email' => $user->email,
@@ -46,12 +54,13 @@ class UserController extends Controller
         }
     
         // Fetch statistics for the cards
-        $activePassengers = User::role('passenger')->where('status', 'active')->count();
-        $activeConsultants = User::role('consultant')->where('status', 'active')->count();
+        $totalPassengers = User::role('passenger')->where('status', 'active')->count();
+        $inactivePassengers = User::role('passenger')->where('status', 'inactive')->count();
+        $totalStaff = User::role('consultant')->where('status', 'active')->count();
         $suspendedUsers = User::where('status', 'suspend')->count();
     
-        // Render the view
-        return view('admin.users.index', compact('activePassengers', 'activeConsultants', 'suspendedUsers'));
+        // Render the view with all required variables
+        return view('admin.users.index', compact('totalPassengers', 'inactivePassengers', 'totalStaff', 'suspendedUsers'));
     }
     
     
@@ -85,7 +94,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         // Only allow admins to edit users
-        if (!Auth::user()->hasRole('admin')) {
+        if (!Auth::user()->hasRole(['admin', 'consultant'])) {
             return redirect('/')->with('error', 'Unauthorized access');
         }
 
@@ -94,25 +103,40 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $request->validate([
+        // Define validation rules for all fields that should be updated
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:15',
-            'role' => 'required|in:passenger,consultant,admin',
-        ]);
-
+            'gender' => 'required|in:male,female',  // Add gender to validation
+            'status' => 'required|in:active,inactive,suspend', // Add status to validation
+        ];
+    
+        // Only require 'role' if the authenticated user is not a consultant
+        if (!auth()->user()->hasRole('consultant')) {
+            $rules['role'] = 'required|in:passenger,consultant,admin';
+        }
+    
+        // Validate the request data
+        $validatedData = $request->validate($rules);
+    
         try {
-            // Update the user details and sync roles
-            $user->update($request->all());
-            $user->syncRoles([$request->role]);
-
+            // Update user details using the validated data
+            $user->update($validatedData);
+    
+            // Sync roles only if the role field is included in the validated data
+            if (isset($validatedData['role']) && !auth()->user()->hasRole('consultant')) {
+                $user->syncRoles([$validatedData['role']]);
+            }
+    
             return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
         } catch (\Exception $e) {
             \Log::error('Error updating user: ' . $e->getMessage());
             return redirect()->back()->with('error', 'An error occurred while updating the user.');
         }
     }
-
+    
+    
     public function delete(Request $request)
     {
         \Log::info('Delete request received for user ID: ' . $request->user_id);
@@ -168,69 +192,68 @@ class UserController extends Controller
         }
     }
 
+    //user creste page
     public function create()
     {
-        // Allow only admins to create new users
-        if (!Auth::user()->hasRole('admin')) {
+        \Log::info(Auth::user()->roles);
+        // Allow only admins and consultants to create new users
+        if (!Auth::user()->hasAnyRole(['admin', 'consultant'])) {
             return redirect('/login')->with('error', 'Unauthorized access');
         }
-
+    
         return view('admin.create');
     }
-
+    
     public function store(Request $request)
     {
-        // Ensure only admins can store new users
-        if (!Auth::user()->hasRole('admin')) {
+        // Ensure only admins or consultants can store new users
+        if (!Auth::user()->hasAnyRole(['admin', 'consultant'])) {
             return redirect('/')->with('error', 'Unauthorized access');
         }
-
+    
+        // Validate the request data
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'role' => 'required|in:passenger,consultant,admin',
             'gender' => 'required|in:male,female',
         ]);
-
+    
         if (User::where('email', $request->email)->exists()) {
             return redirect()->back()->with('error', 'User with this email already exists.');
         }
-
+    
         try {
             $status = ($request->role === 'passenger') ? 'inactive' : 'active';
             $createdBy = Auth::user()->email;
-
+    
             // Generate a random password
-            $generatedPassword = Str::random(10); // You can adjust the length as needed
-
-
-            // Create the new user and assign roles using Spatie
+            $generatedPassword = Str::random(10);
+    
+            // Create the new user
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'password' => bcrypt($generatedPassword), // Hash the generated password
+                'password' => bcrypt($generatedPassword),
                 'gender' => $request->gender,
                 'created_by' => $createdBy,
                 'status' => $status,
             ]);
-
+    
+            // Assign role
             $user->assignRole($request->role);
-
-            // Send the email with login credentials
-            Mail::to($user->email)->send(new \App\Mail\UserCreatedNotification($user, $generatedPassword));
-
-             // If the user role is 'passenger', send the email verification link
-            if ($request->role === 'passenger') {
-                $user->sendEmailVerificationNotification();
-            }
-
+    
+            // Dispatch job for sending email in the background
+            dispatch(new \App\Jobs\SendUserCreationEmail($user, $generatedPassword));
+    
+            // Success message
             return redirect()->route('admin.users.create')->with('success', 'User created successfully.');
         } catch (\Exception $e) {
             \Log::error('User creation failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'An error occurred while creating the user.');
         }
     }
-
+    
     // admin delete user page 
 
 
@@ -265,31 +288,54 @@ class UserController extends Controller
     }
 
     public function getDeletedUsers()
-    {
-        Log::info('Fetching list of temporarily deleted users.');
+{
+    Log::info('Fetching list of temporarily deleted users.');
 
-        try {
-            $deletedUsers = User::where('status', 'deleted')->orderBy('updated_at', 'desc')->get();
+    try {
+        $deletedUsers = User::where('status', 'deleted')
+            ->leftJoin('user_deletes', 'users.id', '=', 'user_deletes.user_id')
+            ->select(
+                'users.id',
+                'users.name',
+                'users.email',
+                'users.phone',
+                'users.status',
+                'users.created_by',
+                'user_deletes.deleted_by',
+                'users.updated_at'
+            )
+            ->orderBy('users.updated_at', 'desc')
+            ->get();
 
-            $formattedUsers = $deletedUsers->map(function($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'status' => ucfirst($user->status),
-                    'created_by' => $user->created_by // Assuming you store this
-                ];
-            });
+        $formattedUsers = $deletedUsers->map(function ($user) {
+            // Fetch creator's name directly by email
+            $creator = User::where('email', $user->created_by)->first();
+            $deleter = User::where('email', $user->deleted_by)->first();
 
-            Log::info('Deleted users fetched successfully.', ['totalDeletedUsers' => count($deletedUsers)]);
+            // Log for debugging
+            Log::info('Creator fetched:', ['creator' => $creator ? $creator->toArray() : 'No creator found']);
+            Log::info('Deleter fetched:', ['deleter' => $deleter ? $deleter->toArray() : 'No deleter found']);
 
-            return response()->json(['data' => $formattedUsers]);
-        } catch (\Exception $e) {
-            Log::error('Error fetching deleted users list.', ['error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Error fetching deleted users list.'], 500);
-        }
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'status' => ucfirst($user->status),
+                'created_by' => $creator ? $creator->name : 'N/A',
+                'deleted_by' => $deleter ? $deleter->name : 'N/A',
+            ];
+        });
+
+        Log::info('Formatted deleted users data for DataTable.', ['totalDeletedUsers' => count($formattedUsers)]);
+
+        return response()->json(['data' => $formattedUsers]);
+    } catch (\Exception $e) {
+        Log::error('Error fetching deleted users list.', ['error' => $e->getMessage()]);
+        return response()->json(['success' => false, 'message' => 'Error fetching deleted users list.'], 500);
     }
+}
+
 
     public function permanentDelete(Request $request)
     {
@@ -312,5 +358,29 @@ class UserController extends Controller
             return response()->json(['success' => false, 'message' => 'Error deleting user.'], 500);
         }
     }
+
+    public function restore(Request $request)
+    {
+        $userId = $request->input('user_id');
+        
+        $user = User::find($userId);
+        
+        if ($user && $user->status === 'deleted') {
+            try {
+                $user->status = 'active'; // Update status to active
+                $user->save();
+
+                \Log::info("User restored successfully", ['user_id' => $userId]);
+
+                return response()->json(['success' => true, 'message' => 'User restored successfully.']);
+            } catch (\Exception $e) {
+                \Log::error('Error restoring user: ' . $e->getMessage(), ['user_id' => $userId]);
+                return response()->json(['success' => false, 'message' => 'An error occurred while restoring the user.'], 500);
+            }
+        }
+
+        return response()->json(['success' => false, 'message' => 'User not found or already active.'], 404);
+    }
+
 
 }

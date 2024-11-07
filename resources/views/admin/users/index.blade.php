@@ -1,33 +1,49 @@
-@extends('admin.layouts.admin-layout')
+@php
+    $layout = auth()->user()->hasRole('admin') 
+        ? 'admin.layouts.admin-layout' 
+        : 'staff.layouts.staff-layout';
+@endphp
+
+@extends($layout)
 
 @section('content')
 <h1 class="app-page-title">User Management</h1>
 
 <!-- Statistics Cards -->
+
 <div class="row mb-4" id="user-stats">
-    <!-- Active Passengers (Success) -->
-    <div class="col-md-4">
-        <div class="card text-white bg-success">
-            <div class="card-body text-center">
-                <h5 class="card-title">Active Passengers</h5>
-                <h2 id="activePassengers">{{ $activePassengers }}</h2>
-                <small class="text-white">Active</small>
-            </div>
+<div class="col-md-4">
+    <div class="card text-white bg-success">
+        <div class="card-body text-center">
+            <h5 class="card-title">Active Passengers</h5>
+            <h2 id="activePassengers">{{ $totalPassengers }}</h2>
+            <small class="text-white">Active</small>
         </div>
     </div>
+</div>
 
-    <!-- Active Staff (Info) -->
-    <div class="col-md-4">
-        <div class="card text-white bg-info">
-            <div class="card-body text-center">
-                <h5 class="card-title">Active Staffs</h5>
-                <h2 id="activeConsultants">{{ $activeConsultants }}</h2>
-                <small class="text-white">Active</small>
+    @if(auth()->user()->hasRole('consultant'))
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Inactive Passengers</h5>
+                    <h2 id="inactivePassengers">{{ $inactivePassengers }}</h2>
+                    <small class="text-white">Inactive</small>
+                </div>
             </div>
         </div>
-    </div>
+    @else
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Active Staff</h5>
+                    <h2 id="activeConsultants">{{ $totalStaff }}</h2>
+                    <small class="text-white">Active</small>
+                </div>
+            </div>
+        </div>
+    @endif
 
-    <!-- Suspended Users (Danger) -->
     <div class="col-md-4">
         <div class="card text-white bg-danger">
             <div class="card-body text-center">
@@ -38,7 +54,6 @@
         </div>
     </div>
 </div>
-
 <!-- DataTable -->
 <div class="app-card app-card-details shadow-sm mb-4">
     <div class="app-card-body p-4">
@@ -179,6 +194,27 @@ $(document).ready(function() {
             }
         });
     });
+   
+    function fetchStatistics() {
+    $.ajax({
+        url: "{{ route('admin.users.fetch-stats') }}",
+        method: "GET",
+        success: function(response) {
+            $('#activePassengers').text(response.totalPassengers);
+            $('#inactivePassengers').text(response.inactivePassengers);
+            $('#activeConsultants').text(response.totalStaff);
+            $('#suspendedUsers').text(response.suspendedUsers);
+        },
+        error: function(error) {
+            console.error('Error fetching statistics:', error);
+        }
+    });
+}
+
+// Call fetchStatistics periodically (e.g., every 30 seconds)
+setInterval(fetchStatistics, 30000);
+
+
 });
 </script>
 @endpush

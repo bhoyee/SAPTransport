@@ -1,4 +1,10 @@
-@extends('admin.layouts.admin-layout')
+@php
+    $layout = auth()->user()->hasRole('admin') 
+        ? 'admin.layouts.admin-layout' 
+        : 'staff.layouts.staff-layout';
+@endphp
+
+@extends($layout)
 
 @section('content')
 
@@ -148,11 +154,12 @@
                         </button>
 
                     </form>
+        
 
-                        <!-- Display success or error messages -->
                         <div id="alert-message" class="alert alert-dismissible fade show mt-2" style="display: none;" role="alert">
                             <span id="alert-message-content"></span>
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
                         </div>
 
                 </div>

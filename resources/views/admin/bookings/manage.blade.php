@@ -1,4 +1,10 @@
-@extends('admin.layouts.admin-layout')
+@php
+    $layout = auth()->user()->hasRole('admin') 
+        ? 'admin.layouts.admin-layout' 
+        : 'staff.layouts.staff-layout';
+@endphp
+
+@extends($layout)
 
 @section('content')
 <style>
@@ -43,6 +49,7 @@
                     <th>S/N</th>
                     <th>Booking Ref</th>
                     <th>Booking Date</th>
+                    <th>Updated At</th>
                     <th>Service Type</th>
                     <th>Status</th>
                     <th>Created By</th>
@@ -139,7 +146,7 @@ $(document).ready(function() {
         responsive: true,
         autoWidth: false,
         pageLength: 10,
-        order: [[2, 'desc']], // Order by Booking Date column (descending)
+        order: [[3, 'desc']], // Order by the hidden Updated At column (descending)
         ajax: {
             url: "{{ route('admin.bookings.fetch') }}", // Use a route that fetches booking data in JSON format
             method: 'GET',
@@ -152,16 +159,18 @@ $(document).ready(function() {
             { width: '5%', targets: 0 },  // S/N column
             { width: '10%', targets: 1 }, // Booking Ref column
             { width: '10%', targets: 2 }, // Booking Date column
-            // { width: '10%', targets: 3 }, // Updated At column (make sure this matches server response)
-            { width: '10%', targets: 3 }, // Service Type column
-            { width: '10%', targets: 4 }, // Status column
-            { width: '10%', targets: 5 }, // Created By column
-            { width: '35%', targets: 6 }  // Action column (last column)
+            //  { width: '10%', targets: 3 }, // Updated At column (make sure this matches server response)
+            { width: '10%', targets: 4 }, // Service Type column
+            { width: '10%', targets: 5 }, // Status column
+            { width: '10%', targets: 6 }, // Created By column
+            { width: '35%', targets: 7 }  // Action column (last column)
         ],
         columns: [
             { data: null },  // S/N
             { data: 'booking_reference' },  // Booking Reference
             { data: 'created_at', render: function(data) { return new Date(data).toLocaleDateString(); } },  // Booking Date
+            { data: 'updated_at', visible:false},  // Updated At (hidden, used for ordering)
+
             // { data: 'updated_at', render: function(data) { return new Date(data).toLocaleDateString(); } },  // Updated At
             { data: 'service_type' },  // Service Type
             { 

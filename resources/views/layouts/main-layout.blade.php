@@ -81,7 +81,7 @@
                     @else
                         <a href="{{ route(
                             Auth::user()->hasRole('admin') ? 'admin.dashboard' : 
-                            (Auth::user()->hasRole('consultant') ? 'consultant.dashboard' : 'passenger.dashboard')
+                            (Auth::user()->hasRole('consultant') ? 'staff.dashboard' : 'passenger.dashboard')
                         ) }}" id="auth-button" class="btn btn-primary ms-2">Dashboard</a>
                     @endif
                 @else

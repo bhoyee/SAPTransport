@@ -95,6 +95,22 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsTo(User::class, 'created_by', 'email');
     }
+
+    // In User.php
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by', 'email'); // Adjusted to fetch by 'email' in the User model
+    }
+    
+    public function userDelete()
+    {
+        return $this->hasOne(UserDelete::class, 'user_id', 'id');
+    }
+
+        
+
+ 
+
     
 
 }
