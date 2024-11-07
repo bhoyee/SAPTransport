@@ -33,9 +33,9 @@ class UserReportController extends Controller
             'email_verified' => 'nullable|in:verified,not_verified',
         ]);
     
-        // Initialize the query and exclude users with 'deleted' status
-        $query = User::where('status', '!=', 'deleted');
-    
+     // Initialize the query and exclude users with 'deleted' status
+     $query = User::where('status', '!=', 'deleted')->with('roles'); // Ensure roles are loaded
+
         // Role filter using Spatie's roles
         if (!empty($request->role)) {
             $query->role($request->role); // Use Spatie's role method instead of direct column access
@@ -52,9 +52,16 @@ class UserReportController extends Controller
         } elseif ($request->email_verified === 'not_verified') {
             $query->whereNull('email_verified_at');
         }
-    
+
+            // Fetch the filtered users and map the roles
+        $users = $query->get()->map(function ($user) {
+            // Map each user's role to display as 'Staff' for consultants, or show the actual role name
+            $user->role_display = $user->roles->pluck('name')->first() === 'consultant' ? 'Staff' : ucfirst($user->roles->pluck('name')->first());
+            return $user;
+        });
+        
         // Fetch the filtered users
-        $users = $query->get();
+        //$users = $query->get();
     
         // Check if no records were found
         if ($users->isEmpty()) {
@@ -62,11 +69,15 @@ class UserReportController extends Controller
         }
     
         // Prepare the role display name
-        if (empty($request->role)) {
-            $roleDisplayName = 'All'; // Show 'All' if no specific role is selected
-        } else {
-            $roleDisplayName = $request->role === 'consultant' ? 'Staff' : 'Passenger';
-        }
+        // if (empty($request->role)) {
+        //     $roleDisplayName = 'All'; // Show 'All' if no specific role is selected
+        // } else {
+        //     $roleDisplayName = $request->role === 'consultant' ? 'Staff' : 'Passenger';
+        // }
+
+            // Prepare the role display name
+         $roleDisplayName = empty($request->role) ? 'All' : ($request->role === 'consultant' ? 'Staff' : 'Passenger');
+
     
         // Generate the PDF with pagination support
         $pdf = PDF::loadView('admin.users.report_pdf', [

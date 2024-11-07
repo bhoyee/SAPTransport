@@ -21,24 +21,24 @@ class AdminReportController extends Controller
     public function fetchSalesData()
     {
         try {
-            $today = Invoice::whereDate('created_at', Carbon::today())
+            $today = Invoice::whereDate('updated_at', Carbon::today())
                             ->where('status', 'Paid')
                             ->sum('amount');
-            
-            $week = Invoice::whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+    
+            $week = Invoice::whereBetween('updated_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
                            ->where('status', 'Paid')
                            ->sum('amount');
-            
-            $month = Invoice::whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
+    
+            $month = Invoice::whereBetween('updated_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
                             ->where('status', 'Paid')
                             ->sum('amount');
-            
-            $year = Invoice::whereBetween('created_at', [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()])
+    
+            $year = Invoice::whereBetween('updated_at', [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()])
                            ->where('status', 'Paid')
                            ->sum('amount');
-
+    
             Log::info("Fetched sales data - Today: $today, Week: $week, Month: $month, Year: $year");
-
+    
             return response()->json([
                 'today' => $today,
                 'week' => $week,
@@ -50,27 +50,25 @@ class AdminReportController extends Controller
             return response()->json(['error' => 'Failed to fetch sales data'], 500);
         }
     }
-
-
+    
     public function downloadSalesReport(Request $request)
     {
         $fromDate = $request->query('from');
         $toDate = $request->query('to');
     
         try {
-            // Validate the date range
             if (!$fromDate || !$toDate) {
-                return response()->json(['error' => 'Please provide both from and to dates.'], 400);
+                return back()->withErrors(['error' => 'Please provide both from and to dates.']);
             }
     
             // Fetch sales data within the date range
-            $salesData = Invoice::whereBetween('created_at', [$fromDate, $toDate])
+            $salesData = Invoice::whereBetween('updated_at', [$fromDate, $toDate])
                                 ->where('status', 'Paid')
                                 ->get();
     
             // Check if data is available
             if ($salesData->isEmpty()) {
-                return response()->json(['error' => 'No data found for the specified date range.'], 404);
+                return back()->withErrors(['error' => 'No data found for the specified date range.']);
             }
     
             // Load the view for PDF generation
@@ -88,9 +86,10 @@ class AdminReportController extends Controller
             );
         } catch (\Exception $e) {
             Log::error('Error generating sales report: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to generate the sales report.'], 500);
+            return back()->withErrors(['error' => 'Failed to generate the sales report.']);
         }
     }
+    
     
     
 

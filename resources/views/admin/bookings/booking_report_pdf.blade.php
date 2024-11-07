@@ -36,19 +36,21 @@
     </style>
 </head>
 <body>
-    <div class="report-header">
+
             <!-- Report Header -->
-    <div class="report-header">
-        <h1>{{ $companyName }} - 
-            @if ($bookingStatus === 'All') 
-                All 
-            @else 
-                {{ ucfirst($bookingStatus) }} Bookings Report 
-            @endif
-        </h1>
-        <p>Generated on: {{ now()->format('Y-m-d H:i:s') }}</p>
-        <p>Report Date Range: From {{ $dateFrom }} to {{ $dateTo }}</p>
-    </div>
+            <div class="report-header">
+                <h1>{{ $companyName }}</h1>
+                <p>
+                    @if ($bookingStatus === 'All') 
+                        All Bookings
+                    @else 
+                        {{ ucfirst($bookingStatus) }} Report
+                    @endif
+                </p>
+                <p>Generated on: {{ now()->format('Y-m-d H:i:s') }}</p>
+                <p>Report Date Range: From {{ $dateFrom }} to {{ $dateTo }}</p>
+            </div>
+
 
 
 
