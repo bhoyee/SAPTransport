@@ -1,4 +1,10 @@
-@extends('admin.layouts.admin-layout')
+@php
+    $layout = auth()->user()->hasRole('admin') 
+        ? 'admin.layouts.admin-layout' 
+        : 'staff.layouts.staff-layout';
+@endphp
+
+@extends($layout)
 
 @section('content')
 <h1 class="app-page-title">Generate User Payment Report</h1>

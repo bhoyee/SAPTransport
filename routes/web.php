@@ -171,10 +171,6 @@ Route::delete('/custom-invoices/{id}/delete', [AdminInvoiceController::class, 'd
 // Route to handle the update request for a custom invoice
 Route::put('/custom-invoices/{id}', [AdminInvoiceController::class, 'updateCustomInvoice'])->name('admin.customInvoices.update');
 
-Route::get('/reports/sales', [AdminReportController::class, 'showSalesReport'])->name('admin.salesReport');
-Route::get('/reports/sales/fetch', [AdminReportController::class, 'fetchSalesData'])->name('admin.salesReport.fetch');
-
-Route::get('/reports/sales/download', [AdminReportController::class, 'downloadSalesReport'])->name('admin.salesReport.download');
 
 // managing support ticketing
 Route::get('/support-tickets', [SupportTicketController::class, 'index'])->name('admin.support-tickets.index');
@@ -197,23 +193,6 @@ Route::put('/settings/{id}', [AdminSettings::class, 'update'])->name('admin.sett
     Route::post('/settings/change-password', [AdminSettings::class, 'changePassword'])->name('admin.settings.change-password');
     Route::get('/settings/activity-log', [AdminSettings::class, 'fetchActivityLog'])->name('admin.settings.activity-log');
 
-
- 
-
-    // Show the payment report page
-    Route::get('/payments/report', [PaymentReportController::class, 'showPaymentReportPage'])->name('admin.payments.report');
-
-    // Fetch report data for cards (based on daily, weekly, monthly, yearly)
-    Route::get('/payments/report-data/{timeframe}', [PaymentReportController::class, 'fetchReportData'])->name('admin.payments.report.data');
-
-    // Generate PDF for payments report
-    Route::post('/payments/report/pdf', [PaymentReportController::class, 'generatePdf'])->name('admin.payments.report.pdf');
-
-
-    // Routes for User Payment Report
-    // Route::get('/reports/user-payment-report', [UserPaymentReportController::class, 'index'])->name('admin.reports.user-payment');
-    Route::post('/reports/user-payment-report/pdf', [UserPaymentReportController::class, 'generateUserPaymentReport'])->name('admin.reports.user-payment.pdf');
-    Route::get('/reports/user-payment-report', [UserPaymentReportController::class, 'index'])->name('admin.reports.userPaymentReport');
 
 });
 
@@ -394,7 +373,25 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|consultant'])->group(fun
     // Route to handle the update request
     Route::put('/invoices/{id}', [AdminInvoiceController::class, 'update'])->name('admin.invoices.update');
     Route::delete('/invoices/{id}/delete', [AdminInvoiceController::class, 'deleteInvoice'])->name('admin.invoices.delete');
+
+
+        
+    Route::get('/reports/sales', [AdminReportController::class, 'showSalesReport'])->name('admin.salesReport');
+    Route::get('/reports/sales/fetch', [AdminReportController::class, 'fetchSalesData'])->name('admin.salesReport.fetch');
+
+    Route::get('/reports/sales/download', [AdminReportController::class, 'downloadSalesReport'])->name('admin.salesReport.download');
+       
+        // Show the payment report page
+    Route::get('/payments/report', [PaymentReportController::class, 'showPaymentReportPage'])->name('admin.payments.report');
+        // Fetch report data for cards (based on daily, weekly, monthly, yearly)
+    Route::get('/payments/report-data/{timeframe}', [PaymentReportController::class, 'fetchReportData'])->name('admin.payments.report.data');
     
+        // Generate PDF for payments report
+    Route::post('/payments/report/pdf', [PaymentReportController::class, 'generatePdf'])->name('admin.payments.report.pdf');
+    
+           // Routes for User Payment Report
+    Route::post('/reports/user-payment-report/pdf', [UserPaymentReportController::class, 'generateUserPaymentReport'])->name('admin.reports.user-payment.pdf');
+    Route::get('/reports/user-payment-report', [UserPaymentReportController::class, 'index'])->name('admin.reports.userPaymentReport');
 });
 
 

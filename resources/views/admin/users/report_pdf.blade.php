@@ -39,8 +39,9 @@
     </style>
 </head>
 <body>
-    <div class="report-header">
-        <h1>{{ $companyName }} - {{ $roleDisplayName }} User Report</h1>
+<div class="report-header">
+        <h1>{{ $companyName }}</h1>
+        <p>{{ $roleDisplayName }} User Report</p>
         <p>Generated at: {{ $generatedAt }}</p>
         <p>Report Date Range: From {{ $dateFrom }} to {{ $dateTo }}</p>
     </div>
@@ -64,7 +65,9 @@
                     <td>{{ $user->name }}</td>
                     <td>{{ $user->email }}</td>
                     <td>{{ $user->phone }}</td>
-                    <td>{{ ucfirst($user->role) === 'Consultant' ? 'Staff' : ucfirst($user->role) }}</td>
+                    <td>{{ $user->role_display ?? 'N/A' }}</td>
+
+                    <!-- <td>{{ ucfirst($user->role) === 'Consultant' ? 'Staff' : ucfirst($user->role) }}</td> -->
                     <!-- <td>{{ ucfirst($user->status) }}</td> -->
                     <td>{{ $user->created_at->format('Y-m-d H:i:s') }}</td>
                 </tr>
