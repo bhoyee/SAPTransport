@@ -1,6 +1,12 @@
 <!-- resources/views/admin/support-tickets/view.blade.php -->
 
-@extends('admin.layouts.admin-layout')
+@php
+    $layout = auth()->user()->hasRole('admin') 
+        ? 'admin.layouts.admin-layout' 
+        : 'staff.layouts.staff-layout';
+@endphp
+
+@extends($layout)
 
 @section('title', 'View Support Ticket')
 
@@ -38,42 +44,46 @@
             </form>
 
             <!-- Ticket Trend -->
-            <div class="ticket-trend mt-4" id="replies-container">
-                <!-- Owner's Original Message -->
-                <div class="reply p-3 mb-3" style="background-color: #e8f4f8;"> <!-- Light blue for owner -->
-                    <p>
-                        <span class="badge bg-success">Owner</span> 
-                        {{ $ticket->fullname }} said:
-                        <span class="text-muted">{{ \Carbon\Carbon::parse($ticket->created_at)->format('d M Y H:i') }}</span>
-                    </p>
-                    <p>{!! $ticket->message !!}</p> <!-- Render the message as HTML -->
-                </div>
+<!-- Ticket Trend -->
+<!-- Ticket Trend -->
+<div class="ticket-trend mt-4" id="replies-container">
+    <!-- Owner's Original Message -->
+    <div class="reply p-3 mb-3" style="background-color: #e8f4f8;"> <!-- Light blue for owner -->
+        <p>
+            <span class="badge bg-success">Owner</span> 
+            {{ $ticket->fullname }} said:
+            <span class="text-muted">{{ \Carbon\Carbon::parse($ticket->created_at)->format('d M Y H:i') }}</span>
+        </p>
+        <p>{!! $ticket->message !!}</p> <!-- Render the message as HTML -->
+    </div>
 
-                <!-- Display Replies -->
-                @foreach($ticket->replies as $reply)
-                    @if($reply->user && ($reply->user->hasRole('admin') || $reply->user->hasRole('consultant')))
-                    <!-- Operator's Reply -->
-                    <div class="reply mt-3 p-3" style="background-color: #f7f7f7;" data-reply-id="{{ $reply->id }}"> <!-- Light gray for operator -->
-                        <p>
-                            <span class="badge bg-info">Operator</span>
-                            {{ $reply->user->name ?? 'Unknown User' }} said:
-                            <span class="text-muted">{{ \Carbon\Carbon::parse($reply->created_at)->format('d M Y H:i') }}</span>
-                        </p>
-                        <p>{!! $reply->message !!}</p> <!-- Render the reply message as HTML -->
-                    </div>
-                    @else
-                    <!-- Owner's Reply -->
-                    <div class="reply mt-3 p-3" style="background-color: #e8f4f8;" data-reply-id="{{ $reply->id }}"> <!-- Same light blue for owner -->
-                        <p>
-                            <span class="badge bg-success">Owner</span> 
-                            {{ $reply->user->name ?? 'Unknown User' }} said:
-                            <span class="text-muted">{{ \Carbon\Carbon::parse($reply->created_at)->format('d M Y H:i') }}</span>
-                        </p>
-                        <p>{!! $reply->message !!}</p> <!-- Render the reply message as HTML -->
-                    </div>
-                    @endif
-                @endforeach
-            </div>
+    <!-- Display Replies -->
+    @foreach($ticket->replies as $reply)
+        @php
+            // Determine the role text and badge color based on user role
+            if ($reply->user && $reply->user->hasRole('admin')) {
+                $roleText = 'Admin';
+                $badgeClass = 'bg-danger'; // Red for admin
+            } elseif ($reply->user && $reply->user->hasRole('consultant')) {
+                $roleText = 'Operator';
+                $badgeClass = 'bg-info'; // Blue for consultant/operator
+            } else {
+                $roleText = 'Owner';
+                $badgeClass = 'bg-success'; // Green for passenger/owner
+            }
+        @endphp
+        
+        <div class="reply mt-3 p-3" style="background-color: #f7f7f7;" data-reply-id="{{ $reply->id }}">
+            <p>
+                <span class="badge {{ $badgeClass }}">{{ $roleText }}</span>
+                {{ $reply->user->name ?? 'Unknown User' }} said:
+                <span class="text-muted">{{ \Carbon\Carbon::parse($reply->created_at)->format('d M Y H:i') }}</span>
+            </p>
+            <p>{!! $reply->message !!}</p> <!-- Render the reply message as HTML -->
+        </div>
+    @endforeach
+</div>
+
 
             <!-- Reply Form with Quill Editor -->
             <form id="replyForm" onsubmit="return submitReplyWithQuill()">
@@ -107,6 +117,10 @@
     const replyQuill = new Quill('#reply-editor-container', {
         theme: 'snow'
     });
+    const ticketId = {{ $ticket->id }};
+    let lastReplyTimestamp = "{{ $ticket->replies->last()?->created_at ?? $ticket->created_at }}"; // Track last reply timestamp
+
+
 
     // On form submission, show spinner and disable button for Update Status
     function submitStatusUpdate() {
@@ -117,50 +131,93 @@
         return true; // Allow form submission
     }
 
-    // On form submission, pass Quill content into hidden input field and show spinner for Send Reply
-    function submitReplyWithQuill() {
-        const replyMessageInput = document.querySelector('input[name=message]');
-        replyMessageInput.value = replyQuill.root.innerHTML; // Get Quill's content
+    function fetchNewReplies() {
+    $.ajax({
+        url: `{{ route('admin.support-tickets.fetch-replies', $ticket->id) }}`,
+        method: 'GET',
+        data: { lastReplyTimestamp: lastReplyTimestamp },
+        success: function(response) {
+            if (response.newReplies && response.newReplies.length > 0) {
+                response.newReplies.forEach(reply => {
+                    if ($(`[data-reply-id="${reply.id}"]`).length === 0) {
+                        // Log the received role to confirm correctness
+                        console.log("Received role for new reply:", reply.user_role);
 
-        const submitReplyButton = document.getElementById('submitReplyButton');
-        submitReplyButton.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Sending..."; // Show spinner
-        submitReplyButton.disabled = true; // Disable button to prevent multiple submissions
+                        // Assign colors and roles based on user_role accurately
+                        const roleText = reply.user_role === 'admin' ? 'Admin' : (reply.user_role === 'consultant' ? 'Operator' : 'Owner');
+                        const badgeClass = reply.user_role === 'admin' ? 'bg-danger' : (reply.user_role === 'consultant' ? 'bg-info' : 'bg-success');
+                        const backgroundColor = reply.user_role === 'owner' ? '#e8f4f8' : '#f7f7f7';
 
-        // AJAX request to submit the reply
-        $.ajax({
-            url: "{{ route('admin.support-tickets.reply', $ticket->id) }}",
-            method: 'POST',
-            data: {
-                _token: "{{ csrf_token() }}",
-                message: replyMessageInput.value
-            },
-            success: function(response) {
-                // Append the new reply to the replies container
-                $('#replies-container').append(`
-                    <div class="reply mt-3 p-3" style="background-color: #f7f7f7;" data-reply-id="${response.id}">
-                        <p>
-                            <span class="badge bg-info">Operator</span>
-                            {{ Auth::user()->name }} said:
-                            <span class="text-muted">${new Date().toLocaleString()}</span>
-                        </p>
-                        <p>${response.message}</p>
-                    </div>
-                `);
-
-                // Clear the Quill editor
-                replyQuill.setContents([]);
-            },
-            error: function() {
-                console.error('Failed to send the reply.');
-            },
-            complete: function() {
-                // Reset the button regardless of success or failure
-                submitReplyButton.innerHTML = "Send Reply";
-                submitReplyButton.disabled = false;
+                        $('#replies-container').append(`
+                            <div class="reply mt-3 p-3" style="background-color: ${backgroundColor};" data-reply-id="${reply.id}">
+                                <p>
+                                    <span class="badge ${badgeClass}">${roleText}</span>
+                                    ${reply.user_name} said:
+                                    <span class="text-muted">${reply.created_at}</span>
+                                </p>
+                                <p>${reply.message}</p>
+                            </div>
+                        `);
+                    }
+                });
+                // Update last reply timestamp for the next fetch
+                lastReplyTimestamp = response.newReplies[response.newReplies.length - 1].timestamp;
             }
-        });
+        },
+        error: function() {
+            console.error('Failed to fetch new replies.');
+        }
+    });
+}
 
-        return false; // Prevent default form submission
-    }
+// Poll for new replies every 5 seconds
+setInterval(fetchNewReplies, 5000);
+
+function submitReplyWithQuill() {
+    const replyMessageInput = document.querySelector('input[name=message]');
+    replyMessageInput.value = replyQuill.root.innerHTML;
+
+    const submitReplyButton = document.getElementById('submitReplyButton');
+    submitReplyButton.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Sending...";
+    submitReplyButton.disabled = true;
+
+    $.ajax({
+        url: "{{ route('admin.support-tickets.reply', $ticket->id) }}",
+        method: 'POST',
+        data: {
+            _token: "{{ csrf_token() }}",
+            message: replyMessageInput.value
+        },
+        success: function(response) {
+            const roleText = response.user_role === 'admin' ? 'Admin' : (response.user_role === 'consultant' ? 'Operator' : 'Owner');
+            const badgeClass = response.user_role === 'admin' ? 'bg-danger' : (response.user_role === 'consultant' ? 'bg-info' : 'bg-success');
+            const backgroundColor = response.user_role === 'owner' ? '#e8f4f8' : '#f7f7f7';
+
+            $('#replies-container').append(`
+                <div class="reply mt-3 p-3" style="background-color: ${backgroundColor};" data-reply-id="${response.id}">
+                    <p>
+                        <span class="badge ${badgeClass}">${roleText}</span>
+                        ${response.user_name} said:
+                        <span class="text-muted">${new Date().toLocaleString()}</span>
+                    </p>
+                    <p>${response.message}</p>
+                </div>
+            `);
+
+            replyQuill.setText(''); // Clear the Quill editor
+        },
+        error: function() {
+            console.error('Failed to send the reply.');
+        },
+        complete: function() {
+            submitReplyButton.innerHTML = "Send Reply";
+            submitReplyButton.disabled = false;
+        }
+    });
+
+    return false;
+}
+
+
 </script>
 @endpush

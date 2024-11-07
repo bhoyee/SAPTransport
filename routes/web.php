@@ -154,8 +154,6 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
 
 
  
-
-
 // Routes for custom invoice creation
 Route::get('/invoices/create-custom', [AdminInvoiceController::class, 'createCustomForm'])->name('admin.invoices.createCustomForm');
 Route::post('/invoices/create-custom', [AdminInvoiceController::class, 'createCustomInvoice'])->name('admin.invoices.createCustom');
@@ -172,12 +170,6 @@ Route::delete('/custom-invoices/{id}/delete', [AdminInvoiceController::class, 'd
 Route::put('/custom-invoices/{id}', [AdminInvoiceController::class, 'updateCustomInvoice'])->name('admin.customInvoices.update');
 
 
-// managing support ticketing
-Route::get('/support-tickets', [SupportTicketController::class, 'index'])->name('admin.support-tickets.index');
-Route::get('/support-tickets/{id}/view', [SupportTicketController::class, 'view'])->name('admin.support-tickets.view');
-Route::delete('/support-tickets/{id}', [SupportTicketController::class, 'delete'])->name('admin.support-tickets.delete');
-Route::post('/support-tickets/{id}/reply', [SupportTicketController::class, 'reply'])->name('admin.support-tickets.reply');
-Route::patch('/support-tickets/{id}/update-status', [SupportTicketController::class, 'updateStatus'])->name('support-tickets.updateStatus');
 
 //acct etting route
 // Route::get('/account', [AccountController::class, 'showAccountPage'])->name('admin.account');
@@ -392,6 +384,18 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|consultant'])->group(fun
            // Routes for User Payment Report
     Route::post('/reports/user-payment-report/pdf', [UserPaymentReportController::class, 'generateUserPaymentReport'])->name('admin.reports.user-payment.pdf');
     Route::get('/reports/user-payment-report', [UserPaymentReportController::class, 'index'])->name('admin.reports.userPaymentReport');
+
+    // managing support ticketing
+    Route::get('/support-tickets', [SupportTicketController::class, 'index'])->name('admin.support-tickets.index');
+    Route::get('/support-tickets/{id}/view', [SupportTicketController::class, 'view'])->name('admin.support-tickets.view');
+    Route::delete('/support-tickets/{id}', [SupportTicketController::class, 'delete'])->name('admin.support-tickets.delete');
+    Route::post('/support-tickets/{id}/reply', [SupportTicketController::class, 'reply'])->name('admin.support-tickets.reply');
+    Route::patch('/support-tickets/{id}/update-status', [SupportTicketController::class, 'updateStatus'])->name('support-tickets.updateStatus');
+
+    Route::get('/support-tickets/{id}/fetch-replies', [SupportTicketController::class, 'fetchNewReplies'])
+    ->name('admin.support-tickets.fetch-replies');
+
+
 });
 
 

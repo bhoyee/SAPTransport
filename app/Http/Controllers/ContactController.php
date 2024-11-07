@@ -139,41 +139,40 @@ class ContactController extends Controller
     {
         try {
             $ticket = Contact::findOrFail($id);
-
+    
             // Check if the user is authorized to reply
             if ($ticket->email_address !== Auth::user()->email) {
                 Log::warning('Unauthorized attempt to reply to ticket.', ['ticket_id' => $id, 'user_id' => Auth::id()]);
                 return response()->json(['error' => 'Unauthorized action.'], 403);
             }
-
+    
             $message = $ticket->status == 'closed'
                 ? Auth::user()->name . ' wants to reopen the ticket.'
                 : $request->input('message');
-
-            // If the ticket is closed, reopen it and add a system message
+    
+            // If the ticket is closed, reopen it
             if ($ticket->status == 'closed') {
-                // Reopen the ticket
                 $ticket->update(['status' => 'open']);
                 Log::info('Ticket reopened.', ['ticket_id' => $id]);
             }
-
+    
             // Create a new reply
             $reply = TicketReply::create([
                 'ticket_id' => $ticket->id,
                 'user_id' => Auth::id(),
                 'message' => $message,
             ]);
-
+    
             Log::info('Reply added to ticket.', ['ticket_id' => $id, 'reply_id' => $reply->id, 'user_id' => Auth::id()]);
-
-            // Record the activity log
-             // Log the activity
+    
+            // Record the activity in the activity log
             ActivityLogger::log('Ticket Reply', 'User replied to ticket #' . $ticket->ticket_num);
-
-
+    
+            // Determine the role for frontend display
+            $userRole = Auth::user()->hasRole('admin') ? 'admin' : (Auth::user()->hasRole('consultant') ? 'consultant' : 'owner');
+    
             // Notify admin and consultants
             $adminConsultantUsers = User::role(['admin', 'consultant'])->get(); // Assuming using Spatie's role system
-
             foreach ($adminConsultantUsers as $adminConsultant) {
                 Notification::create([
                     'user_id' => $adminConsultant->id,
@@ -183,21 +182,23 @@ class ContactController extends Controller
                     'related_user_name' => Auth::user()->name,
                 ]);
             }
-
-            // Return the reply message as a response
+    
+            // Return the reply data with the user role
             return response()->json([
                 'message' => $message,
                 'id' => $reply->id,
+                'user_role' => $userRole,
+                'user_name' => Auth::user()->name,
+                'created_at' => now()->format('d M Y H:i'),
                 'timestamp' => now()->format('Y-m-d H:i:s'),
             ], 200);
-
+    
         } catch (\Exception $e) {
-            // Log the error
             Log::error('Failed to reply to ticket.', ['ticket_id' => $id, 'user_id' => Auth::id(), 'error' => $e->getMessage()]);
             return response()->json(['error' => 'Failed to send reply.'], 500);
         }
     }
-
+    
     
     
     // Handle contact form submission
@@ -260,25 +261,49 @@ class ContactController extends Controller
     public function fetchNewReplies($id, Request $request)
     {
         $lastReplyTimestamp = $request->input('lastReplyTimestamp');
-
-        // Fetch replies created after the last timestamp
-        $newReplies = TicketReply::with('user', 'ticket')
-            ->where('ticket_id', $id)
-            ->where('created_at', '>', $lastReplyTimestamp)
-            ->get()
-            ->map(function ($reply) {
-                return [
-                    'id' => $reply->id,
-                    'message' => $reply->message,
-                    'user_name' => $reply->user->name ?? 'Unknown User',
-                    'user_role' => $reply->user->email === $reply->ticket->email_address ? 'owner' : 'operator',
-                    'created_at' => $reply->created_at->format('d M Y H:i'),
-                    'timestamp' => $reply->created_at->format('Y-m-d H:i:s'),
-                ];
-            });
-
-        return response()->json(['newReplies' => $newReplies]);
+    
+        try {
+            // Fetch the ticket to identify the owner
+            $ticket = Contact::findOrFail($id);
+            $ticketOwnerId = $ticket->user_id; // Store the owner ID
+    
+            // Fetch replies made after the last timestamp
+            $newReplies = TicketReply::with('user')
+                ->where('ticket_id', $id)
+                ->where('created_at', '>', $lastReplyTimestamp)
+                ->get()
+                ->map(function ($reply) use ($ticketOwnerId) {
+                    // Determine the role for each reply
+                    $userRole = $reply->user_id === $ticketOwnerId
+                        ? 'owner'
+                        : ($reply->user && $reply->user->hasRole('admin') ? 'admin' : 'consultant');
+    
+                    // Log role determination for debugging
+                    Log::info('Reply Role Determination for Passenger Page', [
+                        'reply_id' => $reply->id,
+                        'reply_user_id' => $reply->user_id,
+                        'ticket_owner_id' => $ticketOwnerId,
+                        'determined_role' => $userRole,
+                        'user_name' => $reply->user->name ?? 'Unknown User'
+                    ]);
+    
+                    return [
+                        'id' => $reply->id,
+                        'message' => $reply->message,
+                        'user_name' => $reply->user->name ?? 'Unknown User',
+                        'user_role' => $userRole,
+                        'created_at' => $reply->created_at->format('d M Y H:i'),
+                        'timestamp' => $reply->created_at->format('Y-m-d H:i:s'),
+                    ];
+                });
+    
+            return response()->json(['newReplies' => $newReplies], 200);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch new replies for passenger page: ' . $e->getMessage(), ['ticket_id' => $id]);
+            return response()->json(['error' => 'Failed to fetch new replies.'], 500);
+        }
     }
+    
 
 
 }
