@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Log;
 use App\Mail\TicketReplyNotification;
 use Illuminate\Support\Facades\Mail;
 use App\Services\ActivityLogger;
+use App\Models\Notification;
+
 
 class SupportTicketController extends Controller
 {
@@ -76,45 +78,52 @@ class SupportTicketController extends Controller
     {
         Log::info('Attempting to reply to support ticket.', ['ticket_id' => $id]);
     
-        // Validate the request input
         $request->validate([
             'message' => 'required|string',
         ]);
     
         try {
-            // Find the support ticket
+            // Retrieve the ticket to check if the current user is the owner (passenger)
             $ticket = Contact::findOrFail($id);
-            Log::info('Support ticket found for replying.', ['ticket_id' => $id]);
+    
+            // Determine the role accurately: "owner" if the current user is the ticket creator
+            if (Auth::id() === $ticket->user_id) {
+                $userRole = 'owner';
+            } elseif (Auth::user()->hasRole('admin')) {
+                $userRole = 'admin';
+            } else {
+                $userRole = 'consultant';
+            }
+            
+            Log::info('Assigned role for reply', [
+                'user_id' => Auth::id(),
+                'ticket_owner_id' => $ticket->user_id,
+                'assigned_role' => $userRole
+            ]);
     
             // Create the reply
             $reply = new TicketReply();
             $reply->ticket_id = $ticket->id;
-            $reply->user_id = Auth::id(); // The authenticated user (admin or consultant) replying to the ticket
+            $reply->user_id = Auth::id();
             $reply->message = $request->input('message');
             $reply->save();
     
-            // Update the ticket's `updated_at` timestamp
+            // Update the ticket's last updated timestamp
             $ticket->touch();
     
-            // Send email notification to the user who initiated the ticket
+            // Send notification if needed
             Mail::to($ticket->email_address)->send(new TicketReplyNotification($ticket, $reply));
     
-            Log::info('Reply added to the support ticket successfully.', [
-                'ticket_id' => $id,
-                'reply_id' => $reply->id,
-            ]);
-    
+            // Log the activity
+            ActivityLogger::log(
+                'Reply to Ticket',
+                'Replied to ticket #' . $ticket->ticket_num,
+                Auth::id()
+            );
 
-                // Record the activity in the activity log
-                ActivityLogger::log(
-                    'Reply to Ticket',
-                    'Replied to ticket #' . $ticket->ticket_num,
-                    Auth::id()
-                );
-    
             // Get the user associated with the email address (if any)
             $user = \App\Models\User::where('email', $ticket->email_address)->first();
-    
+            
             // Notify the user who initiated the ticket if found
             if ($user) {
                 Notification::create([
@@ -125,13 +134,14 @@ class SupportTicketController extends Controller
                     'related_user_name' => Auth::user()->name,
                 ]);
             }
+            
     
-            // Return a JSON response with the reply data
+            // Return the correct role in response
             return response()->json([
                 'id' => $reply->id,
                 'message' => $reply->message,
                 'user_name' => Auth::user()->name,
-                'user_role' => Auth::user()->hasRole('admin') ? 'operator' : 'owner',
+                'user_role' => $userRole, // Should now be "owner", "admin", or "consultant" as applicable
                 'created_at' => $reply->created_at->format('d M Y H:i'),
                 'timestamp' => $reply->created_at->format('Y-m-d H:i:s'),
             ], 200);
@@ -145,34 +155,93 @@ class SupportTicketController extends Controller
         }
     }
     
+    
+
+    // SupportTicketController.php
+
 
     public function fetchNewReplies($id, Request $request)
     {
         $lastReplyTimestamp = $request->input('lastReplyTimestamp');
-
+    
         try {
-            // Fetch replies created after the last timestamp
+            // Fetch the ticket to identify the owner
+            $ticket = Contact::findOrFail($id);
+            $ticketOwnerId = $ticket->user_id; // Store the owner ID
+    
+            // Fetch replies made after the last timestamp
             $newReplies = TicketReply::with('user')
                 ->where('ticket_id', $id)
                 ->where('created_at', '>', $lastReplyTimestamp)
                 ->get()
-                ->map(function ($reply) {
+                ->map(function ($reply) use ($ticketOwnerId) {
+                    // Check if reply's user_id matches the ticket owner, otherwise assign based on role
+                    if ($reply->user_id === $ticketOwnerId) {
+                        $userRole = 'owner'; // The ticket owner is typically the passenger
+                    } elseif ($reply->user && $reply->user->hasRole('admin')) {
+                        $userRole = 'admin';
+                    } elseif ($reply->user && $reply->user->hasRole('consultant')) {
+                        $userRole = 'consultant';
+                    } else {
+                        $userRole = 'guest'; // Fallback role if user role is unclear
+                    }
+    
+                    // Log the role determined for each reply to help with debugging
+                    Log::info('Reply Role Determination', [
+                        'reply_id' => $reply->id,
+                        'reply_user_id' => $reply->user_id,
+                        'ticket_owner_id' => $ticketOwnerId,
+                        'determined_role' => $userRole,
+                        'user_name' => $reply->user->name ?? 'Unknown User'
+                    ]);
+    
                     return [
                         'id' => $reply->id,
                         'message' => $reply->message,
                         'user_name' => $reply->user->name ?? 'Unknown User',
-                        'user_role' => $reply->user->hasRole('admin') ? 'operator' : 'owner',
+                        'user_role' => $userRole,
                         'created_at' => $reply->created_at->format('d M Y H:i'),
                         'timestamp' => $reply->created_at->format('Y-m-d H:i:s'),
                     ];
                 });
-
+    
             return response()->json(['newReplies' => $newReplies], 200);
         } catch (\Exception $e) {
             Log::error('Failed to fetch new replies: ' . $e->getMessage(), ['ticket_id' => $id]);
             return response()->json(['error' => 'Failed to fetch new replies.'], 500);
         }
     }
+    
+    
+
+
+    // public function fetchNewReplies($id, Request $request)
+    // {
+    //     $lastReplyTimestamp = $request->input('lastReplyTimestamp');
+
+    //     try {
+    //         // Fetch replies created after the last timestamp
+    //         $newReplies = TicketReply::with('user')
+    //             ->where('ticket_id', $id)
+    //             ->where('created_at', '>', $lastReplyTimestamp)
+    //             ->get()
+    //             ->map(function ($reply) {
+    //                 return [
+    //                     'id' => $reply->id,
+    //                     'message' => $reply->message,
+    //                     'user_name' => $reply->user->name ?? 'Unknown User',
+    //                     'user_role' => $reply->user->hasRole('admin') ? 'operator' : 'owner',
+    //                     'created_at' => $reply->created_at->format('d M Y H:i'),
+    //                     'timestamp' => $reply->created_at->format('Y-m-d H:i:s'),
+    //                 ];
+    //             });
+
+    //         return response()->json(['newReplies' => $newReplies], 200);
+    //     } catch (\Exception $e) {
+    //         Log::error('Failed to fetch new replies: ' . $e->getMessage(), ['ticket_id' => $id]);
+    //         return response()->json(['error' => 'Failed to fetch new replies.'], 500);
+    //     }
+    // }
 
     // app/Http/Controllers/Admin/SupportTicketController.php
 
@@ -211,6 +280,7 @@ class SupportTicketController extends Controller
             return redirect()->back()->withErrors('Failed to update ticket status.');
         }
     }
+
 
 
     

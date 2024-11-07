@@ -48,42 +48,48 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        // Initialize DataTable with custom ordering by 'Last Updated'
-        var table = $('#tickets-table').DataTable({
+        let table = $('#tickets-table').DataTable({
             responsive: true,
             paging: true,
             searching: true,
             ordering: true,
             lengthChange: true,
-            order: [[4, 'desc']], // Order by 'Last Updated' (5th column, 0-indexed as 4)
+            order: [[4, 'desc']], // Order by 'Last Updated' column in descending order
             columnDefs: [
-                { orderable: false, targets: 0 } // Disable ordering for the 'S/N' column
+                { orderable: false, targets: 0 } // Disable ordering on the 'S/N' column
             ]
         });
 
-        // Polling function to fetch tickets
+        // Add serial numbers dynamically
+        table.on('order.dt search.dt draw.dt', function () {
+            let start = table.page.info().start;
+            table.column(0, { order: 'applied' }).nodes().each(function (cell, i) {
+                cell.innerHTML = start + i + 1;
+            });
+        }).draw();
+
+        // Function to fetch and refresh tickets data
         function fetchTickets() {
             $.ajax({
-                url: "{{ route('tickets.fetch') }}", // This route should return the latest tickets data
+                url: "{{ route('tickets.fetch') }}",
                 method: 'GET',
                 success: function(response) {
-                    // Clear the table data
                     table.clear();
 
-                    // Add the new data
+                    // Populate the table with the fetched data
                     response.tickets.forEach(function(ticket, index) {
                         table.row.add([
-                            index + 1, // S/N
+                            '', // S/N column
                             ticket.department.charAt(0).toUpperCase() + ticket.department.slice(1), // Department
                             `<strong>#${ticket.ticket_num}</strong><br><p>${ticket.subject}</p>`, // Subject
                             `<span class="badge ${ticket.status === 'open' ? 'bg-danger' : 'bg-success'}">${ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}</span>`, // Status
-                            moment(ticket.updated_at).format('DD MMM YYYY HH:mm'), // Last Updated
+                            ticket.updated_at, // Last Updated
                             `<a href="/tickets/view/${ticket.id}" class="btn btn-primary btn-sm">View</a>` // Actions
                         ]);
                     });
 
-                    // Redraw the table
-                    table.draw();
+                    // Redraw the table with the new data
+                    table.order([[4, 'desc']]).draw();
                 },
                 error: function() {
                     console.error('Failed to fetch tickets.');
@@ -91,7 +97,7 @@
             });
         }
 
-        // Poll every 5 seconds
+        // Poll every 5 seconds for real-time updates
         setInterval(fetchTickets, 5000);
     });
 </script>
