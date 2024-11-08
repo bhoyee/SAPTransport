@@ -1,14 +1,21 @@
-@extends('admin.layouts.admin-layout')
+@php
+    $layout = auth()->user()->hasRole('admin') 
+        ? 'admin.layouts.admin-layout' 
+        : 'staff.layouts.staff-layout';
 
-@section('title', 'Admin Settings')
+    // Set the title based on the user's role
+    $pageTitle = auth()->user()->hasRole('admin') ? 'Admin Settings' : 'Staff Settings';
+@endphp
+
+@extends($layout)
+
+@section('title', $pageTitle)
 
 @section('content')
-<h1 class="app-page-title">Admin Settings</h1>
+<h1 class="app-page-title">{{ $pageTitle }}</h1>
 
 <div class="app-card app-card-details shadow-sm mb-4">
     <div class="app-card-body p-4">
-      
-
         <div class="container mt-5">
             <div class="row">
                 <!-- Password Change Section -->
@@ -36,106 +43,92 @@
                     <div id="password-feedback" class="mt-3"></div>
                 </div>
 
+                <!-- Conditionally show Enable / Disable Bookings Section for non-consultants -->
+                @if(!auth()->user()->hasRole('consultant'))
+                <div class="col-md-6 mb-5">
+                    <h2>Enable / Disable Bookings</h2>
 
+                    @if(session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
 
-<!-- Display Enable / Disable Bookings Section -->
-<div class="col-md-6 mb-5">
-    <h2>Enable / Disable Bookings</h2>
-
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-
-        </div>
-    @endif
-
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Setting Key</th>
-                <th>Setting Value</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($settings as $setting)
-                <tr>
-                    <td>{{ $setting->key }}</td>
-                    <td>
-                        @if($setting->key === 'booking_status')
-                            <!-- Display badge based on the value -->
-                            <span class="badge bg-{{ $setting->value === 'closed' ? 'danger' : 'success' }}">
-                                {{ ucfirst($setting->value) }}
-                            </span>
-                           
-                     
-                        @else
-                            {{ $setting->value }}
-                        @endif
-                    </td>
-                    <td>
-                    <form action="{{ route('admin.settings.update', $setting->id) }}" method="POST" onsubmit="showSpinner(this)">
-    @csrf
-    @method('PUT')
-
-    @if($setting->key === 'booking_status')
-        <select name="value" class="form-control">
-            <option value="open" {{ $setting->value === 'open' ? 'selected' : '' }}>Enable Bookings</option>
-            <option value="closed" {{ $setting->value === 'closed' ? 'selected' : '' }}>Disable Bookings</option>
-        </select>
-    @else
-        <input type="text" name="value" value="{{ $setting->value }}" class="form-control">
-    @endif
-
-    <button type="submit" class="btn btn-primary mt-2">
-        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-        <span class="button-text">Update</span>
-    </button>
-</form>
-
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-</div>
-
-
-
-            </div>
-        </div>
-
-    </div>
-</div>
-
-        <!-- Real-Time Activity Log Table -->
-
-        <div class="app-card app-card-details shadow-sm mb-4 mt-3">
-            <div class="app-card-body p-4">
-      
-                <div class="col-md-12">
-                    <h3>Activity Log</h3>
-                    <table id="activity-log-table" class="table table-striped table-bordered">
+                    <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>User</th>
-                                <th>Action</th>
-                                <th>description</th>
-                                <th>IP Address</th>
-                                <th>Timestamp</th>
+                                <th>Setting Key</th>
+                                <th>Setting Value</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
+                        <tbody>
+                            @foreach($settings as $setting)
+                                <tr>
+                                    <td>{{ $setting->key }}</td>
+                                    <td>
+                                        @if($setting->key === 'booking_status')
+                                            <span class="badge bg-{{ $setting->value === 'closed' ? 'danger' : 'success' }}">
+                                                {{ ucfirst($setting->value) }}
+                                            </span>
+                                        @else
+                                            {{ $setting->value }}
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <form action="{{ route('admin.settings.update', $setting->id) }}" method="POST" onsubmit="showSpinner(this)">
+                                            @csrf
+                                            @method('PUT')
+
+                                            @if($setting->key === 'booking_status')
+                                                <select name="value" class="form-control">
+                                                    <option value="open" {{ $setting->value === 'open' ? 'selected' : '' }}>Enable Bookings</option>
+                                                    <option value="closed" {{ $setting->value === 'closed' ? 'selected' : '' }}>Disable Bookings</option>
+                                                </select>
+                                            @else
+                                                <input type="text" name="value" value="{{ $setting->value }}" class="form-control">
+                                            @endif
+
+                                            <button type="submit" class="btn btn-primary mt-2">
+                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                                                <span class="button-text">Update</span>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
                     </table>
                 </div>
+                @endif
             </div>
         </div>
-
-
     </div>
 </div>
 
+<!-- Conditionally show Activity Log for non-consultants -->
+@if(!auth()->user()->hasRole('consultant'))
+<div class="app-card app-card-details shadow-sm mb-4 mt-3">
+    <div class="app-card-body p-4">
+        <div class="col-md-12">
+            <h3>Activity Log</h3>
+            <table id="activity-log-table" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Description</th>
+                        <th>IP Address</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
 
 @push('scripts')

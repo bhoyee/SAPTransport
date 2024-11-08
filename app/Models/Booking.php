@@ -241,6 +241,11 @@ class Booking extends Model
         return $this->belongsTo(User::class, 'created_by', 'email');  // Assuming created_by stores the creator's email
     }
 
+    public function updatedByUser()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+    
 
 }
 

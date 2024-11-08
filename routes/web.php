@@ -175,16 +175,6 @@ Route::put('/custom-invoices/{id}', [AdminInvoiceController::class, 'updateCusto
 // Route::get('/account', [AccountController::class, 'showAccountPage'])->name('admin.account');
 // Route::post('/account', [AccountController::class, 'updateAccount'])->name('admin.update-account');
 
-Route::get('/setting', [SettingController::class, 'index'])->name('admin.settings.index');
-Route::put('/settings/{id}', [AdminSettings::class, 'update'])->name('admin.settings.update');
-
-
-
-// setting routes
-    Route::get('/settings', [AdminSettings::class, 'showSettings'])->name('admin.settings');
-    Route::post('/settings/change-password', [AdminSettings::class, 'changePassword'])->name('admin.settings.change-password');
-    Route::get('/settings/activity-log', [AdminSettings::class, 'fetchActivityLog'])->name('admin.settings.activity-log');
-
 
 });
 
@@ -203,6 +193,14 @@ Route::get('/tickets/fetch', [ContactController::class, 'fetchTickets'])->name('
 Route::prefix('staff')->middleware(['auth', 'role:consultant'])->group(function () {
     Route::get('/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
     Route::get('/support', [StaffSupportController::class, 'index'])->name('staff.support');
+
+    Route::get('/fetch-recent-interactions', [StaffDashboardController::class, 'fetchRecentInteractions'])->name('staff.fetch.recentInteractions');
+    Route::get('/fetch-active-bookings', [StaffDashboardController::class, 'fetchActiveBookings'])->name('staff.fetch.activeBookings');
+
+    Route::get('/dashboard/booking-status-distribution', [StaffDashboardController::class, 'getBookingStatusDistribution'])->name('staff.dashboard.bookingStatusDistribution');
+    Route::get('/dashboard/service-type-usage', [StaffDashboardController::class, 'getServiceTypeUsage'])->name('staff.dashboard.serviceTypeUsage');
+    Route::get('/dashboard/today-stats', [StaffDashboardController::class, 'getTodayDashboardStats'])->name('staff.dashboard.today-stats');
+
 });
 
 
@@ -394,6 +392,16 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|consultant'])->group(fun
 
     Route::get('/support-tickets/{id}/fetch-replies', [SupportTicketController::class, 'fetchNewReplies'])
     ->name('admin.support-tickets.fetch-replies');
+
+// setting routes
+    Route::get('/setting', [SettingController::class, 'index'])->name('admin.settings.index');
+    Route::put('/settings/{id}', [AdminSettings::class, 'update'])->name('admin.settings.update');
+
+
+    Route::get('/settings', [AdminSettings::class, 'showSettings'])->name('admin.settings');
+    Route::post('/settings/change-password', [AdminSettings::class, 'changePassword'])->name('admin.settings.change-password');
+    Route::get('/settings/activity-log', [AdminSettings::class, 'fetchActivityLog'])->name('admin.settings.activity-log');
+
 
 
 });
