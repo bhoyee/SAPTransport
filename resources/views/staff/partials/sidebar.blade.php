@@ -402,13 +402,14 @@
 									<ul class="submenu-list list-unstyled">
 
 									<li class="submenu-item">
-										<a class="submenu-link" href="">Send Messages</a>
+										<a class="submenu-link" href="{{ route('admin.broadcast') }}">Send Messages</a>
 									</li>
 
+
 									<li class="submenu-item">
-										<a class="submenu-link" href="">Manage Messages</a>
+										<a class="submenu-link" href="{{ route('admin.manage-messages') }}">Manage Messages</a>
 									</li>
-						
+
 
 									
 									</ul>
