@@ -40,6 +40,7 @@ use App\Http\Controllers\Admin\TestDashboardController;
 
 use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\BroadcastController;
 
 
 
@@ -402,11 +403,28 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|consultant'])->group(fun
     Route::post('/settings/change-password', [AdminSettings::class, 'changePassword'])->name('admin.settings.change-password');
     Route::get('/settings/activity-log', [AdminSettings::class, 'fetchActivityLog'])->name('admin.settings.activity-log');
 
+    //Send Message broadcast
+    Route::get('/broadcast', [BroadcastController::class, 'index'])->name('admin.broadcast');
+    Route::post('/broadcast/send', [BroadcastController::class, 'sendBroadcast'])->name('admin.broadcast.send');
+
+
+    Route::get('/message/{id}/view', [BroadcastController::class, 'viewMessage'])->name('admin.message.view');
+
+    Route::get('/messages/manage', [BroadcastController::class, 'manageMessages'])->name('admin.manage-messages');
+    Route::get('/messages/fetch', [BroadcastController::class, 'fetchMessages'])->name('admin.fetch-messages');
+    
+    // routes/web.php
+    Route::get('/tracking-pixel/{messageId}', [BroadcastController::class, 'trackEmailOpen'])->name('email.tracking.pixel');
+    // Route::get('/email/track/{messageId}', [BroadcastController::class, 'trackEmailOpen'])->name('email.tracking.pixel');
+
+    Route::get('/message/{id}/view', [BroadcastController::class, 'viewMessage'])->name('admin.message.view');
 
 
 });
 
 
+// to track if email is read
+Route::get('/email/tracking/pixel', [BroadcastController::class, 'trackEmailOpen'])->name('email.tracking.pixel');
 
 // Booking and Payment Routes (Both for Admins and Passengers)
 Route::post('/book-airport-transfer', [BookingController::class, 'store'])->name('booking.store');
