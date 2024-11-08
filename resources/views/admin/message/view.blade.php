@@ -12,9 +12,8 @@
 <div class="container mt-5">
     
     <h1 class="app-page-title">Message Details</h1>
-<br>
-<a href="{{ route('admin.manage-messages') }}" class="btn btn-secondary mb-3">Back to Manage Messages</a> <!-- Back button -->
-
+    <br>
+    <a href="{{ route('admin.manage-messages') }}" class="btn btn-secondary mb-3">Back to Manage Messages</a> <!-- Back button -->
 
     <div class="card">
         <div class="card-body">
@@ -42,7 +41,17 @@
                     <tr>
                         <td>{{ $receiver->name }}</td>
                         <td>{{ $receiver->email }}</td>
-                        <td>{{ ucfirst($message->status) }}</td>
+                        <td>
+                            @if ($message->status === 'read')
+                                <span class="badge bg-success">Read</span>
+                            @elseif ($message->status === 'received')
+                                <span class="badge bg-info">Received</span>
+                            @elseif ($message->status === 'sent')
+                                <span class="badge bg-danger">Sent</span>
+                            @else
+                                <span class="badge bg-secondary">{{ ucfirst($message->status) }}</span>
+                            @endif
+                        </td>
                     </tr>
                 </tbody>
             </table>
