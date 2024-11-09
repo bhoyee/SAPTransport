@@ -76,8 +76,14 @@
             <h4 class="fw-bold">Invoice</h4>
             <p>Invoice Number: {{ $invoice->invoice_number }}</p>
             <p>Issue Date: {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d M Y') }}</p>
-            <p>Due Date: {{ \Carbon\Carbon::parse($invoice->payment->booking->pickup_date)->format('d M Y') }}</p>
-            <p>Due Amount: NGN{{ number_format($invoice->amount, 2) }}</p>
+            <p>Due Date: 
+                    @if ($invoice->booking) 
+                        {{ \Carbon\Carbon::parse($invoice->booking->pickup_date)->format('d M Y') }} 
+                    @else 
+                        N/A 
+                    @endif
+                </p>            
+                <p>Due Amount: NGN{{ number_format($invoice->amount, 2) }}</p>
 
             <!-- Invoice Status -->
             <p>
@@ -133,7 +139,7 @@
             <td>{{ $booking->service_type }}</td>
             <td>{{ \Carbon\Carbon::parse($booking->pickup_date)->format('d M Y') }}</td>
             <td>{{ $booking->pickup_time }}</td>
-            <td>{{ $booking->dropoff_address }}</td>
+            <td>{{ $booking->dropoff_address ?? $booking->airport_name }}</td>
             <td>NGN {{ number_format($invoice->amount, 2) }}</td>
         </tr>
         </tbody>

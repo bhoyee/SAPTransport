@@ -27,8 +27,13 @@
                     <h4 class="fw-bold">Invoice</h4>
                     <p>Invoice Number: {{ $invoice->invoice_number }}</p>
                     <p>Issue Date: {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d M Y') }}</p>
-                    <p>Due Date: {{ \Carbon\Carbon::parse($invoice->payment->booking->pickup_date)->format('d M Y') }}</p>
-
+                    <p>Due Date: 
+                    @if ($invoice->booking) 
+                        {{ \Carbon\Carbon::parse($invoice->booking->pickup_date)->format('d M Y') }} 
+                    @else 
+                        N/A 
+                    @endif
+                </p>
                     <p>Due Amount: ₦{{ number_format($invoice->amount, 2) }}</p>
 
                     <!-- Invoice Status -->
@@ -88,7 +93,7 @@
                             <td>{{ $invoice->booking->service_type }}</td>
                             <td>{{ \Carbon\Carbon::parse($invoice->booking->pickup_date)->format('d M Y') }}</td>
                             <td>{{ $invoice->booking->pickup_time }}</td>
-                            <td>{{ $invoice->booking->dropoff_address }}</td>
+                            <td>{{ $booking->dropoff_address ?? $booking->airport_name }}</td>
                             <td>₦{{ number_format($invoice->amount, 2) }}</td>
                         </tr>
                     </tbody>
