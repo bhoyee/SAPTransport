@@ -49,6 +49,19 @@
             background-color: #6c757d;
         }
 
+        /* Alert Box styling */
+        .alert {
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .alert-danger {
+            background-color: #dc3545;
+        }
+
         /* Responsive styling */
         @media (max-width: 600px) {
             table, table th, table td {
@@ -116,7 +129,8 @@
     </table>
 
     <!-- Payment Options -->
-    <p>You can choose to pay now using our online platform, view your invoice details, or pay in cash on/after the trip.</p>
+    <p>You can choose to pay now using our online platform, view your invoice details, or pay using bank transfer.</p>
+    <p>For our company bank details, please call us on +234 807 041 9826 (open 24/7).</p>
 
     <div>
         <!-- View Invoice Button -->
@@ -130,10 +144,16 @@
         </a>
     </div>
 
+    <!-- Important Note Section -->
+    <div class="alert alert-danger">
+        <strong>Note:</strong> Full payment must be made before the trip. Late cancellations (less than 24 hours before the trip) will incur a 25% fee, and there is no refund for no-shows.
+    </div>
+
     <p>If you have any questions, feel free to contact our support team.</p>
 
     <p>Thank you for choosing SAP Transportation!</p>
 
     <p>Best regards,<br>{{ config('app.name') }} Team</p>
+    <p>Tel: +234 807 041 9826</p>
 </body>
 </html>
