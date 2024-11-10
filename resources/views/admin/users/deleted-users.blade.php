@@ -84,43 +84,44 @@ $(document).ready(function() {
         });
     }
 
-    // Fetch stats on page load
     fetchTotalDeletedUsers();
 
-    // Initialize DataTable for Deleted Users
     let table = $('#deleted-users-table').DataTable({
-        responsive: true,
-        pageLength: 10,
-        order: [[5, "desc"]],
-        ajax: {
-            url: "{{ route('admin.users.deleted-list') }}",
-            dataSrc: 'data',
-            error: function(xhr, error, thrown) {
-                console.error('Error fetching deleted users:', error, thrown);
-            }
-        },
-        columns: [
-            { data: null, orderable: false, searchable: false, render: function (data, type, row, meta) { return meta.row + 1; }},
-            { data: 'name' },
-            { data: 'email' },
-            { data: 'phone' },
-            { data: 'status', render: function(data) { return `<span class="badge bg-danger">${data}</span>`; }},
-            { data: 'created_by' },
-            { data: 'deleted_by' },
-            { data: null, orderable: false, searchable: false, render: function (data, type, row, meta) {
-                    return `<button class="btn btn-success btn-sm restore-user-btn" data-user-id="${row.id}">Restore</button>
-                            <button class="btn btn-danger btn-sm" data-user-id="${row.id}" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>`;
-                }
-            }
-        ],
-        drawCallback: function(settings) {
-            let api = this.api();
-            let startIndex = api.page.info().start;
-            api.column(0, { page: 'current' }).nodes().each(function(cell, i) { cell.innerHTML = startIndex + i + 1; });
+    responsive: true,
+    pageLength: 10,
+    paging: true,
+    ordering: true,
+    order: [[5, "desc"]],
+    ajax: {
+        url: "{{ route('admin.users.deleted-list') }}",
+        dataSrc: 'data',
+        error: function(xhr, error, thrown) {
+            console.error('Error fetching deleted users:', error, thrown);
         }
-    });
+    },
+    columns: [
+        { data: null, orderable: false, searchable: false },
+        { data: 'name' },
+        { data: 'email' },
+        { data: 'phone' },
+        { data: 'status', render: function(data) { return `<span class="badge bg-danger">${data}</span>`; }},
+        { data: 'created_by' },
+        { data: 'deleted_by' },
+        { data: null, orderable: false, searchable: false, render: function (data, type, row, meta) {
+                return `<button class="btn btn-success btn-sm restore-user-btn" data-user-id="${row.id}">Restore</button>
+                        <button class="btn btn-danger btn-sm" data-user-id="${row.id}" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>`;
+            }
+        }
+    ],
+    drawCallback: function(settings) {
+        let api = this.api();
+        api.column(0, { page: 'current' }).nodes().each(function(cell, i) {
+            cell.innerHTML = api.page.info().start + i + 1;
+        });
+    }
+});
 
-    // Periodically reload the DataTable and stats every 30 seconds
+
     setInterval(function() {
         table.ajax.reload(null, false);
         fetchTotalDeletedUsers();

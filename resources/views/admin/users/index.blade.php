@@ -111,21 +111,20 @@ $(document).ready(function() {
     let table = $('#users-table').DataTable({
         responsive: true,
         pageLength: 10,
-        order: [[4, "desc"]], // Order by Created At column (descending)
+        order: [[4, "desc"]],
         ajax: {
-            url: "{{ route('admin.users.index') }}", // The route to get user data via AJAX
-            dataSrc: 'data', // Look for the 'data' array in the JSON response
+            url: "{{ route('admin.users.index') }}",
+            dataSrc: 'data',
             error: function(xhr, error, thrown) {
-                console.error('Error fetching users:', error, thrown); // Log any errors to the console
+                console.error('Error fetching users:', error, thrown);
             }
         },
         columns: [
             { 
-                data: null, // S/N column
-                orderable: true, // Make S/N column sortable
-                searchable: false, // Disable searching for S/N
+                data: null,
+                orderable: true,
+                searchable: false,
                 render: function (data, type, row, meta) {
-                    // S/N based on the order of the created_at field
                     return meta.row + 1;
                 }
             },
@@ -136,57 +135,62 @@ $(document).ready(function() {
                 return `<span class="badge ${badgeClass}">${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
             }},
             { data: 'created_at' },
-            { data: 'actions', orderable: false, searchable: false } // Action buttons
+            { data: 'actions', orderable: false, searchable: false }
         ],
         drawCallback: function(settings) {
-            // Renumber the S/N column based on the current page
             let api = this.api();
             let startIndex = api.page.info().start;
-
-            // Reassign S/N in case of sorting, pagination, etc.
             api.column(0, { page: 'current' }).nodes().each(function(cell, i) {
                 cell.innerHTML = startIndex + i + 1;
             });
         }
     });
 
-    // Periodically reload the DataTable every 30 seconds
     setInterval(function() {
-        table.ajax.reload(null, false); // Reload DataTable without resetting pagination
-    }, 30000); // 30 seconds
+        table.ajax.reload(null, false);
+    }, 30000);
 
-    // Modal logic for delete button
     $('#deleteModal').on('show.bs.modal', function(event) {
-        var button = $(event.relatedTarget); // Button that triggered the modal
-        var userId = button.data('user-id'); // Extract info from data-* attributes
-        $('#delete-user-id').val(userId); // Set the user ID in the form
+        var button = $(event.relatedTarget);
+        var userId = button.data('user-id');
+        $('#delete-user-id').val(userId);
+        console.log('Preparing to delete user with ID:', userId); 
     });
 
-    // Handle Delete Form submission via AJAX
     $('#deleteUserForm').on('submit', function(e) {
-        e.preventDefault(); // Prevent default form submission
+        e.preventDefault(); 
 
         let form = $(this);
         let userId = $('#delete-user-id').val();
+        let formData = form.serialize();
+
+        console.log('Form data before sending:', formData); 
+        console.log("Attempting AJAX POST to:", "{{ route('admin.users.delete') }}");
 
         $.ajax({
-            url: "{{ route('admin.users.delete') }}", // The route to delete the user
+            url: "{{ route('admin.users.delete') }}",
             method: 'POST',
-            data: form.serialize(),
+            data: formData,
+            cache: false,
             beforeSend: function() {
                 $('#delete-user-btn').hide();
                 $('#delete-spinner').show();
             },
             success: function(response) {
+                console.log('Delete response from server:', response);
                 if (response.success) {
                     $('#deleteModal').modal('hide');
-                    table.ajax.reload(null, false); // Reload DataTable without resetting pagination
+                    table.ajax.reload(null, false);
+                    alert('User deleted successfully.');
                 } else {
                     alert('Failed to delete user: ' + response.message);
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Error deleting user:', error);
+                console.error('AJAX Error deleting user:', error);
+                console.log('Status:', status);
+                console.log('Response body:', xhr.responseText);
+                alert('Failed to delete user. Check console for details.');
             },
             complete: function() {
                 $('#delete-user-btn').show();
@@ -194,27 +198,25 @@ $(document).ready(function() {
             }
         });
     });
-   
+
     function fetchStatistics() {
-    $.ajax({
-        url: "{{ route('admin.users.fetch-stats') }}",
-        method: "GET",
-        success: function(response) {
-            $('#activePassengers').text(response.totalPassengers);
-            $('#inactivePassengers').text(response.inactivePassengers);
-            $('#activeConsultants').text(response.totalStaff);
-            $('#suspendedUsers').text(response.suspendedUsers);
-        },
-        error: function(error) {
-            console.error('Error fetching statistics:', error);
-        }
-    });
-}
+        $.ajax({
+            url: "{{ route('admin.users.fetch-stats') }}",
+            method: "GET",
+            success: function(response) {
+                $('#activePassengers').text(response.totalPassengers);
+                $('#inactivePassengers').text(response.inactivePassengers);
+                $('#activeConsultants').text(response.totalStaff);
+                $('#suspendedUsers').text(response.suspendedUsers);
+            },
+            error: function(error) {
+                console.error('Error fetching statistics:', error);
+            }
+        });
+    }
 
-// Call fetchStatistics periodically (e.g., every 30 seconds)
-setInterval(fetchStatistics, 30000);
-
-
+    setInterval(fetchStatistics, 30000);
 });
 </script>
 @endpush
+

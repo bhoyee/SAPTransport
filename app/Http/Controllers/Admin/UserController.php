@@ -12,6 +12,10 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
+use App\Models\Notification;
+use App\Mail\UserDeletedMail;
+use App\Services\ActivityLogger;
+
 
 class UserController extends Controller
 {
@@ -136,42 +140,83 @@ class UserController extends Controller
         }
     }
     
-    
     public function delete(Request $request)
     {
-        \Log::info('Delete request received for user ID: ' . $request->user_id);
+        \Log::info('Delete request received. User ID:', ['user_id' => $request->user_id]);
     
-        // Find the user by the provided user_id
-        $user = User::find($request->user_id);
+        // Default response setup
+        $response = ['success' => false, 'message' => 'User not found.'];
+        $statusCode = 404;
     
-        if ($user) {
-            try {
-                \Log::info('User found. Proceeding with deletion.', ['user_id' => $user->id, 'user_email' => $user->email]);
+        // Validate request
+        if (!$request->has('user_id')) {
+            \Log::warning('No user_id provided in request.');
+            $response = ['success' => false, 'message' => 'User ID is required.'];
+            $statusCode = 400;
+        } else {
+            $user = User::find($request->user_id);
     
-                // Log the deletion in the user_deletes table
-                UserDelete::create([
-                    'user_id' => $user->id,
-                    'deleted_by' => Auth::user()->email,
-                    'deleted_at' => now(),
-                ]);
+            if ($user) {
+                try {
+                    \Log::info('User found. Proceeding with deletion.', ['user_id' => $user->id, 'user_email' => $user->email]);
     
-                // Update the user's status to 'deleted'
-                $user->status = 'deleted';
-                $user->save();
+                    $deletedBy = Auth::user();
     
-                \Log::info('User status updated to deleted.', ['user_id' => $user->id]);
+                    // Log the deletion in the user_deletes table
+                    UserDelete::create([
+                        'user_id' => $user->id,
+                        'deleted_by' => $deletedBy->email ?? 'unknown',
+                        'deleted_at' => now(),
+                    ]);
     
-                return response()->json(['success' => true, 'message' => 'User deleted successfully.']);
-            } catch (\Exception $e) {
-                \Log::error('Error deleting user: ' . $e->getMessage(), ['user_id' => $user->id]);
-                return response()->json(['success' => false, 'message' => 'An error occurred while deleting the user.'], 500);
+                    // Update the user's status to 'deleted'
+                    $user->status = "deleted";
+                    $user->save();
+    
+                    // Activity Logging for the logged-in user
+                    ActivityLogger::log(
+                        'User Deleted',
+                        'User ' . $user->name . ' was deleted by ' . $deletedBy->name . ' on ' . now()
+                    );
+    
+                    // Prepare immediate success response
+                    $response = ['success' => true, 'message' => 'User deleted successfully.'];
+                    $statusCode = 200;
+    
+                    // Notify all admins about the deletion
+                    $adminUsers = User::role(['admin'])->get();
+                    foreach ($adminUsers as $admin) {
+                        Notification::create([
+                            'user_id' => $admin->id,
+                            'message' => 'User ' . $user->name . ' was deleted by ' . $deletedBy->name,
+                            'type' => 'message',
+                            'status' => 'unread',
+                            'related_user_name' => $deletedBy->name,
+                        ]);
+                        \Log::info("Notification sent to admin ID: {$admin->id}");
+                    }
+    
+                    // Send email to the admin about the deletion
+                    try {
+                        $adminEmail = config('mail.admin_email'); // Get admin email from config
+                        Mail::to($adminEmail)->send(new UserDeletedMail($user, $deletedBy));
+                        \Log::info("Deletion email sent to admin: {$adminEmail}");
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to send deletion email to admin: ' . $e->getMessage());
+                    }
+    
+                } catch (\Exception $e) {
+                    \Log::error('Error during user deletion:', ['error' => $e->getMessage(), 'user_id' => $user->id]);
+                    $response = ['success' => false, 'message' => 'An error occurred while deleting the user.'];
+                    $statusCode = 500;
+                }
             }
         }
     
-        \Log::warning('User not found.', ['user_id' => $request->user_id]);
-        return response()->json(['success' => false, 'message' => 'User not found.'], 404);
+        return response()->json($response, $statusCode);
     }
     
+
 
     public function suspend(User $user)
     {
@@ -260,82 +305,83 @@ class UserController extends Controller
     public function showDeletedUsers()
     {
         Log::info('Fetching total number of temporarily deleted users.');
-        
+    
         try {
-            $totalDeletedUsers = User::where('status', 'deleted')->count();
+            // Count deleted users from the user_deletes table
+            $totalDeletedUsers = UserDelete::count();
             Log::info('Total deleted users fetched successfully.', ['totalDeletedUsers' => $totalDeletedUsers]);
-
+    
+            // Pass the count to the view
             return view('admin.users.deleted-users', compact('totalDeletedUsers'));
         } catch (\Exception $e) {
             Log::error('Error fetching total deleted users.', ['error' => $e->getMessage()]);
             return redirect()->back()->with('error', 'Unable to fetch deleted users at this time.');
         }
     }
+    
+    
 
     public function fetchDeletedStats()
     {
         Log::info('Fetching real-time total of deleted users.');
-
+    
         try {
-            $totalDeletedUsers = User::where('status', 'deleted')->count();
+            // Count deleted users from the user_deletes table
+            $totalDeletedUsers = UserDelete::count();
             Log::info('Real-time total deleted users fetched successfully.', ['totalDeletedUsers' => $totalDeletedUsers]);
-
+    
             return response()->json(['totalDeletedUsers' => $totalDeletedUsers]);
         } catch (\Exception $e) {
             Log::error('Error fetching real-time deleted user stats.', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => 'Error fetching real-time stats.'], 500);
         }
     }
-
+    
     public function getDeletedUsers()
-{
-    Log::info('Fetching list of temporarily deleted users.');
-
-    try {
-        $deletedUsers = User::where('status', 'deleted')
-            ->leftJoin('user_deletes', 'users.id', '=', 'user_deletes.user_id')
-            ->select(
-                'users.id',
-                'users.name',
-                'users.email',
-                'users.phone',
-                'users.status',
-                'users.created_by',
-                'user_deletes.deleted_by',
-                'users.updated_at'
-            )
-            ->orderBy('users.updated_at', 'desc')
-            ->get();
-
-        $formattedUsers = $deletedUsers->map(function ($user) {
-            // Fetch creator's name directly by email
-            $creator = User::where('email', $user->created_by)->first();
-            $deleter = User::where('email', $user->deleted_by)->first();
-
-            // Log for debugging
-            Log::info('Creator fetched:', ['creator' => $creator ? $creator->toArray() : 'No creator found']);
-            Log::info('Deleter fetched:', ['deleter' => $deleter ? $deleter->toArray() : 'No deleter found']);
-
-            return [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'status' => ucfirst($user->status),
-                'created_by' => $creator ? $creator->name : 'N/A',
-                'deleted_by' => $deleter ? $deleter->name : 'N/A',
-            ];
-        });
-
-        Log::info('Formatted deleted users data for DataTable.', ['totalDeletedUsers' => count($formattedUsers)]);
-
-        return response()->json(['data' => $formattedUsers]);
-    } catch (\Exception $e) {
-        Log::error('Error fetching deleted users list.', ['error' => $e->getMessage()]);
-        return response()->json(['success' => false, 'message' => 'Error fetching deleted users list.'], 500);
+    {
+        Log::info('Fetching list of temporarily deleted users.');
+    
+        try {
+            // Fetch deleted users from user_deletes table and join with users
+            $deletedUsers = UserDelete::leftJoin('users', 'user_deletes.user_id', '=', 'users.id')
+                ->select(
+                    'users.id',
+                    'users.name',
+                    'users.email',
+                    'users.phone',
+                    'users.status',
+                    'users.created_by',
+                    'user_deletes.deleted_by',
+                    'user_deletes.deleted_at as updated_at'
+                )
+                ->orderBy('user_deletes.deleted_at', 'desc')
+                ->get();
+    
+            // Format data for DataTables
+            $formattedUsers = $deletedUsers->map(function ($user) {
+                $creator = User::where('email', $user->created_by)->first();
+                $deleter = User::where('email', $user->deleted_by)->first();
+    
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'status' => ucfirst($user->status),
+                    'created_by' => $creator ? $creator->name : 'N/A',
+                    'deleted_by' => $deleter ? $deleter->name : 'N/A',
+                ];
+            });
+    
+            Log::info('Formatted deleted users data for DataTable.', ['totalDeletedUsers' => count($formattedUsers)]);
+    
+            return response()->json(['data' => $formattedUsers]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching deleted users list.', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Error fetching deleted users list.'], 500);
+        }
     }
-}
-
+    
 
     public function permanentDelete(Request $request)
     {
