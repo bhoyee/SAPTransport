@@ -13,7 +13,7 @@
 
     <div class="row">
         <div class="col-md-3 mb-4">
-            <div class="card bg-primary text-white">
+            <div class="card bg-info text-white">
                 <div class="card-body">
                     <h5>Total Active Passengers</h5>
                     <h3 id="totalActivePassengers">{{ $totalActivePassengers }}</h3>
@@ -29,13 +29,14 @@
             </div>
         </div>
         <div class="col-md-3 mb-4">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h5>Total Sales Today</h5>
-                    <h3 id="totalSalesToday">{{ $totalSalesToday }}</h3>
-                </div>
+    <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h5>Total Sales Today</h5>
+                <h3 id="totalSalesToday">₦{{ number_format($totalSalesToday, 2) }}</h3>
             </div>
         </div>
+    </div>
+
         <div class="col-md-3 mb-4">
             <div class="card bg-danger text-white">
                 <div class="card-body">
@@ -278,22 +279,23 @@
 <script>
     // Function to fetch and update dashboard data in real-time
     function fetchDashboardData() {
-        console.log('Fetching real-time dashboard data');
-        fetch('/admin/dashboard-data')
-            .then(response => response.json())
-            .then(data => {
-                // Update each card with the real-time data
-                document.getElementById('totalActivePassengers').innerText = data.totalActivePassengers;
-                document.getElementById('totalBookingsToday').innerText = data.totalBookingsToday;
-                document.getElementById('totalSalesToday').innerText = data.totalSalesToday;
-                document.getElementById('openTickets').innerText = data.openTickets;
+    console.log('Fetching real-time dashboard data');
+    fetch('/admin/dashboard-data')
+        .then(response => response.json())
+        .then(data => {
+            // Update each card with the real-time data
+            document.getElementById('totalActivePassengers').innerText = data.totalActivePassengers;
+            document.getElementById('totalBookingsToday').innerText = data.totalBookingsToday;
+            document.getElementById('totalSalesToday').innerText = `₦${parseFloat(data.totalSalesToday).toFixed(2)}`;
+            document.getElementById('openTickets').innerText = data.openTickets;
 
-                console.log('Dashboard data updated:', data);
-            })
-            .catch(error => {
-                console.error('Error fetching dashboard data:', error);
-            });
-    }
+            console.log('Dashboard data updated:', data);
+        })
+        .catch(error => {
+            console.error('Error fetching dashboard data:', error);
+        });
+}
+
 
     // Poll every 10 seconds for real-time updates
     setInterval(fetchDashboardData, 10000);

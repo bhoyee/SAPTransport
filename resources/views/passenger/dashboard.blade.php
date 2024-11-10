@@ -148,7 +148,7 @@ th, td {
                                         </div>
                                         <!-- Text -->
                                         <div class="small-card-text w-100 text-center">
-                                            <p class="font-weight-normal m-0 text-muted">Total Payments</p>
+                                            <p class="font-weight-normal m-0 text-muted">Total Spent</p>
                                             <h4 class="font-weight-normal m-0 text-primary">₦ <span id="total-payment"></span></h4>
                                         </div>
                                     </div>
@@ -380,7 +380,7 @@ th, td {
 
 						    <div class="app-card-footer p-4 mt-auto">
 
-							   <a class="btn btn-secondary" href="#">View Invoices</a>
+							   <a class="btn btn-secondary" href="{{ route('invoices.index') }}">View Invoices</a>
 
 						    </div><!--//app-card-footer-->
 
@@ -434,7 +434,7 @@ th, td {
 
 						    <div class="app-card-footer p-4 mt-auto">
 
-							   <a class="btn btn-secondary" href="#">Contact Support</a>
+							   <a class="btn btn-secondary" href="{{ route('passenger.open-ticket') }}">Contact Support</a>
 
 						    </div><!--//app-card-footer-->
 
@@ -488,7 +488,7 @@ th, td {
 
 						    <div class="app-card-footer p-4 mt-auto">
 
-							   <a class="btn btn-secondary" href="#">Update Settings</a>
+							   <a class="btn btn-secondary" href="{{ route('account.settings') }}">Update Settings</a>
 
 						    </div><!--//app-card-footer-->
 
