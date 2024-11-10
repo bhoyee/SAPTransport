@@ -388,8 +388,14 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|consultant'])->group(fun
     Route::post('/reports/user-payment-report/pdf', [UserPaymentReportController::class, 'generateUserPaymentReport'])->name('admin.reports.user-payment.pdf');
     Route::get('/reports/user-payment-report', [UserPaymentReportController::class, 'index'])->name('admin.reports.userPaymentReport');
 
+
+
     // managing support ticketing
     Route::get('/support-tickets', [SupportTicketController::class, 'index'])->name('admin.support-tickets.index');
+
+
+    Route::get('/support-tickets/data', [SupportTicketController::class, 'getTicketsData'])->name('admin.support-tickets.data');
+
     Route::get('/support-tickets/{id}/view', [SupportTicketController::class, 'view'])->name('admin.support-tickets.view');
     Route::delete('/support-tickets/{id}', [SupportTicketController::class, 'delete'])->name('admin.support-tickets.delete');
     Route::post('/support-tickets/{id}/reply', [SupportTicketController::class, 'reply'])->name('admin.support-tickets.reply');

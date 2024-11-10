@@ -7,159 +7,72 @@
 <link href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css" rel="stylesheet">
 @endpush
 
+<h2>Welcome to the Admin Dashboard</h2>
+<p>Admin-specific data and metrics go here.</p>
 
-    <h2>Welcome to the Admin Dashboard</h2>
-    <p>Admin-specific data and metrics go here.</p>
-
-    <div class="row">
-        <div class="col-md-3 mb-4">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5>Total Active Passengers</h5>
-                    <h3 id="totalActivePassengers">{{ $totalActivePassengers }}</h3>
-                </div>
+<!-- Summary Cards -->
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5>Total Active Passengers</h5>
+                <h3 id="totalActivePassengers">{{ $totalActivePassengers }}</h3>
             </div>
         </div>
-        <div class="col-md-3 mb-4">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5>Total Bookings Today</h5>
-                    <h3 id="totalBookingsToday">{{ $totalBookingsToday }}</h3>
-                </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>Total Bookings Today</h5>
+                <h3 id="totalBookingsToday">{{ $totalBookingsToday }}</h3>
             </div>
         </div>
-        <div class="col-md-3 mb-4">
-    <div class="card bg-warning text-white">
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning text-white">
             <div class="card-body">
                 <h5>Total Sales Today</h5>
                 <h3 id="totalSalesToday">₦{{ number_format($totalSalesToday, 2) }}</h3>
             </div>
         </div>
     </div>
-
-        <div class="col-md-3 mb-4">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h5>Open Support Tickets</h5>
-                    <h3 id="openTickets">{{ $openTickets }}</h3>
-                </div>
+    <div class="col-md-3 mb-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h5>Open Support Tickets</h5>
+                <h3 id="openTickets">{{ $openTickets }}</h3>
             </div>
         </div>
     </div>
-     <!-- Charts Row -->
-     <style>
-.chart-container {
-    position: relative;
-    width: 100%;
+</div>
+
+<!-- CSS for consistent height -->
+<style>
+.chart-card-height {
+    height: 420px; /* Adjust the height as needed */
+}
+
+.chart-container, .calendar-container {
     padding: 1rem;
     overflow: hidden;
-    height: 100%;
 }
 
-.chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
+#bookingVolumeChart, #revenueDistributionChart, #bookingCompletionRateChart, #calendar {
+    width: 90% !important;
+    height: 90% !important;
 }
 
-#bookingVolumeChart, #revenueDistributionChart {
+#calendar{
     width: 100% !important;
-    height: 350px !important; /* Ensures consistent height */
+    height: 95% !important;
+    font-size: smaller;
 }
-.calendar-container {
-    height: 400px; /* Fixed height for the calendar container */
-    overflow-y: auto;
-}
-.fc-daygrid-day-number {
-    font-size: 0.8rem; /* Adjust as needed */
-}
-
-/* Reduce font size of event titles */
-.fc-event-title, .fc-daygrid-event-dot {
-    font-size: 0.75rem; /* Adjust as needed */
-}
-
-/* Reduce font size of header (e.g., month name) */
-.fc-toolbar-title {
-    font-size: 1rem; /* Adjust as needed */
-}
-
-/* Reduce font size of day names in the header */
-.fc-col-header-cell {
-    font-size: 0.8rem; /* Adjust as needed */
-}
-
-/* Reduce font size in the list view */
-.fc-list-event-title, .fc-list-event-time {
-    font-size: 0.75rem; /* Adjust as needed */
-}
-
-#calendar {
-    transform: scale(0.8); /* Scale down to 80% of the original size */
-    transform-origin: top left; /* Scale from the top left corner */
-    width: 125%; /* Adjust width to fit the container properly after scaling */
-    height: 100%; /* Ensure it fills the container’s height */
-    overflow: hidden; /* Prevent scrollbars within the calendar */
-}
-
-/* Adjust the container to fit the scaled calendar */
-#calendar-container {
-    height: 400px; /* Set a fixed height that fits well on your page */
-    overflow: hidden; /* Hide any overflow */
-}
-
-@media (max-width: 768px) {
-    .chart-container {
-        padding: 1rem 0.5rem; /* Adjust padding for mobile */
-    }
-    .chart-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .chart-header select {
-        margin-top: 0.5rem;
-    }
-    #bookingVolumeChart, #revenueDistributionChart {
-        height: 400px !important; /* Increase height for better visibility on mobile */
-    }
-    #calendar {
-        transform: scale(0.75); /* Further scaling on smaller screens */
-        width: 135%; /* Adjust width to fit properly after scaling */
-    }
-    
-    /* Hide 'day' and 'week' options for compact mobile view */
-    .fc-toolbar .fc-dayGridMonth-button,
-    .fc-toolbar .fc-timeGridWeek-button,
-    .fc-toolbar .fc-timeGridDay-button,
-    .fc-toolbar .fc-listMonth-button {
-        display: none;
-    }
-
-    /* Hide unused sections of toolbar on mobile */
-    #calendar .fc-toolbar .fc-right {
-        display: none;
-    }
-
-    /* Adjust font size and layout for the navigation buttons */
-    #calendar .fc-toolbar h2 {
-        font-size: 1rem; /* Adjust month title font size further */
-    }
-    #calendar .fc-toolbar .fc-left,
-    #calendar .fc-toolbar .fc-center {
-        font-size: 0.8rem;
-    }
-    
-}
-
-#calendar .fc-dayGridMonth .fc-dayNumber {
-    font-size: 0.9rem; /* Reduce the day number font size */
-}
-
 </style>
+
+<!-- Charts Row -->
 <div class="row">
     <div class="col-md-6 mb-4">
-        <div class="card">
+        <div class="card chart-card-height">
             <div class="card-body chart-container">
                 <h5>Booking Volume Over Time</h5>
                 <select id="timeFrame" class="form-select mb-3" onchange="fetchBookingVolumeData()">
@@ -173,7 +86,7 @@
         </div>
     </div>
     <div class="col-md-6 mb-4">
-        <div class="card">
+        <div class="card chart-card-height">
             <div class="card-body chart-container">
                 <h5>Revenue Distribution by Service Type</h5>
                 <canvas id="revenueDistributionChart"></canvas>
@@ -182,11 +95,10 @@
     </div>
 </div>
 
-
-    <!-- Booking Completion Rate & Calendar Row -->
-    <div class="row mt-4">
+<!-- Booking Completion Rate & Calendar Row -->
+<div class="row mt-4">
     <div class="col-md-6 mb-4">
-        <div class="card">
+        <div class="card chart-card-height">
             <div class="card-body chart-container">
                 <h5>Booking Completion Rate</h5>
                 <select id="completionTimeFrame" class="form-select mb-3">
@@ -200,10 +112,11 @@
         </div>
     </div>
     <div class="col-md-6 mb-4">
-    <div class="card">
-        <div class="card-body chart-container calendar-container">
-            <h5>Calendar</h5>
-            <div id="calendar"></div> <!-- Calendar container -->
+        <div class="card chart-card-height">
+            <div class="card-body chart-container calendar-container">
+                <h5>Calendar</h5>
+                <div id="calendar"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -266,6 +179,7 @@
 
 @endsection
 
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -308,15 +222,16 @@
     function initializeCharts() {
     const bookingVolumeCtx = document.getElementById('bookingVolumeChart').getContext('2d');
     bookingVolumeChart = new Chart(bookingVolumeCtx, {
-        type: 'line',
+        type: 'line', // Keep as 'line' but add fill for area effect
         data: {
-            labels: [],  // Update with actual data later
+            labels: [], // Update with actual data later
             datasets: [{
                 label: 'Bookings',
-                data: [],  // Update with actual data later
+                data: [], // Update with actual data later
                 borderColor: 'blue',
-                fill: false,
-                tension: 0.1
+                backgroundColor: 'rgba(0, 123, 255, 0.2)', // Set a semi-transparent fill color
+                fill: true, // Enables the area below the line
+                tension: 0.3 // Optional: adds a slight curve for smoothness
             }]
         },
         options: {
@@ -324,24 +239,23 @@
             maintainAspectRatio: false,
             plugins: {
                 datalabels: {
-                    display: true,  // Always display labels
+                    display: true, // Always display labels
                     color: 'black',
                     align: 'top',
                     font: {
                         weight: 'bold'
                     },
                     formatter: function(value, context) {
-                        return value;  // Show the value directly on each point
+                        return value; // Show the value directly on each point
                     }
                 }
             },
             tooltips: {
-                enabled: true,  // Enable tooltips on hover
+                enabled: true, // Enable tooltips on hover
                 mode: 'index',
                 intersect: false,
                 callbacks: {
                     label: function(tooltipItem, data) {
-                        // Display label and value in tooltip
                         let label = data.datasets[tooltipItem.datasetIndex].label || '';
                         if (label) {
                             label += ': ';
@@ -384,12 +298,12 @@
                         weight: 'bold'
                     },
                     formatter: function(value, context) {
-                        return value;  // Display value directly on pie slices
+                        return value; // Display value directly on pie slices
                     }
                 }
             },
             tooltips: {
-                enabled: true,  // Enable tooltips on hover
+                enabled: true,
                 callbacks: {
                     label: function(tooltipItem, data) {
                         let label = data.labels[tooltipItem.index] || '';
