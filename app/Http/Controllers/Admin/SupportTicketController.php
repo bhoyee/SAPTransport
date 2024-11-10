@@ -19,22 +19,70 @@ use App\Models\Notification;
 
 class SupportTicketController extends Controller
 {
-    // Display the list of support tickets
-    public function index()
-    {
-        Log::info('Fetching support tickets for admin.');
 
-        try {
-            $tickets = Contact::orderBy('updated_at', 'desc')->paginate(10); // Fetch support tickets
-            Log::info('Support tickets fetched successfully.', ['total_tickets' => $tickets->total()]);
-
-            return view('admin.support-tickets.index', compact('tickets'));
-        } catch (\Exception $e) {
-            Log::error('Failed to fetch support tickets: ' . $e->getMessage());
-            return redirect()->back()->withErrors('Failed to load support tickets.');
+        // Display the support tickets page
+        public function index()
+        {
+            return view('admin.support-tickets.index'); // No need to pass tickets here
         }
-    }
-
+    
+        // Fetch data for DataTable
+        public function getTicketsData(Request $request)
+        {
+            Log::info('getTicketsData called');
+        
+            try {
+                $query = Contact::query();
+        
+                // Server-side pagination and sorting parameters from DataTables
+                $totalRecords = $query->count();
+                $filteredRecords = $totalRecords;
+        
+                // Search filter if provided
+                if ($search = $request->input('search.value')) {
+                    $query->where('department', 'like', "%{$search}%")
+                          ->orWhere('subject', 'like', "%{$search}%")
+                          ->orWhere('ticket_num', 'like', "%{$search}%");
+                    $filteredRecords = $query->count();
+                }
+        
+                // Sorting and pagination
+                $start = $request->input('start', 0);
+                $length = $request->input('length', 10);
+                $query->skip($start)->take($length);
+        
+                // Execute the query
+                $tickets = $query->orderBy('updated_at', 'desc')->get();
+        
+                // Transform data for DataTable format
+                $data = $tickets->map(function ($ticket, $index) use ($start) {
+                    return [
+                        'id' => $start + $index + 1,
+                        'department' => ucfirst($ticket->department),
+                        'subject' => "<strong>#{$ticket->ticket_num}</strong><br><p>" . ($ticket->subject ?: ucfirst($ticket->category)) . "</p>",
+                        'status' => "<span class='badge " . ($ticket->status == 'open' ? 'bg-danger' : 'bg-success') . "'>" . ucfirst($ticket->status) . "</span>",
+                        'updated_at' => $ticket->updated_at->format('d M Y H:i'),
+                        'actions' => '<a href="'.route('admin.support-tickets.view', $ticket->id).'" class="btn btn-primary btn-sm">View</a>
+                                      <form action="'.route('admin.support-tickets.delete', $ticket->id).'" method="POST" class="d-inline-block">
+                                          '.csrf_field().method_field('DELETE').'
+                                          <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Are you sure you want to delete this ticket?\')">Delete</button>
+                                      </form>'
+                    ];
+                });
+        
+                return response()->json([
+                    'draw' => $request->input('draw'),
+                    'recordsTotal' => $totalRecords,
+                    'recordsFiltered' => $filteredRecords,
+                    'data' => $data
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to fetch support tickets: ' . $e->getMessage());
+                return response()->json(['error' => 'Failed to load support tickets.'], 500);
+            }
+        }
+        
+        
     // View a specific support ticket
     public function view($id)
     {

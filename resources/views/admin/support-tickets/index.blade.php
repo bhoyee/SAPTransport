@@ -9,7 +9,6 @@
 @section('title', 'Manage Support Tickets')
 
 @section('content')
-
 <h1 class="app-page-title">Manage Support Tickets</h1>
 <div class="container mt-5">
     <div class="card">
@@ -26,30 +25,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($tickets as $ticket)
-                    <tr>
-                        <td></td> <!-- Serial number will be added by DataTables -->
-                        <td>{{ ucfirst($ticket->department) }}</td>
-                        <td>
-                            <strong>#{{ $ticket->ticket_num }}</strong><br>
-                            <p>{{ $ticket->subject ?? ucfirst($ticket->category) }}</p>
-                        </td>
-                        <td>
-                            <span class="badge {{ $ticket->status == 'open' ? 'bg-danger' : 'bg-success' }}">
-                                {{ ucfirst($ticket->status) }}
-                            </span>
-                        </td>
-                        <td>{{ \Carbon\Carbon::parse($ticket->updated_at)->format('d M Y H:i') }}</td>
-                        <td>
-                            <a href="{{ route('admin.support-tickets.view', $ticket->id) }}" class="btn btn-primary btn-sm">View</a>
-                            <form action="{{ route('admin.support-tickets.delete', $ticket->id) }}" method="POST" class="d-inline-block">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this ticket?')">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                    @endforeach
+                    <!-- DataTables will populate this dynamically -->
                 </tbody>
             </table>
         </div>
@@ -59,26 +35,35 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function() {
-        let table = $('#tickets-table').DataTable({
-            responsive: true,
-            paging: true,
-            searching: true,
-            ordering: true,
-            lengthChange: true,
-            order: [[5, 'desc']], // Order by 'Last Updated'
-            columnDefs: [
-                { orderable: false, targets: 0 } // Disable ordering on the S/N column
-            ]
-        });
-
-        // Add serial numbers dynamically
-        table.on('order.dt search.dt', function () {
-            let start = table.page.info().start;
-            table.column(0, { order: 'applied' }).nodes().each(function (cell, i) {
-                cell.innerHTML = start + i + 1;
-            });
-        }).draw();
+$(document).ready(function() {
+    $('#tickets-table').DataTable({
+        responsive: true,
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{{ route('admin.support-tickets.data') }}",
+            type: "GET",
+            error: function(xhr, status, error) {
+                console.error('Error fetching support tickets data:', error);
+            }
+        },
+        columns: [
+            { data: 'id', name: 'id', orderable: false, searchable: false }, // Serial number
+            { data: 'department', name: 'department' },
+            { data: 'subject', name: 'subject', orderable: false },
+            { data: 'status', name: 'status', orderable: false },
+            { data: 'updated_at', name: 'updated_at' },
+            { data: 'actions', name: 'actions', orderable: false, searchable: false }
+        ],
+        order: [[4, 'desc']], // Order by 'Last Updated'
+        pageLength: 10,
+        lengthMenu: [5, 10, 15, 20],
     });
+
+    // Optional: Refresh data every 30 seconds
+    setInterval(function() {
+        $('#tickets-table').DataTable().ajax.reload(null, false);
+    }, 30000);
+});
 </script>
 @endpush
