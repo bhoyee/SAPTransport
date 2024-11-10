@@ -638,49 +638,56 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Function to update the bookings table
     function updateBookingsTable(bookings) {
-        const tableBody = document.querySelector('#recent-bookings tbody');
-        tableBody.innerHTML = '';  // Clear previous table rows
+    const tableBody = document.querySelector('#recent-bookings tbody');
+    tableBody.innerHTML = '';  // Clear previous table rows
 
-        if (bookings.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No recent bookings found.</td></tr>';
-            return;
-        }
-
-        bookings.forEach(booking => {
-            const bookingDate = new Date(booking.created_at).toLocaleDateString(); // Format the date
-            const isEditable = booking.status.toLowerCase() === 'pending';
-            const isCancelable = booking.status.toLowerCase() === 'pending';
-            const isExpired = booking.status.toLowerCase() === 'expired';
-
-            const bookingUrl = `/booking/${booking.id}/view`;
-            const editUrl = `/booking/${booking.id}/edit`;
-
-            const row = `
-                <tr>
-                    <td data-label="Booking Ref">${booking.booking_reference}</td>
-                    <td data-label="Booking Date">${bookingDate}</td>
-                    <td data-label="Service Type">${booking.service_type}</td>
-                    <td data-label="Status"><span class="badge ${getStatusClass(booking.status)}">${booking.status}</span></td>
-                    <td data-label="" class="button-group">
-                        <a class="btn btn-warning btn-sm ${!isEditable ? 'disabled' : ''}" href="${editUrl}" ${!isEditable ? 'aria-disabled="true"' : ''}>Edit</a>
-                        <button class="btn btn-danger btn-sm ${(!isCancelable || isExpired) ? 'disabled' : ''}" data-id="${booking.id}" type="button">Cancel</button>
-                        <a class="btn btn-primary btn-sm" href="${bookingUrl}">View</a>
-                    </td>
-                </tr>
-            `;
-            tableBody.innerHTML += row;
-        });
-
-        // Attach click event for cancel buttons
-        document.querySelectorAll('.btn-danger').forEach(button => {
-            button.addEventListener('click', function() {
-                bookingIdToCancel = this.getAttribute('data-id');
-                $('#cancelBookingModal').modal('show'); // Trigger modal on click
-            });
-        });
+    if (bookings.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No recent bookings found.</td></tr>';
+        return;
     }
+
+    bookings.forEach(booking => {
+        const bookingDate = new Date(booking.created_at).toLocaleDateString(); // Format the date
+        const isEditable = booking.status.toLowerCase() === 'pending';
+        const isCancelable = booking.status.toLowerCase() === 'pending';
+        const isExpired = booking.status.toLowerCase() === 'expired';
+        const isConfirmed = booking.status.toLowerCase() === 'confirmed';
+
+        // Combine pickup date and time
+        const pickupDateTime = new Date(`${booking.pickup_date}T${booking.pickup_time}`);
+        const now = new Date();
+        const within24Hours = (pickupDateTime - now) <= (24 * 60 * 60 * 1000); // Check if within 24 hours
+
+        const bookingUrl = `/passenger/booking/${booking.id}/view`;
+        const editUrl = `/passenger/booking/${booking.id}/edit`;
+
+        // Generate row for each booking
+        const row = `
+            <tr>
+                <td data-label="Booking Ref">${booking.booking_reference}</td>
+                <td data-label="Booking Date">${bookingDate}</td>
+                <td data-label="Service Type">${booking.service_type}</td>
+                <td data-label="Status"><span class="badge ${getStatusClass(booking.status)}">${booking.status}</span></td>
+                <td data-label="" class="button-group">
+                    <a class="btn btn-warning btn-sm ${!isEditable ? 'disabled' : ''}" href="${editUrl}" ${!isEditable ? 'aria-disabled="true"' : ''}>Edit</a>
+                    <button class="btn btn-danger btn-sm ${(!isCancelable && (!isConfirmed || within24Hours)) ? 'disabled' : ''}" data-id="${booking.id}" type="button">Cancel</button>
+                    <a class="btn btn-primary btn-sm" href="${bookingUrl}">View</a>
+                </td>
+            </tr>
+        `;
+        tableBody.innerHTML += row;
+    });
+
+    // Attach click event for cancel buttons
+    document.querySelectorAll('.btn-danger').forEach(button => {
+        button.addEventListener('click', function() {
+            bookingIdToCancel = this.getAttribute('data-id');
+            $('#cancelBookingModal').modal('show'); // Trigger modal on click
+        });
+    });
+}
+
 
     // Function to handle booking cancellation with spinner
     confirmCancelButton.addEventListener('click', function() {
@@ -689,30 +696,31 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmCancelButton.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Cancelling...";
             confirmCancelButton.disabled = true;
 
-            fetch(`/booking/cancel/${bookingIdToCancel}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    $('#cancelBookingModal').modal('hide');
-                    fetchRecentBookings(); // Refresh bookings list after cancellation
-                } else {
-                    alert('Failed to cancel booking. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error cancelling booking:', error);
-            })
-            .finally(() => {
-                // Reset button state after request completes
-                confirmCancelButton.innerHTML = "Yes, Cancel Booking";
-                confirmCancelButton.disabled = false;
-            });
+            fetch(`/passenger/booking/cancel/${bookingIdToCancel}`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    }
+})
+.then(response => response.json())
+.then(data => {
+    if (data.success) {
+        $('#cancelBookingModal').modal('hide');
+        fetchRecentBookings(); // Refresh bookings list after cancellation
+    } else {
+        alert('Failed to cancel booking. Please try again.');
+    }
+})
+.catch(error => {
+    console.error('Error cancelling booking:', error);
+})
+.finally(() => {
+    // Reset button state after request completes
+    confirmCancelButton.innerHTML = "Yes, Cancel Booking";
+    confirmCancelButton.disabled = false;
+});
+
         }
     });
 

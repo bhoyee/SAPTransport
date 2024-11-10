@@ -127,7 +127,7 @@
                 </div>
                 <div class="col-md-6 text-end">
                     <p><strong>Authorized Signature</strong></p>
-                    <img src="{{ asset('path-to-signature/signature.png') }}" alt="Signature" class="img-fluid" width="100">
+                    <img src="{{ asset('img/sign.png') }}" alt="Signature" class="img-fluid" width="100">
                 </div>
             </div>
 

@@ -70,8 +70,13 @@ Route::get('/contact', function () {
     return view('contact');
 });
 
-//check booking status
+
+// Route for checking booking reference status
 Route::post('/check-booking-status', [BookingController::class, 'checkStatus']);
+
+// Route::get('/get-booking-status', [BookingController::class, 'checkStatus'])->name('booking.status');
+
+Route::get('/get-booking-status', [BookingController::class, 'getBookingStatus'])->name('booking.status');
 
 
 // Registration Routes
@@ -132,7 +137,6 @@ Route::middleware(['auth', 'role:passenger'])->group(function () {
     Route::get('/passenger/activities', [PassengerHomeController::class, 'getUserActivities'])->name('passenger.activities');
 });
 
-Route::get('/get-booking-status', [BookingController::class, 'getBookingStatus'])->name('booking.status');
 
 
 // Admin Routes (Protected by Spatie's Role Middleware)
