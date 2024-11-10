@@ -156,24 +156,39 @@ $(document).ready(function() {
 
     // Restore user
     $('#deleted-users-table').on('click', '.restore-user-btn', function() {
-        let userId = $(this).data('user-id');
-        let button = $(this);
-        button.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Restoring...').prop('disabled', true);
+    let userId = $(this).data('user-id');
+    let button = $(this);
+    
+    // Confirm user ID is correctly passed
+    console.log('Restoring user with ID:', userId);
+    
+    button.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Restoring...').prop('disabled', true);
+    $.ajax({
+    url: "{{ route('admin.users.restore') }}",  // Ensure this matches the route name in web.php
+    method: 'POST',
+    data: { 
+        _token: '{{ csrf_token() }}', 
+        user_id: userId 
+    },
+    success: function(response) {
+        if (response.success) {
+            table.ajax.reload(null, false);
+            fetchTotalDeletedUsers();
+        } else {
+            alert('Failed to restore user: ' + response.message);
+        }
+    },
+    error: function(xhr, status, error) {
+        console.error('Error restoring user:', error);
+        alert('An error occurred while restoring the user.');
+    },
+    complete: function() {
+        button.html('Restore').prop('disabled', false);
+    }
+});
 
-        $.ajax({
-            url: "{{ route('admin.users.restore') }}",
-            method: 'POST',
-            data: { _token: '{{ csrf_token() }}', user_id: userId },
-            success: function(response) {
-                if (response.success) {
-                    table.ajax.reload(null, false);
-                    fetchTotalDeletedUsers();
-                } else { alert('Failed to restore user: ' + response.message); }
-            },
-            error: function(xhr, status, error) { console.error('Error restoring user:', error); alert('An error occurred while restoring the user.'); },
-            complete: function() { button.html('Restore').prop('disabled', false); }
-        });
-    });
+});
+
 });
 </script>
 @endpush
