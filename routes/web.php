@@ -294,6 +294,8 @@ Route::middleware(['auth', 'role:admin|consultant'])->group(function () {
     //create and manage users
     Route::post('users/report/pdf', [UserReportController::class, 'generatePDF'])->name('admin.users.report.pdf');   
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    //Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index'); // For AJAX loading
+
     Route::get('/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
     Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
     Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
@@ -305,7 +307,7 @@ Route::middleware(['auth', 'role:admin|consultant'])->group(function () {
     Route::post('/users/delete', [AdminUserController::class, 'delete'])->name('admin.users.delete');
     Route::post('/users/{user}/suspend', [AdminUserController::class, 'suspend'])->name('admin.users.suspend');
      //Route::get('/admin/users', [UserReportController::class, 'showUserManagementPage'])->name('admin.users.index');
-     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index'); // For AJAX loading
+    // Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index'); // For AJAX loading
      Route::get('/admin/users', [UserReportController::class, 'showUserManagementPage'])->name('admin.users.management'); // For user management page
      Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show'); // Add this route
 });
