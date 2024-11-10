@@ -339,11 +339,11 @@ class UserController extends Controller
     
     public function getDeletedUsers()
     {
-        Log::info('Fetching list of temporarily deleted users.');
+        Log::info('Fetching list of temporarily deleted users from user_deletes table.');
     
         try {
-            // Fetch deleted users from user_deletes table and join with users
-            $deletedUsers = UserDelete::leftJoin('users', 'user_deletes.user_id', '=', 'users.id')
+            $deletedUsers = \DB::table('user_deletes')
+                ->leftJoin('users', 'user_deletes.user_id', '=', 'users.id')
                 ->select(
                     'users.id',
                     'users.name',
@@ -352,7 +352,7 @@ class UserController extends Controller
                     'users.status',
                     'users.created_by',
                     'user_deletes.deleted_by',
-                    'user_deletes.deleted_at as updated_at'
+                    'user_deletes.deleted_at'
                 )
                 ->orderBy('user_deletes.deleted_at', 'desc')
                 ->get();
@@ -377,10 +377,11 @@ class UserController extends Controller
     
             return response()->json(['data' => $formattedUsers]);
         } catch (\Exception $e) {
-            Log::error('Error fetching deleted users list.', ['error' => $e->getMessage()]);
+            Log::error('Error fetching deleted users list from user_deletes table.', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => 'Error fetching deleted users list.'], 500);
         }
     }
+    
     
 
     public function permanentDelete(Request $request)
@@ -408,25 +409,31 @@ class UserController extends Controller
     public function restore(Request $request)
     {
         $userId = $request->input('user_id');
-        
+        \Log::info("Attempting to restore user with ID:", ['user_id' => $userId]);
+    
+        // Find the user in the users table
         $user = User::find($userId);
-        
+    
         if ($user && $user->status === 'deleted') {
             try {
-                $user->status = 'active'; // Update status to active
+                // Update user status back to active
+                $user->status = 'active';
                 $user->save();
-
+    
+                // Optional: Clean up the user_deletes table if needed
+                UserDelete::where('user_id', $userId)->delete();
+    
                 \Log::info("User restored successfully", ['user_id' => $userId]);
-
+    
                 return response()->json(['success' => true, 'message' => 'User restored successfully.']);
             } catch (\Exception $e) {
                 \Log::error('Error restoring user: ' . $e->getMessage(), ['user_id' => $userId]);
                 return response()->json(['success' => false, 'message' => 'An error occurred while restoring the user.'], 500);
             }
         }
-
+    
         return response()->json(['success' => false, 'message' => 'User not found or already active.'], 404);
     }
-
+    
 
 }
