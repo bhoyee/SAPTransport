@@ -120,44 +120,44 @@ class BookingController extends Controller
         return $response;
     }
     
-
     public function checkStatus(Request $request)
-    {
-        \Log::info('checkStatus method called.');
-        
-        $bookingReference = trim($request->input('booking_reference'));
-        \Log::info('Booking reference entered: ' . $bookingReference);
-    
-        // Check if the reference was properly received
-        if (empty($bookingReference)) {
-            \Log::error('No booking reference provided.');
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Booking reference is required.'
-            ]);
-        }
-    
-        // Search for the booking in the database using the reference number
-        $booking = Booking::where('booking_reference', $bookingReference)->first();
+{
+    \Log::info('checkStatus method called.');
 
-        if ($booking) {
-            return response()->json([
-                'status' => 'success',  // This must be present
-                'booking_reference' => $booking->booking_reference,
-                'service_type' => $booking->service_type,
-                'status' => $booking->status,
-                'date' => $booking->pickup_date,
-                'vehicle_type' => $booking->vehicle_type,
-            ]);
-        } else {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'No booking found with that reference number.'
-            ]);
-        }
-        
-        
+    $bookingReference = trim($request->input('booking_reference'));
+    \Log::info('Booking reference entered: ' . $bookingReference);
+
+    if (empty($bookingReference)) {
+        \Log::error('No booking reference provided.');
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Booking reference is required.'
+        ]);
     }
+
+    // Attempt to fetch the booking using the booking reference
+    $booking = Booking::where('booking_reference', $bookingReference)->first();
+
+    if ($booking) {
+        \Log::info('Booking found: ' . json_encode($booking));
+        return response()->json([
+            'status' => 'success',
+            'booking_reference' => $booking->booking_reference,
+            'service_type' => $booking->service_type,
+            'status' => $booking->status,
+            'date' => $booking->pickup_date,
+            'vehicle_type' => $booking->vehicle_type,
+        ]);
+    } else {
+        \Log::info('No booking found with reference: ' . $bookingReference);
+        return response()->json([
+            'status' => 'error',
+            'message' => 'No booking found with that reference number.'
+        ]);
+    }
+}
+
+    
     
     public function cancelBooking(Request $request, $id)
     {

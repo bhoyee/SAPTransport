@@ -55,93 +55,99 @@
 
 <script>
 $(document).ready(function() {
-    let bookingIdToCancel = null; // To store the ID of the booking to be canceled
+    let bookingIdToCancel = null;
 
-    // Manually fetch the data and render the table
-    $.ajax({
-        url: "{{ route('my-bookings') }}",
-        type: 'GET',
-        success: function(response) {
-            console.log('Received response:', response);
+    function fetchAndRenderBookings() {
+        $.ajax({
+            url: "{{ route('my-bookings') }}",
+            type: 'GET',
+            success: function(response) {
+                if (response && response.data) {
+                    // Clear and destroy existing DataTable instance for a fresh render
+                    $('#bookings-table').DataTable().clear().destroy();
+                    $('#bookings-table tbody').empty();
 
-            if (response && response.data) {
-                // Clear the table before appending data
-                $('#bookings-table tbody').empty();
+                    let bookings = response.data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
-                // Sort bookings by updated_at in descending order (most recent first)
-                let bookings = response.data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+                    bookings.forEach(function(booking, index) {
+                        let bookingDate = moment(booking.created_at).format('D MMM, YYYY');
+                        let pickupDate = moment(booking.pickup_date).format('D MMM, YYYY');
+                        let updatedDate = moment(booking.updated_at).format('D MMM, YYYY');
 
-                // Loop through the sorted bookings data and construct table rows
-                bookings.forEach(function(booking, index) {
-                    // Format dates using moment.js
-                    let bookingDate = moment(booking.created_at).format('D MMM, YYYY');
-                    let pickupDate = moment(booking.pickup_date).format('D MMM, YYYY');
-                    let updatedDate = moment(booking.updated_at).format('D MMM, YYYY');
+                        let badgeClass = booking.status === 'completed' ? 'success' :
+                                         booking.status === 'pending' ? 'warning' :
+                                         booking.status === 'cancelled' ? 'danger' :
+                                         booking.status === 'confirmed' ? 'info' :
+                                         booking.status === 'expired' ? 'secondary' : 'primary';
 
-                    // Define status badge
-                    let badgeClass = booking.status === 'completed' ? 'success' :
-                                     booking.status === 'pending' ? 'warning' :
-                                     booking.status === 'cancelled' ? 'danger' :
-                                     booking.status === 'expired' ? 'secondary' : 'primary';
+                        // Calculate real-time conditions
+                        const now = new Date();
+                        const pickupDateTime = new Date(`${booking.pickup_date}T${booking.pickup_time}`);
+                        const within24Hours = (pickupDateTime - now) <= (24 * 60 * 60 * 1000);
+                        const isPending = booking.status.toLowerCase() === 'pending';
+                        const isConfirmed = booking.status.toLowerCase() === 'confirmed';
 
-                    // Construct the action buttons
-                    let actionButtons = `
-                        <a href="/passenger/booking/${booking.id}/edit" class="btn btn-warning btn-sm">Edit</a>
-                        <a href="/passenger/booking/${booking.id}/view" class="btn btn-primary btn-sm">View</a>
-                    `;
+                        // Determine action button states
+                        let editDisabled = isConfirmed || !isPending;
+                        let cancelDisabled = !(isPending || (isConfirmed && !within24Hours));
 
-                    // Only show the Cancel button if the status is "pending"
-                    if (booking.status === 'pending') {
-                        actionButtons += `<button class="btn btn-danger btn-sm" data-id="${booking.id}" type="button" data-bs-toggle="modal" data-bs-target="#cancelBookingModal">Cancel</button>`;
-                    }
+                        // Construct action buttons with real-time conditions
+                        let actionButtons = `
+                            <a href="/passenger/booking/${booking.id}/edit" class="btn btn-warning btn-sm ${editDisabled ? 'disabled' : ''}" ${editDisabled ? 'aria-disabled="true"' : ''}>Edit</a>
+                            <a href="/passenger/booking/${booking.id}/view" class="btn btn-primary btn-sm">View</a>
+                            <button class="btn btn-danger btn-sm ${cancelDisabled ? 'disabled' : ''}" data-id="${booking.id}" type="button" ${cancelDisabled ? 'aria-disabled="true"' : ''}>Cancel</button>
+                        `;
 
-                    // Construct the table row HTML with S/N and Action buttons
-                    let rowHtml = `
-                        <tr>
-                            <td>${index + 1}</td> <!-- Serial Number based on updated_at ordering -->
-                            <td>${booking.booking_reference}</td>
-                            <td>${bookingDate}</td>
-                            <td>${booking.service_type}</td>
-                            <td>${pickupDate}</td>
-                            <td><span class="badge bg-${badgeClass}">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span></td>
-                            <td>${updatedDate}</td>
-                            <td>${actionButtons}</td> <!-- Action Buttons (Edit, View, and Cancel) -->
-                        </tr>`;
+                        // Construct the table row HTML
+                        let rowHtml = `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${booking.booking_reference}</td>
+                                <td>${bookingDate}</td>
+                                <td>${booking.service_type}</td>
+                                <td>${pickupDate}</td>
+                                <td><span class="badge bg-${badgeClass}">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span></td>
+                                <td>${updatedDate}</td>
+                                <td>${actionButtons}</td>
+                            </tr>`;
 
-                    // Append the row to the table body
-                    $('#bookings-table tbody').append(rowHtml);
-                });
+                        $('#bookings-table tbody').append(rowHtml);
+                    });
 
-                // Initialize DataTable after data is appended, and sort by updated_at
-                $('#bookings-table').DataTable({
-                    responsive: true,
-                    paging: true,
-                    searching: true,
-                    ordering: false,  // Disable DataTable's internal ordering since we are manually sorting
-                    lengthChange: true,
-                });
-            } else {
-                console.warn('No data found in the response');
+                    // Reinitialize DataTable to refresh the table with updated data and buttons
+                    $('#bookings-table').DataTable({
+                        responsive: true,
+                        paging: true,
+                        searching: true,
+                        ordering: false,
+                        lengthChange: true,
+                    });
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Error fetching data:', textStatus, errorThrown);
             }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.error('Error fetching data:', textStatus, errorThrown);
-        }
-    });
+        });
+    }
+
+    // Fetch and render bookings initially
+    fetchAndRenderBookings();
+
+    // Refresh bookings every minute for real-time updates
+    setInterval(fetchAndRenderBookings, 60000); // 60,000 ms = 1 minute
 
     // Handle booking cancellation button click
     $('#bookings-table').on('click', '.btn-danger', function() {
-        bookingIdToCancel = $(this).data('id'); // Get the booking ID from the button's data-id attribute
+        bookingIdToCancel = $(this).data('id');
         var cancelModal = new bootstrap.Modal(document.getElementById('cancelBookingModal'));
-        cancelModal.show(); // Show the modal using Bootstrap 5's native modal function
+        cancelModal.show();
     });
 
     // Confirm cancellation action
     $('#confirmCancelButton').on('click', function() {
         if (bookingIdToCancel) {
             $(this).prop('disabled', true).html("<i class='fas fa-spinner fa-spin'></i> Cancelling...");
-            
-            // Make the POST request to cancel the booking
+
             fetch(`/passenger/booking/cancel/${bookingIdToCancel}`, {
                 method: 'POST',
                 headers: {
@@ -156,10 +162,9 @@ $(document).ready(function() {
                 return response.json();
             })
             .then(data => {
-                console.log('Received response:', data);
                 if (data.success) {
                     $('#cancelBookingModal').modal('hide');
-                    location.reload(); // Refresh the page to reflect the cancellation
+                    fetchAndRenderBookings(); // Refresh bookings list after cancellation
                 } else {
                     console.error('Failed to cancel booking:', data);
                 }
@@ -173,6 +178,7 @@ $(document).ready(function() {
         }
     });
 });
-
 </script>
+
 @endpush
+

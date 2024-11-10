@@ -575,7 +575,6 @@
 
         //checking the booking button status 
 // Function to check booking status and update UI
-// Function to check booking status and update UI for both buttons
 function checkBookingStatus() {
     console.log("Checking booking status...");
     fetch('/get-booking-status')
@@ -588,39 +587,21 @@ function checkBookingStatus() {
         .then(data => {
             console.log("Booking status received:", data);
 
-            // Select the buttons by their IDs
             const submitButton = document.getElementById('submit-btn');
             const chSubmitButton = document.getElementById('ch-submit-btn');
 
-            // Update the buttons' state and text based on the booking status
             if (data.status === 'closed') {
-                if (submitButton) {
-                    submitButton.disabled = true;
-                    submitButton.innerHTML = 'No booking at the moment';
-                }
-                if (chSubmitButton) {
-                    chSubmitButton.disabled = true;
-                    chSubmitButton.innerHTML = 'No booking at the moment';
-                }
-                
-                // Show modal if not already shown
-                if (!$('#noBookingModal').hasClass('show')) {
-                    $('#noBookingModal').modal('show');
-                }
+                submitButton.disabled = true;
+                chSubmitButton.disabled = true;
+                submitButton.innerHTML = 'No booking at the moment';
+                chSubmitButton.innerHTML = 'No booking at the moment';
+                $('#noBookingModal').modal('show');
             } else if (data.status === 'open') {
-                if (submitButton) {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = 'Proceed';
-                }
-                if (chSubmitButton) {
-                    chSubmitButton.disabled = false;
-                    chSubmitButton.innerHTML = 'Proceed';
-                }
-                
-                // Hide modal if it is shown
-                if ($('#noBookingModal').hasClass('show')) {
-                    $('#noBookingModal').modal('hide');
-                }
+                submitButton.disabled = false;
+                chSubmitButton.disabled = false;
+                submitButton.innerHTML = 'Proceed';
+                chSubmitButton.innerHTML = 'Proceed';
+                $('#noBookingModal').modal('hide');
             }
         })
         .catch(error => {
@@ -628,12 +609,8 @@ function checkBookingStatus() {
         });
 }
 
-// Poll the server every 5 seconds
 setInterval(checkBookingStatus, 5000);
-
-// Initial check on page load
 checkBookingStatus();
-
 
 
     // Show booking success modal if booking reference exists in session
@@ -723,67 +700,65 @@ checkBookingStatus();
     handleFormSubmission(document.getElementById('charter-form'), document.getElementById('ch-submit-btn'), "{{ route('booking.store') }}");
 
     // Booking Status AJAX submission
-    const bookStatusForm = document.getElementById('booking-status-form');
-    const bookSubmitBtn = document.getElementById('bk-submit-btn');
+     // Booking Status AJAX submission
+   // Booking Status AJAX submission
+const bookStatusForm = document.getElementById('booking-status-form');
+const bookSubmitBtn = document.getElementById('bk-submit-btn');
 
-    if (bookStatusForm) {
-        bookStatusForm.addEventListener('submit', function (event) {
-            event.preventDefault();
+if (bookStatusForm) {
+    bookStatusForm.addEventListener('submit', function (event) {
+        event.preventDefault();
 
-            // Reset previous modal content
-            document.getElementById('booking-status-details').innerHTML = "";
+        // Reset previous modal content
+        document.getElementById('booking-status-details').innerHTML = "";
 
-            const bookingReference = document.getElementById('booking-reference').value;
+        const bookingReference = document.getElementById('booking-reference').value.trim();
+        console.log('Submitting booking reference:', bookingReference);
 
-            console.log('Submitting booking reference:', bookingReference);
+        bookSubmitBtn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Processing...";
+        bookSubmitBtn.disabled = true;
 
-            bookSubmitBtn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Processing...";
-            bookSubmitBtn.disabled = true;
+        fetch('/check-booking-status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: JSON.stringify({ booking_reference: bookingReference }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Data received:', data);
 
-            fetch('/check-booking-status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                },
-                body: JSON.stringify({ booking_reference: bookingReference }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Response received: ', data);
+            // Display booking details if any status other than 'error' is received
+            if (data.status !== 'error') {
+                const bookingDetails = `
+                    <p><strong>Booking Reference:</strong> ${data.booking_reference}</p>
+                    <p><strong>Booking Status:</strong> ${data.status}</p>
+                    <p><strong>Service Type:</strong> ${data.service_type}</p>
+                    <p><strong>Pickup/Drop-off Date:</strong> ${data.date}</p>
+                    <p><strong>Vehicle Type:</strong> ${data.vehicle_type}</p>
+                `;
+                document.getElementById('booking-status-details').innerHTML = bookingDetails;
+                $('#bookingStatusModal').modal('show');
+            } else {
+                // Show error if status is 'error'
+                document.getElementById('booking-status-details').innerHTML = '<p>No such booking reference number found.</p>';
+                $('#bookingStatusModal').modal('show');
+            }
 
-                // Response status is "success"
-                if (data.status === 'success' || data.status === 'pending') {
-                    // Populate the modal with the actual booking details
-                    const bookingDetails = `
-                        <p><strong>Booking Reference:</strong> ${data.booking_reference}</p>
-                        <p><strong>Booking Status:</strong> ${data.status}</p> <!-- Now using data.status to show booking status -->
-                        <p><strong>Service Type:</strong> ${data.service_type}</p>
-                        <p><strong>Pickup/Drop-off Date:</strong> ${data.date}</p>
-                        <p><strong>Vehicle Type:</strong> ${data.vehicle_type}</p>
-                    `;
-                    document.getElementById('booking-status-details').innerHTML = bookingDetails;
-
-                    // Show the modal using jQuery
-                    $('#bookingStatusModal').modal('show');
-
-                } else {
-                    // Handle error: No such booking reference number found
-                    document.getElementById('booking-status-details').innerHTML = '<p>No such booking reference number found.</p>';
-                    $('#bookingStatusModal').modal('show');
-                }
-
-                bookSubmitBtn.innerHTML = "Check Status";
-                bookSubmitBtn.disabled = false;
-            })
-            .catch(error => {
-                console.error('Error during fetch request:', error);
-                bookSubmitBtn.innerHTML = "Check Status";
-                bookSubmitBtn.disabled = false;
-            });
+            bookSubmitBtn.innerHTML = "Check Status";
+            bookSubmitBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error during fetch request:', error);
+            document.getElementById('booking-status-details').innerHTML = '<p>An error occurred. Please try again.</p>';
+            $('#bookingStatusModal').modal('show');
+            bookSubmitBtn.innerHTML = "Check Status";
+            bookSubmitBtn.disabled = false;
         });
-    }
-
+    });
+}
 
     // Airport Pickup and Drop-off toggle logic
     const toggleTripType = (btn1, btn2, showElement, hideElement, tripTypeValue) => {
