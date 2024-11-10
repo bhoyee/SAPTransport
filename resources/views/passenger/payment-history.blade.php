@@ -92,17 +92,23 @@
                     let badgeClass = data === 'paid' ? 'success' : data === 'refund-pending' ? 'warning' : data === 'refunded' ? 'info' : 'danger';
                     return `<span class="badge bg-${badgeClass}">${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
                 }},
-                { data: null, render: function(data, type, row) {
-                    let actions = `
-                        <a href="{{ route('booking.view', ['id' => row.booking.id]) }}" class="btn btn-primary btn-sm">View</a>
+                { 
+                    data: null, 
+                    render: function(data, type, row) {
+                        // Create the URL dynamically in JavaScript for the View button
+                        let viewUrl = `/passenger/booking/${row.booking.id}/view`; // Adjust URL as needed
+                        let actions = `
+                            <a href="${viewUrl}" class="btn btn-primary btn-sm">View</a>
+                        `;
 
-                    `;
-                    if (row.status === 'paid') {
-                        actions += `<button class="btn btn-danger btn-sm" onclick="showRefundModal('${row.id}')">Request Refund</button>`;
+                        if (row.status === 'paid') {
+                            actions += `<button class="btn btn-danger btn-sm" onclick="showRefundModal('${row.id}')">Request Refund</button>`;
+                        }
+                        return actions;
                     }
-                    return actions;
-                }}
+                }
             ]
+
         });
 
         // Function to show the refund modal

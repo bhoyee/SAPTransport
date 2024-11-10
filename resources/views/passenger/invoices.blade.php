@@ -43,7 +43,7 @@
             responsive: true,
             paging: true,
             searching: true,
-            ordering: false,  // Disable ordering because we will sort manually by updated_at
+            ordering: true,  // Disable ordering because we will sort manually by updated_at
             lengthChange: true,
             ajax: {
                 url: "{{ route('invoices.index') }}", // URL to fetch the data
