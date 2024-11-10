@@ -199,7 +199,13 @@ class ContactController extends Controller
         }
     }
     
-    
+    public function createTicketForm()
+{
+    $user = Auth::user(); // Fetch the logged-in user's information
+
+    return view('passenger.create-ticket', compact('user')); // Adjust the view path if necessary
+}
+
     
     // Handle contact form submission
     public function submit(Request $request)

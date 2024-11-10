@@ -94,7 +94,8 @@
                 }},
                 { data: null, render: function(data, type, row) {
                     let actions = `
-                        <a href="/booking/view/${row.booking.id}" class="btn btn-primary btn-sm">View</a>
+                        <a href="{{ route('booking.view', ['id' => row.booking.id]) }}" class="btn btn-primary btn-sm">View</a>
+
                     `;
                     if (row.status === 'paid') {
                         actions += `<button class="btn btn-danger btn-sm" onclick="showRefundModal('${row.id}')">Request Refund</button>`;
