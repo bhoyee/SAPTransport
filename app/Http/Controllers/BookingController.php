@@ -92,12 +92,25 @@ class BookingController extends Controller
     
             \Log::info('Attempting to send email to: ' . $user->email);
     
-            // Send the confirmation email
+            // Send the confirmation email to the user
             try {
                 Mail::to($user->email)->send(new BookingConfirmation($booking, $user, $booking->status));
                 \Log::info('Email sent successfully.');
             } catch (\Exception $e) {
                 \Log::error('Failed to send email: ' . $e->getMessage());
+            }
+
+            // Send notification email to admin
+            try {
+                $adminEmail = config('mail.admin_email'); // Assuming admin email is defined in .env
+                if ($adminEmail) {
+                    Mail::to($adminEmail)->send(new BookingAdminNotification($booking, $user));
+                    \Log::info('Email sent successfully to admin.');
+                } else {
+                    \Log::warning('Admin email not set in .env.');
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send email to admin: ' . $e->getMessage());
             }
     
             // Log the successful booking completion
@@ -121,41 +134,41 @@ class BookingController extends Controller
     }
     
     public function checkStatus(Request $request)
-{
-    \Log::info('checkStatus method called.');
+    {
+        \Log::info('checkStatus method called.');
 
-    $bookingReference = trim($request->input('booking_reference'));
-    \Log::info('Booking reference entered: ' . $bookingReference);
+        $bookingReference = trim($request->input('booking_reference'));
+        \Log::info('Booking reference entered: ' . $bookingReference);
 
-    if (empty($bookingReference)) {
-        \Log::error('No booking reference provided.');
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Booking reference is required.'
-        ]);
+        if (empty($bookingReference)) {
+            \Log::error('No booking reference provided.');
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Booking reference is required.'
+            ]);
+        }
+
+        // Attempt to fetch the booking using the booking reference
+        $booking = Booking::where('booking_reference', $bookingReference)->first();
+
+        if ($booking) {
+            \Log::info('Booking found: ' . json_encode($booking));
+            return response()->json([
+                'status' => 'success',
+                'booking_reference' => $booking->booking_reference,
+                'service_type' => $booking->service_type,
+                'status' => $booking->status,
+                'date' => $booking->pickup_date,
+                'vehicle_type' => $booking->vehicle_type,
+            ]);
+        } else {
+            \Log::info('No booking found with reference: ' . $bookingReference);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No booking found with that reference number.'
+            ]);
+        }
     }
-
-    // Attempt to fetch the booking using the booking reference
-    $booking = Booking::where('booking_reference', $bookingReference)->first();
-
-    if ($booking) {
-        \Log::info('Booking found: ' . json_encode($booking));
-        return response()->json([
-            'status' => 'success',
-            'booking_reference' => $booking->booking_reference,
-            'service_type' => $booking->service_type,
-            'status' => $booking->status,
-            'date' => $booking->pickup_date,
-            'vehicle_type' => $booking->vehicle_type,
-        ]);
-    } else {
-        \Log::info('No booking found with reference: ' . $bookingReference);
-        return response()->json([
-            'status' => 'error',
-            'message' => 'No booking found with that reference number.'
-        ]);
-    }
-}
 
     
     

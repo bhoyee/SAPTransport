@@ -164,7 +164,7 @@
                     <a href="{{ route('passenger.makepayments') }}" class="btn btn-secondary">Close</a>
                 @else
                     <!-- Disable Edit Button if booking status is 'cancelled', 'completed', or 'expired' -->
-                    @if (in_array($booking->status, ['cancelled', 'completed', 'expired']))
+                    @if (in_array($booking->status, ['cancelled', 'completed', 'confirmed', 'expired']))
                         <button class="btn btn-warning" disabled>Edit Booking</button>
                     @else
                         <a href="{{ route('booking.edit', $booking->id) }}" class="btn btn-warning">Edit Booking</a>
