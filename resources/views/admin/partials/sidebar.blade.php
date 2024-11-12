@@ -177,7 +177,9 @@
 								<li class="submenu-item">
 									<a class="submenu-link" href="{{ route('admin.bookings.confirm-search') }}">Confirm Booking</a>
 								</li>
-				
+								<li class="submenu-item">
+									<a class="submenu-link" href="{{ route('admin.bookings.assign-driver') }}">Assign Driver</a> 
+								</li>
 
 
                                 </ul>

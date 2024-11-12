@@ -17,6 +17,7 @@ use App\Mail\BookingAdminNotification;
 use App\Mail\BookingCancellationAdminNotification;
 use App\Mail\BookingCancellation;
 use App\Models\Setting;
+use App\Mail\BookingUpdateMail;
 
 class BookingController extends Controller
 {
@@ -289,5 +290,77 @@ class BookingController extends Controller
         return response()->json(['status' => 'unknown'], 404);
     }
     
+
+    public function showAssignDriverPage()
+    {
+        // Simply load the view without any booking dependency
+        return view('admin.bookings.assign-driver'); 
+    }
     
+    public function searchBookingByReference(Request $request)
+    {
+        $bookingRef = $request->input('booking_ref');
+        $booking = Booking::where('booking_reference', $bookingRef)->first();
+    
+        if (!$booking) {
+            return redirect()->route('admin.bookings.assign-driver')->with('error', 'Booking not found.');
+        }
+    
+        // Pass the booking to the assign-driver view
+        return view('admin.bookings.assign-driver', compact('booking'));
+    }
+    
+
+    public function assignDriver(Request $request, $id)
+    {
+        $request->validate([
+            'driver_name' => 'required|string|max:255',
+            'vehicle_details' => 'required|string|max:255',
+        ]);
+    
+        $booking = Booking::findOrFail($id);
+    
+        // Update booking with driver information
+        $booking->update([
+            'driver_name' => $request->driver_name,
+            'vehicle_details' => $request->vehicle_details,
+        ]);
+
+
+         // Set a session flash message to indicate that the driver was just assigned
+        session()->flash('driver_assigned', true);
+    
+        // Notify the passenger and admins
+        $passenger = $booking->user;
+        Mail::to($passenger->email)->send(new BookingUpdateMail($booking));
+
+                // Create push notification for the passenger
+                Notification::create([
+                    'user_id' => $passenger->id,
+                    'message' => 'Your booking (Reference: ' . $booking->booking_reference . ') has been updated with driver details. Driver: ' . $request->driver_name . ', Vehicle: ' . $request->vehicle_details,
+                    'type' => 'booking',
+                    'status' => 'unread',
+                    'related_user_name' => $request->driver_name,
+                ]);
+    
+        // Notify all admins
+        $adminUsers = User::role(['admin'])->get();
+        foreach ($adminUsers as $admin) {
+            Notification::create([
+                'user_id' => $admin->id,
+                'message' => 'Booking (Reference: ' . $booking->booking_reference . ') has been assigned to driver ' . $request->driver_name . ' with vehicle details: ' . $request->vehicle_details,
+                'type' => 'booking',
+                'status' => 'unread',
+                'related_user_name' => $request->driver_name,
+            ]);
+            \Log::info("Notification sent to admin ID: {$admin->id}");
+        }
+    
+        return redirect()->route('admin.bookings.assign-driver-search', ['booking_ref' => $booking->booking_reference])
+            ->with('success', 'Driver assigned and passenger notified successfully.');
+    }
+    
+
+
+
 }

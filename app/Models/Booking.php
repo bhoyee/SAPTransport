@@ -29,7 +29,8 @@ class Booking extends Model
         'trip_type', 
 
         'status', 
-
+        'driver_name',
+        'vehicle_details',
         'airport_name', 
 
         'vehicle_type', 
