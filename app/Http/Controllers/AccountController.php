@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Models\User;
+
 
 class AccountController extends Controller
 {
@@ -18,11 +20,6 @@ class AccountController extends Controller
     public function updateAccount(Request $request)
     {
         $user = Auth::user();
-    
-        // Ensure only passengers can update this account
-        // if (!$user->hasRole('passenger')) {
-        //     return redirect()->route('home')->with('error', 'You do not have permission to update this account.');
-        // }
     
         // Validate input
         $validator = Validator::make($request->all(), [
@@ -48,14 +45,23 @@ class AccountController extends Controller
             $user->profile_image = $fileName;
         }
     
-        // Update phone
-        if ($request->input('phone')) {
-            $user->phone = $request->input('phone');
+        // Update phone with unique check
+        $newPhone = $request->input('phone');
+        if ($newPhone && $newPhone !== $user->phone) {
+            // Check if the new phone number already exists in the database
+            $existingPhone = User::where('phone', $newPhone)->where('id', '!=', $user->id)->exists();
+            if ($existingPhone) {
+                return redirect()->back()->with('error', 'The phone number already exists. Please choose a different number.');
+            }
+    
+            // If unique, update the user's phone number
+            $user->phone = $newPhone;
         }
     
         $user->save();
     
         return redirect()->back()->with('success', 'Profile updated successfully!');
     }
+    
     
 }
