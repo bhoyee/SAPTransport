@@ -49,22 +49,33 @@
 <!-- CSS for consistent height -->
 <style>
 .chart-card-height {
-    height: 420px; /* Adjust the height as needed */
+    height: 400px; /* Adjust the height as needed */
 }
 
-.chart-container, .calendar-container {
-    padding: 1rem;
-    overflow: hidden;
-}
+.chart-container {
+        position: relative;
+        padding: 20px; /* Add padding around the chart for axes visibility */
+    }
 
-#bookingVolumeChart, #revenueDistributionChart, #bookingCompletionRateChart, #calendar {
+
+
+#bookingVolumeChart, #revenueDistributionChart,  #calendar {
     width: 90% !important;
-    height: 90% !important;
+    height: 95% !important;
+}
+#bookingCompletionRateChart {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.chart-container {
+    height: 400px; /* Increase height for more space */
+    padding-bottom: 30px; /* Extra padding for bottom axis */
 }
 
 #calendar{
     width: 100% !important;
-    height: 95% !important;
+    height: 85% !important;
     font-size: smaller;
 }
 </style>
@@ -370,22 +381,55 @@ function initializeCompletionRateChart() {
     bookingCompletionRateChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Cancelled', 'Confirmed', 'Completed'], // Add 'Confirmed' to the labels
+            labels: ['Cancelled', 'Confirmed', 'Completed'],
             datasets: [{
                 label: 'Booking Status',
-                data: [0, 0, 0], // Include an initial zero for 'Confirmed'
-                backgroundColor: [ '#F44336', '#2196F3','#4CAF50'], // Different colors for each status
+                data: [0, 0, 0],
+                backgroundColor: ['#F44336', '#2196F3', '#4CAF50']
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false, // Allow chart to adjust to container
+            layout: {
+                padding: {
+                    top: 20,
+                    right: 20,
+                    bottom: 40, // Extra padding for bottom axis
+                    left: 20
+                }
+            },
             scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Booking Status',
+                        font: {
+                            size: 14
+                        }
+                    },
+                    ticks: {
+                        maxRotation: 0,
+                        minRotation: 0
+                    }
+                },
                 y: {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Number of Bookings'
+                        text: 'Number of Bookings',
+                        font: {
+                            size: 14
+                        }
+                    },
+                    ticks: {
+                        stepSize: 1
                     }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false // Hide legend if it overlaps with the chart
                 }
             }
         }
@@ -393,16 +437,19 @@ function initializeCompletionRateChart() {
 }
 
 
-    function fetchBookingCompletionRateData() {
-    const timeFrame = document.getElementById('completionTimeFrame').value; // assuming there's a dropdown with id 'completionTimeFrame'
+
+function fetchBookingCompletionRateData() {
+    const timeFrame = document.getElementById('completionTimeFrame').value;
     fetch(`/admin/booking-completion-rate-data?timeFrame=${timeFrame}`)
         .then(response => response.json())
         .then(data => {
-            bookingCompletionRateChart.data.datasets[0].data = [data.confirmed, data.cancelled, data.completed];
+            // Update the chart data in the correct order
+            bookingCompletionRateChart.data.datasets[0].data = [data.cancelled, data.confirmed, data.completed];
             bookingCompletionRateChart.update();
         })
         .catch(error => console.error('Error fetching booking completion rate data:', error));
 }
+
 
 
 // Event listener to update chart when dropdown changes
