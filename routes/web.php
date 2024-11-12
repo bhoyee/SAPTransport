@@ -432,6 +432,16 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|consultant'])->group(fun
     Route::get('/message/{id}/view', [BroadcastController::class, 'viewMessage'])->name('admin.message.view');
 
 
+
+
+// Route to open the driver assignment search page
+Route::get('/bookings/assign-driver', [BookingController::class, 'showAssignDriverPage'])->name('admin.bookings.assign-driver');
+Route::get('/bookings/assign-driver-search', [BookingController::class, 'searchBookingByReference'])->name('admin.bookings.assign-driver-search');
+
+// In web.php
+Route::get('/bookings/assign-driver', [BookingController::class, 'showAssignDriverPage'])->name('admin.bookings.assign-driver');
+Route::post('/bookings/assign-driver/{id}', [BookingController::class, 'assignDriver'])->name('admin.bookings.assign-driver.update');
+
 });
 
 
