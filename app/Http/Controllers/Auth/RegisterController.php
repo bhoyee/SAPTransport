@@ -28,6 +28,8 @@ class RegisterController extends Controller
 
         // Check if the user already exists based on email
         $existingUser = User::where('email', $request->email)->first();
+        $existingUserByPhone = User::where('phone', $request->phone)->first();
+
 
         if ($existingUser) {
             Log::info('User with this email already exists', ['email' => $request->email]);
@@ -37,6 +39,12 @@ class RegisterController extends Controller
 
             // Flash a session error message and redirect back
             return redirect()->back()->with('error', 'A user with this email address already exists.');
+        }
+
+        if ($existingUserByPhone) {
+            Log::info('User with this phone number already exists', ['phone' => $request->phone]);
+            ActivityLogger::log('Registration Failed', 'A user with this phone number already exists: ' . $request->phone);
+            return redirect()->back()->with('error', 'A user with this phone number already exists.');
         }
 
         // Validate the form data
