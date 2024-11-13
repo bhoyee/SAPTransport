@@ -291,15 +291,14 @@ class AdminBookingController extends Controller
                     'pickup_address' => 'nullable|string|max:255',
                     'dropoff_address' => 'nullable|string|max:255',
                     'pickup_date' => 'required|date',
-                    'pickup_time' => 'required|date_format:H:i',  // Using 'H:i' format here
+                    'pickup_time' => 'required|date_format:H:i',
                     'number_adults' => 'required|integer|min:1',
                     'number_children' => 'nullable|integer|min:0',
                     'return_pickup_date' => 'nullable|date',
-                    'return_pickup_time' => 'nullable|date_format:H:i',  // Using 'H:i' format here
-                    'status' => 'nullable|string|in:pending,expired,confirmed,cancelled,completed', // Validate the status
-
-
-
+                    'return_pickup_time' => 'nullable|date_format:H:i',
+                    'status' => 'nullable|string|in:pending,expired,confirmed,cancelled,completed',
+                    'driver_name' => 'nullable|string|max:255', // Optional driver name
+                    'vehicle_details' => 'nullable|string|max:255', // Optional vehicle details
                 ]);
         
                 // Handle nullification of pickup and dropoff address based on trip type
@@ -312,8 +311,8 @@ class AdminBookingController extends Controller
                     $dropoff_address = null; // Clear dropoff address for airport drop-off
                 }
         
-                // Update the booking with the new values
-                $booking->update([
+                // Prepare the data to be updated
+                $updateData = [
                     'service_type' => $request->input('service_type'),
                     'trip_type' => $request->input('trip_type'),
                     'airport_name' => $request->input('airport_name'),
@@ -321,22 +320,31 @@ class AdminBookingController extends Controller
                     'pickup_address' => $pickup_address,
                     'dropoff_address' => $dropoff_address,
                     'pickup_date' => $request->input('pickup_date'),
-                    'pickup_time' => $request->input('pickup_time'),  // Time without seconds
+                    'pickup_time' => $request->input('pickup_time'),
                     'number_adults' => $request->input('number_adults'),
                     'number_children' => $request->input('number_children'),
                     'return_pickup_date' => $request->input('return_pickup_date'),
-                    'return_pickup_time' => $request->input('return_pickup_time'),  // Time without seconds
-                    'updated_by' => auth()->user()->email, // Track who updated the booking
-                    'status' => $request->input('status'),  // Update the booking status
-
-                ]);
-
-                        // Log the user activity using ActivityLogger
-                    \App\Services\ActivityLogger::log(
-                        'Booking Updated', 
-                        'Booking Reference: ' . $booking->booking_reference . ' updated by user: ' . auth()->user()->email
-                    );
-
+                    'return_pickup_time' => $request->input('return_pickup_time'),
+                    'updated_by' => auth()->user()->email,
+                    'status' => $request->input('status'),
+                ];
+        
+                // Conditionally add driver_name and vehicle_details if present in the request
+                if ($request->filled('driver_name')) {
+                    $updateData['driver_name'] = $request->input('driver_name');
+                }
+                if ($request->filled('vehicle_details')) {
+                    $updateData['vehicle_details'] = $request->input('vehicle_details');
+                }
+        
+                // Update the booking with the new values
+                $booking->update($updateData);
+        
+                // Log the user activity using ActivityLogger
+                \App\Services\ActivityLogger::log(
+                    'Booking Updated',
+                    'Booking Reference: ' . $booking->booking_reference . ' updated by user: ' . auth()->user()->email
+                );
         
                 \Log::info('Booking updated successfully', ['booking_id' => $booking->id]);
         
@@ -347,7 +355,7 @@ class AdminBookingController extends Controller
                 return redirect()->back()->with('error', 'Failed to update booking. Please try again.');
             }
         }
-
+        
 
         // AdminBookingController.php
     

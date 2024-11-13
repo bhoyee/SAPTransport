@@ -132,6 +132,20 @@
                 </select>
             </div>
 
+    
+                     <!-- Existing Driver Name and Vehicle Details Fields (Only Visible if Data Exists) -->
+                     @if ($booking->driver_name && $booking->vehicle_details)
+                    <div class="form-group">
+                        <label for="driver-name">Assigned Driver's Name</label>
+                        <input type="text" id="driver-name" name="driver_name" class="form-control" value="{{ old('driver_name', $booking->driver_name) }}" placeholder="Driver's Full Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="vehicle-details">Vehicle Details</label>
+                        <input type="text" id="vehicle-details" name="vehicle_details" class="form-control" value="{{ old('vehicle_details', $booking->vehicle_details) }}" placeholder="Vehicle Details">
+                    </div>
+                @endif
+
 
                 <div class="form-group" id="return-group-time" style="{{ old('trip_type', $booking->trip_type) === 'round_trip' ? '' : 'display:none;' }}">
                     <label for="return-pickup-time">Return Pickup Time</label>
