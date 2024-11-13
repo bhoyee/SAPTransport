@@ -24,7 +24,6 @@
         .report-table th {
             background-color: #f2f2f2;
         }
-        /* Footer style for page numbering */
         .footer {
             position: fixed;
             bottom: 0;
@@ -45,7 +44,6 @@
             font-size: 12px;
             color: #555;
         }
-        /* Website style in footer */
         .website {
             color: #888;
             font-style: italic;
@@ -85,7 +83,7 @@
             @foreach($payments as $index => $payment)
             <tr> 
                 <td>{{ $index + 1 }}</td>
-                <td>{{ $payment->booking->booking_reference }}</td>
+                <td>{{ $payment->booking->booking_reference ?? 'N/A' }}</td>
                 <td>{{ $payment->payment_reference }}</td>
                 <td>NGN {{ number_format($payment->amount, 2) }}</td>
                 <td>{{ ucfirst($payment->status) }}</td>
@@ -102,16 +100,14 @@
         </tfoot>
     </table>
 
-    <!-- Footer for page numbers and website -->
     <div class="footer">
-        <!-- Page: {PAGE_NUM} of {PAGE_COUNT} -->
         <br>
         <span class="website">www.saptransportationandlogistics.ng</span>
     </div>
     <script type="text/php">
     if ( isset($pdf) ) {
         $font = Font_Metrics::get_font("helvetica", "bold");
-        $pdf->page_text(72, 18, "Header: {PAGE_NUM} of {PAGE_COUNT}", $font, 6, array(0,0,0));
+        $pdf->page_text(72, 18, "Page: {PAGE_NUM} of {PAGE_COUNT}", $font, 6, array(0,0,0));
     }
 </script> 
 </body>
