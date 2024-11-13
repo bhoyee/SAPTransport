@@ -150,6 +150,21 @@
 
 
             </div>
+                       <!-- Existing Driver Name and Vehicle Details Fields (Only Visible if Data Exists) -->
+                       @if ($booking->driver_name && $booking->vehicle_details)
+                    <div class="form-group">
+                    <h4 class="mb-3">Driver Information</h4>
+                    <strong>Driver's Name:</strong>
+                    <p>{{ $booking->driver_name}}</p>
+
+                    </div>
+                    <div class="col-md-6">
+                    <strong>Vehicle Details:</strong>
+                    <p>{{ $booking->vehicle_details}}</p>
+                </div>
+
+
+                @endif
 
             <!-- Invoice and Payment Details -->
             <div class="row gx-5 gy-3">
