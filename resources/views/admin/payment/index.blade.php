@@ -18,11 +18,14 @@
                     <th>S/N</th>
                     <th>Booking Ref</th>
                     <th>Amount</th>
-                    <th>Status</th>
                     <th>Payment Date</th>
+
+                    <th>Status</th>
                     <th>Payment Mtd</th>
                     <th>Payment Ref</th>
+                    <th>Updated At</th>
                     <th>Action</th>
+                   
                 </tr>
             </thead>
             <tbody></tbody>
@@ -66,34 +69,34 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // DataTable initialization
     let table = $('#payments-table').DataTable({
         responsive: true,
         paging: true,
         searching: true,
-        order: [[4, 'desc']], // Orders by payment date (descending)
+        order: [[7, 'desc']], // Orders by updated_at (descending)
         ajax: {
-            url: "{{ route('admin.payments.fetch') }}", // Fetching the payment data
+            url: "{{ route('admin.payments.fetch') }}",
             method: 'GET',
-            dataSrc: 'data', // DataTable expects 'data' in the JSON response
+            dataSrc: 'data',
             error: function(xhr, error, thrown) {
                 console.error('Error fetching payments:', error, thrown);
             }
         },
         columns: [
-            { data: null }, // S/N will be populated by DataTable itself
-            { data: 'booking_reference' },  // Booking Reference
-            { data: 'amount', render: function(data) { return `₦${parseFloat(data).toFixed(2)}`; }},  // Amount
-            { data: 'status', render: function(data) { // Status column
+            { data: null },
+            { data: 'booking_reference' },
+            { data: 'amount', render: function(data) { return `₦${parseFloat(data).toFixed(2)}`; }},
+            { data: 'payment_date', render: function(data) { return new Date(data).toLocaleDateString(); }},
+            { data: 'status', render: function(data) {
                 if (data === 'paid') return '<span class="badge bg-success">Paid</span>';
                 else if (data === 'unpaid') return '<span class="badge bg-danger">Unpaid</span>';
                 else if (data === 'refund-pending') return '<span class="badge bg-warning">Refund Pending</span>';
                 else if (data === 'refunded') return '<span class="badge bg-info">Refunded</span>';
             }},
-            { data: 'payment_date', render: function(data) { return new Date(data).toLocaleDateString(); }},  // Payment Date
-            { data: 'payment_method', render: function(data) { return data.charAt(0).toUpperCase() + data.slice(1); }},  // Payment Method
-            { data: 'payment_reference' },  // Payment Reference
-            { data: null, render: function(data) {  // Action buttons
+            { data: 'payment_method', render: function(data) { return data.charAt(0).toUpperCase() + data.slice(1); }},
+            { data: 'payment_reference' },
+            { data: 'updated_at', visible: false },  // Updated At column
+            { data: null, render: function(data) {
                 if (data.status === 'refund-pending') {
                     return `<button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#refundModal" data-id="${data.id}">Process Refund</button>`;
                 } else if (data.status === 'refunded') {
@@ -111,6 +114,8 @@ $(document).ready(function() {
             });
         }
     });
+
+
 
     // Set interval to refresh the DataTable every 30 seconds
     setInterval(function() {
