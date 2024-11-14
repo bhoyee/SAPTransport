@@ -184,11 +184,11 @@ class PaymentController extends Controller
     // fetching realtime paymnt
     public function fetchPayments()
     {
-        // Fetch payments with necessary relationships
-        $payments = Payment::with(['booking', 'invoice'])  
-            ->orderBy('payment_date', 'desc')
+        // Fetch payments with necessary relationships, ordered by updated_at in descending order
+        $payments = Payment::with(['booking', 'invoice'])
+            ->orderBy('updated_at', 'desc')
             ->get();
-
+    
         // Format the data as per DataTables requirements
         $formattedPayments = $payments->map(function ($payment) {
             return [
@@ -199,11 +199,13 @@ class PaymentController extends Controller
                 'payment_date' => $payment->payment_date,
                 'payment_method' => ucfirst($payment->payment_method),
                 'payment_reference' => $payment->payment_reference,
+                'updated_at' => $payment->updated_at->toDateString(),
             ];
         });
-
+    
         return response()->json(['data' => $formattedPayments]);
     }
+    
 
 
 
