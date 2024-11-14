@@ -130,7 +130,7 @@ $(document).ready(function() {
         autoWidth: false,
         paging: true,
         searching: true,
-        order: [[3, 'desc']],
+        order: [[7, 'desc']],
         ajax: {
             url: "{{ route('admin.invoices.fetchAll') }}",
             method: 'GET',
