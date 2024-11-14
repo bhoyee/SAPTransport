@@ -13,6 +13,28 @@
 
     <div class="app-card app-card-details shadow-sm mb-4">
         <div class="app-card-body p-4">
+            <!-- Booker Information Section -->
+        <h3 class="mb-3">Booker Information</h3>
+        <div class="row gx-5 gy-3">
+            <!-- Name -->
+            <div class="col-md-6">
+                <strong>Name:</strong>
+                <p>{{ $booking->user->name ?? 'N/A' }}</p>
+            </div>
+
+            <!-- Email -->
+            <div class="col-md-6">
+                <strong>Email:</strong>
+                <p>{{ $booking->user->email ?? 'N/A' }}</p>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="col-md-6">
+                <strong>Phone Number:</strong>
+                <p>{{ $booking->user->phone ?? 'N/A' }}</p>
+            </div>
+        </div>
+        
             <h3 class="mb-3">Booking Information</h3>
             <div class="row gx-5 gy-3">
                 
@@ -144,6 +166,14 @@
                     <div class="col-md-6">
                         <strong>Updated By:</strong>
                         <p>{{ $booking->updater->name }}</p> <!-- Assuming 'name' is a field in the User model -->
+                    </div>
+                @endif
+
+                     <!-- Updated By (User who made updates) -->
+                     @if (!empty($booking->updater))
+                    <div class="col-md-6">
+                        <strong>Updated By:</strong>
+                        <p>{{ $booking->updater->email }}</p> <!-- Assuming 'name' is a field in the User model -->
                     </div>
                 @endif
 
