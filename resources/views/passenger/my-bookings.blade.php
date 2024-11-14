@@ -15,10 +15,11 @@
                 <th>S/N</th>
                 <th>Booking Ref</th>
                 <th>Booking Date</th>
+                <th>Updated At</th>
                 <th>Service Type</th>
                 <th>Pickup Date</th>
                 <th>Status</th>
-                <th>Updated At</th>
+              
                 <th>Actions</th>
             </tr>
         </thead>
@@ -104,10 +105,12 @@ $(document).ready(function() {
                                 <td>${index + 1}</td>
                                 <td>${booking.booking_reference}</td>
                                 <td>${bookingDate}</td>
-                                <td>${booking.service_type}</td>
-                                <td>${pickupDate}</td>
-                                <td><span class="badge bg-${badgeClass}">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span></td>
                                 <td>${updatedDate}</td>
+                                <td>${pickupDate}</td>
+                                <td>${booking.service_type}</td>
+                          
+                                <td><span class="badge bg-${badgeClass}">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span></td>
+                            
                                 <td>${actionButtons}</td>
                             </tr>`;
 
@@ -120,6 +123,8 @@ $(document).ready(function() {
                         paging: true,
                         searching: true,
                         ordering: false,
+                        order: [[3, 'desc']], // Order by 'updated_at' column in descending order
+
                         lengthChange: true,
                     });
                 }
