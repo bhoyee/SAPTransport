@@ -19,6 +19,7 @@ use App\Mail\BookingCancellationAdminNotification;
 use App\Mail\BookingConfirmationMail;
 use App\Models\Payment; 
 use App\Services\ActivityLogger; // Correct
+use App\Models\Notification;
 
 
 
@@ -384,65 +385,93 @@ class AdminBookingController extends Controller
             return view('admin.bookings.confirm-booking');
         }
 
-    public function confirmBooking(Request $request, $id)
-    {
-        $request->validate([
-            'price' => 'required|numeric|min:0',
-        ]);
-
-        try {
-            // Find the booking by ID
-            $booking = \App\Models\Booking::findOrFail($id);
-
-            // Check if the booking status is already 'confirmed' or another final state
-            if ($booking->status !== 'pending') {
-                return redirect()->back()->with('error', 'This booking is not pending and cannot be confirmed.');
-            }
-
-            // Update the booking status to 'confirmed'
-            $booking->status = 'confirmed';
-            $booking->save();
-
-            // Generate the invoice number (e.g., INV-2024-001)
-            $year = now()->year;
-            $latestInvoice = \App\Models\Invoice::whereYear('invoice_date', $year)->latest('id')->first();
-            $invoiceNumber = 'INV-' . $year . '-' . str_pad(($latestInvoice ? $latestInvoice->id + 1 : 1), 3, '0', STR_PAD_LEFT);
-
-            // Create an invoice
-            $invoice = new \App\Models\Invoice();
-            $invoice->booking_id = $booking->id;
-            $invoice->generated_by = auth()->id();
-            $invoice->invoice_number = $invoiceNumber;
-            $invoice->invoice_date = now();
-            // $invoice->amount = $request->price;
-            $invoice->amount = number_format((float) $request->price, 2, '.', '');
-
-            $invoice->status = 'Unpaid';
-            $invoice->file_path = '/path/to/invoice_' . $invoiceNumber . '.pdf'; // Update this with actual file path
-            $invoice->save();
-
-            // Log the activity
-            \DB::table('activity_logs')->insert([
-                'user_id' => auth()->id(),
-                'action' => 'Booking Confirmed',
-                'description' => 'Booking ' . $booking->booking_reference . ' was confirmed and invoice generated.',
-                'ip_address' => $request->ip(),
-                'created_at' => now(),
-                'updated_at' => now(),
+        public function confirmBooking(Request $request, $id)
+        {
+            $request->validate([
+                'price' => 'required|numeric|min:0',
             ]);
+        
+            try {
+                // Find the booking by ID
+                $booking = \App\Models\Booking::findOrFail($id);
+        
+                // Check if the booking status is already 'confirmed' or another final state
+                if ($booking->status !== 'pending') {
+                    return redirect()->back()->with('error', 'This booking is not pending and cannot be confirmed.');
+                }
+        
+                // Update the booking status to 'confirmed'
+                $booking->status = 'confirmed';
+                $booking->save();
+        
+                // Generate the invoice number (e.g., INV-2024-001)
+                $year = now()->year;
+                $latestInvoice = \App\Models\Invoice::whereYear('invoice_date', $year)->latest('id')->first();
+                $invoiceNumber = 'INV-' . $year . '-' . str_pad(($latestInvoice ? $latestInvoice->id + 1 : 1), 3, '0', STR_PAD_LEFT);
+        
+                // Create an invoice
+                $invoice = new \App\Models\Invoice();
+                $invoice->booking_id = $booking->id;
+                $invoice->generated_by = auth()->id();
+                $invoice->invoice_number = $invoiceNumber;
+                $invoice->invoice_date = now();
+                $invoice->amount = number_format((float) $request->price, 2, '.', '');
+                $invoice->status = 'Unpaid';
+                $invoice->file_path = '/path/to/invoice_' . $invoiceNumber . '.pdf'; // Update this with actual file path
+                $invoice->save();
+        
+                // Log the activity for the admin or staff who confirmed the booking
+                \DB::table('activity_logs')->insert([
+                    'user_id' => auth()->id(),
+                    'action' => 'Booking Confirmed',
+                    'description' => 'Booking ' . $booking->booking_reference . ' was confirmed and invoice generated.',
+                    'ip_address' => $request->ip(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+        
+                // Send confirmation email to the passenger
+                $user = $booking->user;
+                Mail::to($user->email)->send(new BookingConfirmationMail($booking, $invoice));
+        
+                // Create push notification for the passenger
+                Notification::create([
+                    'user_id' => $user->id,
+                    'message' => 'Your booking (Reference: ' . $booking->booking_reference . ') has been confirmed. Invoice No: ' . $invoice->invoice_number . '. Amount to be paid: ₦' . number_format($invoice->amount, 2),
+                    'type' => 'booking',
+                    'status' => 'unread',
+                    'related_user_name' => auth()->user()->name,
+                ]);
+        
+                // Log the activity for the passenger receiving the booking confirmation
+                \DB::table('activity_logs')->insert([
+                    'user_id' => $user->id,
+                    'action' => 'Booking Confirmation Received',
+                    'description' => 'Booking ' . $booking->booking_reference . ' was confirmed. Invoice No: ' . $invoice->invoice_number . '. Amount to be paid: ₦' . number_format($invoice->amount, 2),
+                    'ip_address' => $request->ip(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-            // Send confirmation email to the owner of the booking (optional)
-            $user = $booking->user;
-            Mail::to($user->email)->send(new BookingConfirmationMail($booking, $invoice));
-
-
-            return redirect()->route('admin.bookings.confirm-search')->with('success', 'Booking confirmed and invoice generated.');
-        } catch (\Exception $e) {
-            \Log::error('Error confirming booking: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to confirm the booking. Please try again.');
+                    // Push notifications to all admin and consultant users
+                $adminConsultantUsers = \App\Models\User::role(['admin', 'consultant'])->get();
+                foreach ($adminConsultantUsers as $adminConsultant) {
+                    Notification::create([
+                        'user_id' => $adminConsultant->id,
+                        'message' => 'Booking (Reference: ' . $booking->booking_reference . ') has been confirmed. Passenger: ' . $user->name . ', Amount: ₦' . number_format($invoice->amount, 2),
+                        'type' => 'booking',
+                        'status' => 'unread',
+                        'related_user_name' => $user->name,
+                    ]);
+                }
+                
+                return redirect()->route('admin.bookings.confirm-search')->with('success', 'Booking confirmed and invoice generated.');
+            } catch (\Exception $e) {
+                \Log::error('Error confirming booking: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Failed to confirm the booking. Please try again.');
+            }
         }
-    }
-
+        
 
 
         public function deleteBooking($id)
