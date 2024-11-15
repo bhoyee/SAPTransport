@@ -26,6 +26,8 @@
     <meta property="og:image" content="{{ asset('img/logo.png') }}"> <!-- Replace with actual image URL -->
     <meta property="og:url" content="@yield('og_url', 'http://saptransportationandlogistics.ng/')">
     <meta property="og:type" content="website">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
