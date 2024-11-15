@@ -14,7 +14,7 @@ class Contact extends Model
 
     protected $fillable = [
         'ticket_num', 'status', 'department', 'priority', 'attachment',
-        'fullname', 'email_address', 'subject', 'message', 'category' // added 'category'
+        'fullname', 'email_address', 'phone_number', 'subject', 'message', 'category' // added 'category'
     ];
     
     

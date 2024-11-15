@@ -57,6 +57,7 @@ class ContactController extends Controller
             'message' => $request->input('message'),
             'attachment' => $fileName,
             'status' => 'open',
+            'phone_number' => $request->input('phone'),
         ]);
     
         // Log the ticket creation
@@ -105,19 +106,54 @@ class ContactController extends Controller
     
 
     // View a specific ticket
+    // public function viewTicket($id)
+    // {
+    //     $ticket = Contact::findOrFail($id);
+
+    //     // Check if the user is authorized to view this ticket
+    //     if ($ticket->email_address !== Auth::user()->email) {
+    //         return redirect()->route('passenger.my-tickets')->with('error', 'Unauthorized access to this ticket.');
+    //     }
+
+    //     $replies = TicketReply::with('user')->where('ticket_id', $id)->get();
+
+    //     return view('passenger.view-ticket', compact('ticket', 'replies'));
+    // }
     public function viewTicket($id)
-    {
+{
+    if (!Auth::check()) {
+        Log::warning('Unauthenticated user attempting to access a ticket.', ['ticket_id' => $id]);
+        return redirect()->route('login')->with('error', 'You must log in to view this ticket.');
+    }
+
+    try {
         $ticket = Contact::findOrFail($id);
 
-        // Check if the user is authorized to view this ticket
         if ($ticket->email_address !== Auth::user()->email) {
-            return redirect()->route('passenger.my-tickets')->with('error', 'Unauthorized access to this ticket.');
+            Log::warning('Unauthorized ticket access.', [
+                'ticket_id' => $id,
+                'user_id' => Auth::id(),
+                'user_email' => Auth::user()->email,
+                'ticket_email' => $ticket->email_address
+            ]);
+            return redirect()->route('passenger.my-tickets')->with('error', 'Unauthorized access.');
         }
 
         $replies = TicketReply::with('user')->where('ticket_id', $id)->get();
 
         return view('passenger.view-ticket', compact('ticket', 'replies'));
+
+    } catch (\Exception $e) {
+        Log::error('Failed to view ticket.', [
+            'ticket_id' => $id,
+            'user_id' => Auth::id(),
+            'error' => $e->getMessage()
+        ]);
+        return redirect()->route('passenger.my-tickets')->with('error', 'Failed to retrieve ticket.');
     }
+}
+
+
      // Display the logged-in user's tickets
      public function myTickets()
      {
