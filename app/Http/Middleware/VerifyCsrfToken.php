@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken as Middleware;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Session\TokenMismatchException;
+use Illuminate\Support\Facades\Log;
 
 
 class VerifyCsrfToken extends Middleware
@@ -19,10 +20,21 @@ class VerifyCsrfToken extends Middleware
     public function handle($request, Closure $next)
     {
         try {
+            \Log::info('VerifyCsrfToken middleware: Processing request', ['url' => $request->url()]);
             return parent::handle($request, $next);
         } catch (TokenMismatchException $exception) {
-            // Redirect to login page when CSRF token expires
+            \Log::error('CSRF token mismatch', ['url' => $request->url()]);
             return redirect()->route('login')->with('error', 'Your session has expired. Please log in again.');
         }
     }
+    
+    protected $except = [
+        '/',
+        '/home',
+        '/about',
+        '/faq',
+        '/contact',
+        '/login',
+     
+    ];
 }

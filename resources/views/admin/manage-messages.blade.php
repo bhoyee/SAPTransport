@@ -47,19 +47,29 @@ $(document).ready(function() {
             { data: null, title: "S/N", render: (data, type, row, meta) => meta.row + 1 },
             { data: "subject", title: "Subject" },
             { data: "sender.name", title: "Sender Name", defaultContent: "N/A" },
-            { data: "created_at", title: "Sent At", render: function(data) {
-                return new Date(data).toLocaleString();
-            }},
-            { data: null, title: "Actions", orderable: false, render: function(data) {
-                return `<a href="/admin/message/${data.id}/view" class="btn btn-info btn-sm">View</a>`;
-            }}
+            {
+                data: "sent_at_date",
+                title: "Sent At",
+                render: function(data) {
+                    // Display only the date, no time
+                    return data ? new Date(data).toISOString().split('T')[0] : "N/A";
+                }
+            },
+            {
+                data: null,
+                title: "Actions",
+                orderable: false,
+                render: function(data) {
+                    return `<a href="/admin/message/${data.id}/view" class="btn btn-info btn-sm">View</a>`;
+                }
+            }
         ]
     });
 
     // Function to fetch messages
     function fetchMessages() {
         console.log("Fetching messages...");
-        
+
         $.ajax({
             url: "{{ route('admin.fetch-messages') }}",
             method: 'GET',
@@ -73,7 +83,21 @@ $(document).ready(function() {
                     console.log("No messages available.");
                     messagesTable.clear().draw();
                 } else {
-                    messagesTable.clear().rows.add(data).draw();
+                    // Filter duplicates
+                    const uniqueMessages = [];
+                    const messageSet = new Set();
+
+                    data.forEach(item => {
+                        const dateOnly = new Date(item.created_at).toISOString().split('T')[0];
+                        const uniqueKey = `${item.subject}_${item.sender.name}_${dateOnly}`;
+                        if (!messageSet.has(uniqueKey)) {
+                            messageSet.add(uniqueKey);
+                            uniqueMessages.push(item);
+                            item.sent_at_date = dateOnly; // Format to only the date
+                        }
+                    });
+
+                    messagesTable.clear().rows.add(uniqueMessages).draw();
                 }
             },
             error: function(xhr, status, error) {

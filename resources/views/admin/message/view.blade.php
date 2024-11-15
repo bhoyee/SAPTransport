@@ -10,7 +10,6 @@
 
 @section('content')
 <div class="container mt-5">
-    
     <h1 class="app-page-title">Message Details</h1>
     <br>
     <a href="{{ route('admin.manage-messages') }}" class="btn btn-secondary mb-3">Back to Manage Messages</a> <!-- Back button -->
@@ -23,8 +22,8 @@
 
             <hr>
             <h6><strong>Sender Details:</strong></h6>
-            <p><strong>Name:</strong> {{ $sender->name }}</p>
-            <p><strong>Email:</strong> {{ $sender->email }}</p>
+            <p><strong>Name:</strong> {{ $message->sender->name }}</p>
+            <p><strong>Email:</strong> {{ $message->sender->email }}</p>
             <p><strong>Sent At:</strong> {{ $message->created_at->format('Y-m-d H:i:s') }}</p>
 
             <hr>
@@ -37,23 +36,26 @@
                         <th>Status</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>{{ $receiver->name }}</td>
-                        <td>{{ $receiver->email }}</td>
-                        <td>
-                            @if ($message->status === 'read')
-                                <span class="badge bg-success">Read</span>
-                            @elseif ($message->status === 'received')
-                                <span class="badge bg-info">Received</span>
-                            @elseif ($message->status === 'sent')
-                                <span class="badge bg-danger">Sent</span>
-                            @else
-                                <span class="badge bg-secondary">{{ ucfirst($message->status) }}</span>
-                            @endif
-                        </td>
-                    </tr>
-                </tbody>
+               <tbody>
+    @foreach ($message->recipients as $recipient)
+    <tr>
+        <td>{{ $recipient->name }}</td>
+        <td>{{ $recipient->email }}</td>
+        <td id="status-{{ $recipient->id }}">
+            @if ($recipient->pivot->status === 'read')
+                <span class="badge bg-success">Read</span>
+            @elseif ($recipient->pivot->status === 'received')
+                <span class="badge bg-info">Received</span>
+            @elseif ($recipient->pivot->status === 'sent')
+                <span class="badge bg-danger">Sent</span>
+            @else
+                <span class="badge bg-secondary">{{ ucfirst($recipient->pivot->status) }}</span>
+            @endif
+        </td>
+    </tr>
+    @endforeach
+</tbody>
+
             </table>
         </div>
     </div>
