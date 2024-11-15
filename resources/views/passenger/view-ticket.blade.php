@@ -16,6 +16,16 @@
             <p><strong>Department:</strong> {{ ucfirst($ticket->department) }}</p>
             <p><strong>Last Updated:</strong> {{ \Carbon\Carbon::parse($ticket->updated_at)->format('d M Y H:i') }}</p>
 
+            <!-- Display Attachment -->
+            @if ($ticket->attachment)
+                <p>
+                    <strong>Attachment:</strong>
+                    <a href="{{ asset('uploads/attachments/' . $ticket->attachment) }}" target="_blank">
+                        {{ $ticket->attachment }}
+                    </a>
+                </p>
+            @endif
+
             <!-- Ticket Trend -->
             <div class="ticket-trend" id="replies-container">
                 <!-- Owner's Original Message -->
