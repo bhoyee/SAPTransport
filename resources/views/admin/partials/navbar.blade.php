@@ -250,7 +250,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="item p-3 open-notification" data-id="${notification.id}" data-bs-toggle="modal" data-bs-target="#notificationModal">
                             <div class="row gx-2 justify-content-between align-items-center">
                                 <div class="col-auto">
-                                    <img class="profile-image" src="{{ asset('assets/images/profiles/profile-1.png') }}" alt="">
+                                        <img class="profile-image" src="{{ Auth::user()->profile_image ? asset('storage/profile_images/' . Auth::user()->profile_image) : asset('/images/user.png') }}" alt="">
+
                                 </div>
                                 <div class="col">
                                     <div class="info">

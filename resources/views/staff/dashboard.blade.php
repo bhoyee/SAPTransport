@@ -55,8 +55,10 @@
                             <tr>
                                 <th>S/N</th>
                                 <th>Customer Name</th>
+                                <th>Ticket Num</th>
                                 <th>Last Interaction Date</th>
-                                <th>Status of Last Interaction</th>
+                                <th>Status</th>
+                                
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -85,7 +87,7 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row my-5">
         <!-- Active Bookings Table -->
         <div class="col-lg-8 col-md-12">
             <div class="card">
@@ -177,6 +179,7 @@
                     recentInteractionsTable.row.add([
                         index + 1,
                         interaction.customer_name,
+                        interaction.ticket_num,
                         new Date(interaction.last_interaction_date).toLocaleString(),
                         `<span class="badge ${interaction.status === 'open' ? 'bg-warning' : 'bg-success'}">
                             ${interaction.status.charAt(0).toUpperCase() + interaction.status.slice(1)}
