@@ -37,7 +37,7 @@ class DashboardController extends Controller
         $recentInteractions = Contact::where('status', 'open')
             ->orderBy('updated_at', 'desc')
             ->limit(10)
-            ->get(['id', 'fullname as customer_name', 'updated_at as last_interaction_date', 'status']);
+            ->get(['id', 'fullname as customer_name', 'ticket_num','updated_at as last_interaction_date', 'status']);
     
         return response()->json($recentInteractions);
     }
