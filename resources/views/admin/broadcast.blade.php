@@ -59,44 +59,69 @@
 <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var quill = new Quill('#messageBody', { theme: 'snow' });
-    
-    document.getElementById('broadcast-form').addEventListener('submit', function(e) {
+document.addEventListener('DOMContentLoaded', function () {
+    const quill = new Quill('#messageBody', { theme: 'snow' });
+
+    const form = document.getElementById('broadcast-form');
+    const sendButton = document.getElementById('sendButton');
+    const spinner = document.getElementById('spinner');
+
+    form.addEventListener('submit', function (e) {
         e.preventDefault();
+
+        // Add the Quill content to the hidden input
         document.getElementById('messageBodyInput').value = quill.root.innerHTML;
 
-        // Show spinner and disable button
-        document.getElementById('sendButton').disabled = true;
-        document.getElementById('spinner').style.display = 'inline-block';
+        // Collect form data
+        const formData = new FormData(form);
+        const jsonData = {};
+        formData.forEach((value, key) => {
+            jsonData[key] = value;
+        });
+
+        // Show spinner and disable the button
+        sendButton.disabled = true;
+        spinner.style.display = 'inline-block';
 
         // Perform AJAX request
         fetch("{{ route('admin.broadcast.send') }}", {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-            body: JSON.stringify(Object.fromEntries(new FormData(this))),
-        }).then(response => response.json()).then(data => {
-            alert(data.success);
-
-            // Hide spinner and re-enable button
-            document.getElementById('spinner').style.display = 'none';
-            document.getElementById('sendButton').disabled = false;
-
-            // Clear subject, Quill editor, and hidden textarea
-            document.getElementById('subject').value = '';
-            quill.root.innerHTML = '';
-            document.getElementById('messageBodyInput').value = '';
-        }).catch(() => {
-            alert("An error occurred while sending the message.");
-            document.getElementById('spinner').style.display = 'none';
-            document.getElementById('sendButton').disabled = false;
-        });
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify(jsonData),
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    return response.json().then((data) => {
+                        throw new Error(data.error || 'Failed to send message.');
+                    });
+                }
+                return response.json();
+            })
+            .then((data) => {
+                alert(data.success);
+                spinner.style.display = 'none';
+                sendButton.disabled = false;
+                form.reset();
+                quill.root.innerHTML = '';
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert(error.message || 'An error occurred while sending the message.');
+                spinner.style.display = 'none';
+                sendButton.disabled = false;
+            });
     });
 
-    document.getElementById('recipientType').addEventListener('change', function() {
-        document.getElementById('individualEmailField').style.display = this.value === 'individual' ? 'block' : 'none';
+    document.getElementById('recipientType').addEventListener('change', function () {
+        const showIndividualEmail = this.value === 'individual';
+        document.getElementById('individualEmailField').style.display = showIndividualEmail ? 'block' : 'none';
+        document.getElementById('individualEmail').required = showIndividualEmail;
     });
 });
+
 </script>
 
 @endpush
