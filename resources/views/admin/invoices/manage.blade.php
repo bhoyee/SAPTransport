@@ -140,27 +140,40 @@ $(document).ready(function() {
             }
         },
         columns: [
-            { data: null },
-            { data: 'booking_reference' },
-            { data: 'invoice_number' },
-            { data: 'invoice_date' },
-            { data: 'amount', render: function(data) { return `₦${parseFloat(data).toFixed(2)}`; }},
-            { data: 'status', render: function(data) {
-                if (data === 'Paid') return '<span class="badge bg-success">Paid</span>';
-                else if (data === 'Unpaid') return '<span class="badge bg-danger">Unpaid</span>';
-                else if (data === 'Refunded') return '<span class="badge bg-info">Refunded</span>';
-            }},
-            { data: 'updated_at', visible: false },
-            { data: 'generated_by' },
-            { data: null, render: function(data) {
-                return `
-                    <a href="/admin/invoices/${data.id}/view" class="btn btn-sm btn-info">View</a>
-                    <a href="/admin/invoices/${data.id}/edit" class="btn btn-sm btn-warning">Edit</a>
+    { data: null }, // S/N
+    { data: 'booking_reference' },
+    { data: 'invoice_number' },
+    { data: 'invoice_date' },
+    { data: 'amount', render: function(data) { return `₦${parseFloat(data).toFixed(2)}`; }},
+    { data: 'status', render: function(data) {
+        if (data === 'Paid') return '<span class="badge bg-success">Paid</span>';
+        else if (data === 'Unpaid') return '<span class="badge bg-danger">Unpaid</span>';
+        else if (data === 'Refunded') return '<span class="badge bg-info">Refunded</span>';
+    }},
+    { data: 'updated_at', visible: false },
+    { data: 'generated_by' },
+    { 
+        data: null,
+        render: function(data) {
+            let userHasAdminRole = "{{ auth()->user()->hasRole('admin') ? 'true' : 'false' }}" === 'true';
+
+            let actionButtons = `
+                <a href="/admin/invoices/${data.id}/view" class="btn btn-sm btn-info">View</a>
+                <a href="/admin/invoices/${data.id}/edit" class="btn btn-sm btn-warning">Edit</a>
+            `;
+
+            // Add Delete button only if the user has the Admin role
+            if (userHasAdminRole) {
+                actionButtons += `
                     <button class="btn btn-sm btn-danger" onclick="confirmDelete(${data.id})">Delete</button>
-                    
                 `;
-            }},
-        ],
+            }
+
+            return actionButtons;
+        }
+    },
+],
+
         drawCallback: function(settings) {
             let api = this.api();
             let startIndex = api.page.info().start;
