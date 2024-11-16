@@ -6,6 +6,9 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 use Symfony\Component\HttpFoundation\Exception\SessionExpiredException;
 use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Log;
+
 
 class Handler extends ExceptionHandler
 {
@@ -50,8 +53,16 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
-        if ($exception instanceof \Illuminate\Session\TokenMismatchException) {
-            return redirect('/')->with('message', 'Your session has expired. Please log in again.');
+        // Check if the exception is a TokenMismatchException (CSRF token issue)
+        if ($exception instanceof TokenMismatchException) {
+            // Log the occurrence of a TokenMismatchException
+            \Log::warning('Token mismatch detected. Redirecting user to the home page.', [
+                'url' => $request->url(),
+            ]);
+    
+            // Redirect the user to the home page
+            return redirect()->route('home')
+                ->with('error', 'Your session has expired. Please try again.');
         }
     
         return parent::render($request, $exception);
