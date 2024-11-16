@@ -189,20 +189,35 @@ $(document).ready(function() {
                 data: null,
                 orderable: false,
                 render: function(data) {
-                    return `
-                        <div class="action-buttons">
-                            <a href="/admin/bookings/${data.id}/view" class="btn btn-sm btn-info">View</a>
-                            <a href="/admin/bookings/${data.id}/edit" class="btn btn-sm btn-warning">Edit</a>
-                            ${data.status !== 'cancelled' && data.status !== 'completed' && data.status !== 'expired' ? 
-                                `<a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal" data-booking-id="${data.id}">Cancel</a>` : ''}
-                            <a href="#" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteModal" data-booking-id="${data.id}">Delete</a>
-                            ${data.status === 'confirmed' ? 
-                                `<button class="btn btn-sm btn-success complete-btn" data-bs-toggle="modal" data-bs-target="#completeModal" data-booking-id="${data.id}">Complete</button>` : ''}
-                        </div>
-                    `;
-                }
-            }  // Action buttons
-        ],
+            let userHasAdminRole = "{{ auth()->user()->hasRole('admin') ? 'true' : 'false' }}" === 'true';
+            
+            let actionButtons = `
+                <div class="action-buttons">
+                    <a href="/admin/bookings/${data.id}/view" class="btn btn-sm btn-info">View</a>
+                    <a href="/admin/bookings/${data.id}/edit" class="btn btn-sm btn-warning">Edit</a>
+                    ${data.status !== 'cancelled' && data.status !== 'completed' && data.status !== 'expired' ? 
+                        `<a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal" data-booking-id="${data.id}">Cancel</a>` : ''}
+            `;
+
+            // Only add Delete button if the user has Admin role
+            if (userHasAdminRole) {
+                actionButtons += `
+                    <a href="#" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteModal" data-booking-id="${data.id}">Delete</a>
+                `;
+            }
+
+            // Add Complete button for confirmed bookings
+            if (data.status === 'confirmed') {
+                actionButtons += `
+                    <button class="btn btn-sm btn-success complete-btn" data-bs-toggle="modal" data-bs-target="#completeModal" data-booking-id="${data.id}">Complete</button>
+                `;
+            }
+
+            actionButtons += `</div>`; // Close the action-buttons div
+            return actionButtons;
+        }
+    }  // Action buttons
+],
         drawCallback: function(settings) {
             let api = this.api();
             let startIndex = api.page.info().start;
