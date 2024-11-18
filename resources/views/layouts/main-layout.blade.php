@@ -127,33 +127,34 @@
                 <div class="col-md-3">
                     <h3>Explore Links</h3>
                     <ul class="list-unstyled">
-                        <li><a href="#" class="text-white">Privacy Policy</a></li>
-                        <li><a href="#" class="text-white">Sitemap</a></li>
-                        <li><a href="#" class="text-white">Cancellation</a></li>
-                        <li><a href="#" class="text-white">Terms Of Service</a></li>
-                        <li><a href="#" class="text-white">Privacy Policy</a></li>
+                        <li><a href="{{ url('/privacy-policy') }}" class="text-white">Privacy Policy</a></li>
+                        <!-- <li><a href="#" class="text-white">Sitemap</a></li> -->
+                        <li><a href="{{ url('/cancellation-policy') }}" class="text-white">Cancellation</a></li>
+                        <li><a href="{{ url('/terms-and-conditions') }}" class="text-white">Terms Of Service</a></li>
+                        <li><a href="{{ url('/refund-policy') }}" class="text-white">Refund Policy</a></li>
                     </ul>
                 </div>
                 <div class="col-md-3">
                     <h3>Quick Links</h3>
                     <ul class="list-unstyled">
-                        <li><a href="#" class="text-white">About</a></li>
-                        <li><a href="#" class="text-white">My Booking</a></li>
+                        <li><a href="{{ url('/about') }}" class="text-white">About</a></li>
+                        <!-- <li><a href="#" class="text-white">My Booking</a></li> -->
                         <li><a href="{{ route('payment.search') }}" class="text-white">Make Payment</a></li>
-                        <li><a href="#" class="text-white">FAQ</a></li>
-                        <li><a href="#" class="text-white">Login / Register</a></li>
+                        <li><a href="{{ url('/faq') }}" class="text-white">FAQ</a></li>
+                        <li><a href="{{ url('/login') }}" class="text-white">Login / Register</a></li>
                         
                     </ul>
                 </div>
-                <div class="col-md-3">
-                    <h3>Contact Info</h3>
-                    <ul class="list-unstyled">
+                <div class="col-md-3" style="font-size: 0.9rem;">
+                    <h3 style="font-size: 1.2rem;">Contact Info</h3>
+                    <ul class="list-unstyled" style="font-size: 0.9rem;">
                         <li><i class="fas fa-map-marker-alt"></i> 10 Awolowo Road Ikoyi, Lagos, Nigeria.</li>
                         <li><i class="fas fa-envelope"></i> support@saptransportationandlogistics.ng</li>
                         <li><i class="fas fa-phone"></i> +234 807 041 9826</li>
                         <li><i class="fas fa-globe"></i> http://www.saptransportationandlogistics.ng</li>
                     </ul>
                 </div>
+
             </div>
             <div class="footer-bottom text-center mt-4">
     <div class="d-flex justify-content-center align-items-center flex-wrap">

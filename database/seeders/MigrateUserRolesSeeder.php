@@ -36,9 +36,11 @@ class MigrateUserRolesSeeder extends Seeder
             }
         }
 
-        // Remove the role column if necessary
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('role');
-        });
+        // Check if the role column exists before trying to drop it
+        if (Schema::hasColumn('users', 'role')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('role');
+            });
+        }
     }
 }

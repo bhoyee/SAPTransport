@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Lock Screen</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 
@@ -59,50 +60,6 @@
             display: none; /* Hide spinner initially */
         }
     </style>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const logoutTimeout = 600000; // 10 minutes (in milliseconds)
-
-            setTimeout(function () {
-                // After 10 minutes of being idle on the lock screen, redirect to the login page
-                window.location.href = "{{ route('login') }}";
-            }, logoutTimeout);
-
-            // Handle form submission with spinner
-            const form = document.getElementById('unlock-form');
-            const unlockButton = document.getElementById('unlock-btn');
-            const spinner = document.getElementById('spinner');
-
-            form.addEventListener('submit', function (e) {
-                spinner.style.display = 'inline-block'; // Show the spinner
-                unlockButton.disabled = true; // Disable the button to prevent multiple submissions
-                unlockButton.innerText = 'Unlocking...'; // Change button text
-            });
-
-            // Periodically check if the session is still active
-            setInterval(function () {
-                checkSessionStatus();
-            }, 60000); // Check every minute
-
-            function checkSessionStatus() {
-                fetch('/check-session', {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.active) {
-                        // Session expired, redirect to home page
-                        window.location.href = "/";
-                    }
-                })
-                .catch(error => console.error('Error checking session status:', error));
-            }
-        });
-    </script>
 </head>
 
 <body>
@@ -144,6 +101,76 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const lockScreenTimeout = 60000; // 1 minute (in milliseconds)
+        const logoutTimeout = 120000; // 2 minutes (total session expiration time)
+
+        let lockTimer;
+        let logoutTimer;
+
+        function redirectToHomePage() {
+            console.log("Session expired. Redirecting to home...");
+            window.location.href = "{{ route('home') }}"; // Redirect to the home page
+        }
+
+        function startLockScreenTimer() {
+            console.log("Starting lock screen timer...");
+            lockTimer = setTimeout(function () {
+                console.log("Redirecting to lock screen...");
+                window.location.href = "{{ route('lockscreen.show') }}"; // Redirect to lock screen
+            }, lockScreenTimeout);
+        }
+
+        function startLogoutTimer() {
+            console.log("Starting logout timer...");
+            logoutTimer = setTimeout(redirectToHomePage, logoutTimeout); // Redirect to home page on session expiration
+        }
+
+        function resetTimers() {
+            clearTimeout(lockTimer);
+            clearTimeout(logoutTimer);
+            startLockScreenTimer();
+            startLogoutTimer();
+        }
+
+        // Reset timers on any user activity
+        function attachUserActivityListeners() {
+            ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach((event) => {
+                window.addEventListener(event, resetTimers);
+            });
+        }
+
+        function checkSessionStatus() {
+            fetch('/check-session', {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (!data.active) {
+                        console.log("Session expired on the server. Redirecting to home...");
+                        redirectToHomePage(); // Redirect to home page when session is inactive
+                    }
+                })
+                .catch((error) => console.error('Error checking session status:', error));
+        }
+
+        // Periodically validate session status on the lock screen
+        if (window.location.pathname.includes('lockscreen')) {
+            console.log("Lockscreen detected. Checking session status periodically...");
+            setInterval(checkSessionStatus, 30000); // Check every 30 seconds
+        }
+
+        // Initialize timers and activity listeners
+        resetTimers();
+        attachUserActivityListeners();
+    });
+</script>
+
 </body>
 
 </html>

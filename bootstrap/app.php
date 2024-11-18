@@ -20,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.role' => \App\Http\Middleware\CheckRole::class,
             'lock' => \App\Http\Middleware\CheckIfLocked::class, // Custom lock middleware
             'session.timeout' => \App\Http\Middleware\SessionTimeout::class,
+            'auth' => \Illuminate\Auth\Middleware\Authenticate::class, // Laravel-provided Authenticate middleware
+
             
 
         ]);

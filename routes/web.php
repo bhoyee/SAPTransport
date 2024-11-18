@@ -62,6 +62,25 @@ Route::get('/about', function () {
     return view('about');
 });
 
+Route::get('/privacy-policy', function () {
+    return view('privacy');
+});
+
+Route::get('/cancellation-policy', function () {
+    return view('cancellation');
+});
+
+
+Route::get('/terms-and-conditions', function () {
+    return view('terms');
+});
+
+Route::get('/refund-policy', function () {
+    return view('refund');
+});
+
+
+
 Route::get('/faq', function () {
     return view('faq');
 });
@@ -69,6 +88,20 @@ Route::get('/faq', function () {
 Route::get('/contact', function () {
     return view('contact');
 });
+
+
+Route::get('/test-session', function () {
+    session()->put('lastActivityTime', now()->subSeconds(120)->timestamp); // Simulate 2 minutes of inactivity
+    return 'Session expired test completed.';
+})->middleware('session.timeout');
+
+Route::get('/check-session', function () {
+    return response()->json(['active' => Auth::check()]);
+})->name('check-session');
+
+
+// Add this route in your web.php
+// Route::get('/check-session', [LockScreenController::class, 'checkSessionStatus']);
 
 
 // Route for checking booking reference status
@@ -122,22 +155,54 @@ Route::fallback(function () {
 });
 
 // Passenger Dashboard Routes (Protected by Role)
-Route::middleware(['auth', 'role:passenger'])->group(function () {
-    Route::get('/passenger/dashboard', [PassengerController::class, 'dashboard'])->name('passenger.dashboard');
-    Route::get('/passenger/recent-bookings', [PassengerHomeController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
-    Route::get('/passenger/payment-history', [PassengerHomeController::class, 'getPaymentHistory']);
-    Route::get('/passenger/dashboard-data', [PassengerHomeController::class, 'fetchDashboardData'])->name('passenger.dashboard.data');
-    Route::get('/passenger/makepayments', [InvoiceController::class, 'unpaidPayments'])->name('passenger.makepayments');
-    Route::get('/passenger/invoice/{id}', [InvoiceController::class, 'showInvoice'])->name('passenger.invoice');
-    
 
+Route::middleware(['auth', 'role:passenger', 'session.timeout'])->prefix('passenger')->group(function () {
+    Route::get('/dashboard', [PassengerController::class, 'dashboard'])->name('passenger.dashboard');
+    Route::get('/recent-bookings', [PassengerHomeController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
+    Route::get('/payment-history', [PassengerHomeController::class, 'getPaymentHistory']);
+    Route::get('/dashboard-data', [PassengerHomeController::class, 'fetchDashboardData'])->name('passenger.dashboard.data');
+    Route::get('/makepayments', [InvoiceController::class, 'unpaidPayments'])->name('passenger.makepayments');
+    Route::get('/invoice/{id}', [InvoiceController::class, 'showInvoice'])->name('passenger.invoice');
+    Route::get('/invoice/download/{id}', [InvoiceController::class, 'downloadInvoice'])->name('passenger.downloadInvoice');
+    Route::get('/bookings/chart-data', [PassengerHomeController::class, 'getChartData'])->name('passenger.bookings.chartData');
+    Route::get('/activities', [PassengerHomeController::class, 'getUserActivities'])->name('passenger.activities');
+    Route::get('/settings', [SettingsController::class, 'showSettingsPage'])->name('passenger.settings');
+    Route::post('/change-password', [SettingsController::class, 'changePassword'])->name('passenger.change-password');
+    Route::get('/my-tickets', [ContactController::class, 'myTickets'])->name('passenger.my-tickets');
+    Route::get('/my-tickets/{id}', [ContactController::class, 'viewTicket'])->name('viewTicket');
+    Route::post('/my-tickets/{id}/reply', [ContactController::class, 'replyToTicket'])->name('replyTicket');
+
+    Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-bookings');
     
-    Route::get('/passenger/invoice/download/{id}', [InvoiceController::class, 'downloadInvoice'])->name('passenger.downloadInvoice');
-    Route::get('/passenger/bookings/chart-data', [PassengerHomeController::class, 'getChartData'])->name('passenger.bookings.chartData');
-    Route::get('/passenger/activities', [PassengerHomeController::class, 'getUserActivities'])->name('passenger.activities');
+    Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking']);
+
+    Route::get('/booking/{id}/edit', [BookingEditController::class, 'edit'])->name('booking.edit');
+    Route::put('/booking/{id}', [BookingEditController::class, 'update'])->name('booking.update');
+    Route::get('/booking/{id}/view', [BookingEditController::class, 'show'])->name('booking.view');
+
+    // Payment Routes
+    Route::post('/pay', [PaymentController::class, 'pay'])->name('pay');
+    Route::get('/invoice/failed', [PaymentController::class, 'failedInvoice'])->name('invoice.failed');
+    Route::get('/invoice/paid/{invoice}', [PaymentController::class, 'paidInvoice'])->name('invoice.paid');
+    Route::get('/payments/history', [PaymentController::class, 'paymentHistory'])->name('payment.history');
+    Route::post('/payments/refund', [PaymentController::class, 'requestRefund'])->name('payment.refund');
+
+    // Invoice Routes
+    Route::get('/invoice/view/{id}', [InvoiceController::class, 'view'])->name('invoice.view');
+    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('/invoice/pay/{id}', [InvoiceController::class, 'pay'])->name('invoice.pay');
+    Route::post('/invoice/pay', [PaymentController::class, 'pay'])->name('invoice.pay');
+
+
 });
 
+// Passenger Routes (for managing settings, account, and tickets)
+Route::middleware(['auth', 'role:passenger'])->group(function () {
+  
+    Route::get('/support/ticket', [ContactController::class, 'createTicketForm'])->name('passenger.open-ticket');
+    Route::post('/support/ticket', [ContactController::class, 'storeTicket'])->name('contact.store');
 
+});
 
 // Admin Routes (Protected by Spatie's Role Middleware)
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
@@ -146,7 +211,6 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     // admin dashboard data 
     Route::get('/test-dashboard', [App\Http\Controllers\Admin\TestDashboardController::class, 'index']);
     Route::get('/dashboard-data', [App\Http\Controllers\Admin\TestDashboardController::class, 'getDashboardData']);
-    // Route::get('/chart-data', [App\Http\Controllers\Admin\TestDashboardController::class, 'getChartData']);
     Route::get('/booking-volume-data', [App\Http\Controllers\Admin\TestDashboardController::class, 'getBookingVolumeData']);
     Route::get('/booking-completion-rate-data', [TestDashboardController::class, 'getBookingCompletionRateData']); // New route for completion rate data
     Route::get('/revenue-distribution-data', [App\Http\Controllers\Admin\TestDashboardController::class, 'getRevenueDistributionData']);
@@ -158,28 +222,20 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/recent-payments-data', [TestDashboardController::class, 'getRecentPaymentsData'])->name('admin.recent-payments-data');
 
 
- 
-// Routes for custom invoice creation
-Route::get('/invoices/create-custom', [AdminInvoiceController::class, 'createCustomForm'])->name('admin.invoices.createCustomForm');
-Route::post('/invoices/create-custom', [AdminInvoiceController::class, 'createCustomInvoice'])->name('admin.invoices.createCustom');
-//routes to mange custom invoice 
-Route::get('/custom-invoices', [AdminInvoiceController::class, 'manageCustomInvoices'])->name('admin.customInvoices');
-Route::get('/custom-invoices/fetch', [AdminInvoiceController::class, 'fetchCustomInvoices'])->name('admin.customInvoices.fetch');
-Route::get('/custom-invoices/{id}/download', [AdminInvoiceController::class, 'downloadCustomInvoice'])->name('admin.customInvoices.download');
+     // Routes for custom invoice creation
+    Route::get('/invoices/create-custom', [AdminInvoiceController::class, 'createCustomForm'])->name('admin.invoices.createCustomForm');
+    Route::post('/invoices/create-custom', [AdminInvoiceController::class, 'createCustomInvoice'])->name('admin.invoices.createCustom');
+    //routes to mange custom invoice 
+    Route::get('/custom-invoices', [AdminInvoiceController::class, 'manageCustomInvoices'])->name('admin.customInvoices');
+    Route::get('/custom-invoices/fetch', [AdminInvoiceController::class, 'fetchCustomInvoices'])->name('admin.customInvoices.fetch');
+    Route::get('/custom-invoices/{id}/download', [AdminInvoiceController::class, 'downloadCustomInvoice'])->name('admin.customInvoices.download');
 
-Route::get('/custom-invoices/{id}/view', [AdminInvoiceController::class, 'viewCustomInvoice'])->name('admin.customInvoices.view');
-Route::get('/custom-invoices/{id}/edit', [AdminInvoiceController::class, 'editCustomInvoice'])->name('admin.customInvoices.edit');
-Route::delete('/custom-invoices/{id}/delete', [AdminInvoiceController::class, 'deleteCustomInvoice'])->name('admin.customInvoices.delete');
+    Route::get('/custom-invoices/{id}/view', [AdminInvoiceController::class, 'viewCustomInvoice'])->name('admin.customInvoices.view');
+    Route::get('/custom-invoices/{id}/edit', [AdminInvoiceController::class, 'editCustomInvoice'])->name('admin.customInvoices.edit');
+    Route::delete('/custom-invoices/{id}/delete', [AdminInvoiceController::class, 'deleteCustomInvoice'])->name('admin.customInvoices.delete');
 
-// Route to handle the update request for a custom invoice
-Route::put('/custom-invoices/{id}', [AdminInvoiceController::class, 'updateCustomInvoice'])->name('admin.customInvoices.update');
-
-
-
-//acct etting route
-// Route::get('/account', [AccountController::class, 'showAccountPage'])->name('admin.account');
-// Route::post('/account', [AccountController::class, 'updateAccount'])->name('admin.update-account');
-
+    // Route to handle the update request for a custom invoice
+    Route::put('/custom-invoices/{id}', [AdminInvoiceController::class, 'updateCustomInvoice'])->name('admin.customInvoices.update');
 
 });
 
@@ -232,10 +288,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/auth/google/unlock', [LockScreenController::class, 'handleGoogleUnlock'])->name('auth.google.unlock');
 });
 
-// Add this route in your web.php
-Route::get('/check-session', [LockScreenController::class, 'checkSessionStatus']);
-
-
 
 Route::post('/update-last-activity', function () {
     session()->put('lastActivityTime', now()->timestamp);
@@ -253,20 +305,6 @@ Route::middleware(['auth', 'role:admin|consultant|passenger'])->group(function (
 
 
 
-// Passenger Routes (for managing settings, account, and tickets)
-Route::middleware(['auth', 'role:passenger'])->group(function () {
-    Route::get('/passenger/settings', [SettingsController::class, 'showSettingsPage'])->name('passenger.settings');
-    Route::post('/passenger/change-password', [SettingsController::class, 'changePassword'])->name('passenger.change-password');
-
-    // Route::get('/passenger/account', [AccountController::class, 'showAccountPage'])->name('passenger.account');
-    // Route::post('/passenger/account', [AccountController::class, 'updateAccount'])->name('passenger.update-account');
-
-    Route::get('/support/ticket', [ContactController::class, 'createTicketForm'])->name('passenger.open-ticket');
-    Route::post('/support/ticket', [ContactController::class, 'storeTicket'])->name('contact.store');
-    Route::get('/passenger/my-tickets', [ContactController::class, 'myTickets'])->name('passenger.my-tickets');
-    Route::get('/passenger/my-tickets/{id}', [ContactController::class, 'viewTicket'])->name('viewTicket');
-    Route::post('/passenger/my-tickets/{id}/reply', [ContactController::class, 'replyToTicket'])->name('replyTicket');
-});
 
 // Admin User Management Routes (Only for Admin Role)
     Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
@@ -277,12 +315,9 @@ Route::middleware(['auth', 'role:passenger'])->group(function () {
 
         //admin delete user page 
         Route::get('users/deleted-users', [AdminUserController::class, 'showDeletedUsers'])->name('admin.users.deleted-users'); // To display the page
-        // Route::get('users/deleted', [AdminUserController::class, 'showDeletedUsers'])->name('admin.users.deleted'); // To display the page
         Route::get('users/fetch-deleted-stats', [AdminUserController::class, 'fetchDeletedStats'])->name('admin.users.fetch-deleted-stats'); // For the card
         Route::get('users/deleted-list', [AdminUserController::class, 'getDeletedUsers'])->name('admin.users.deleted-list'); // For the DataTable
-        // Route::post('users/permanent-delete', [AdminUserController::class, 'permanentDelete'])->name('admin.users.permanent-delete'); // For permanent deletion
     
-    // Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show'); // Add this route
     
 });
 
@@ -306,8 +341,6 @@ Route::middleware(['auth', 'role:admin|consultant'])->group(function () {
     Route::get('users/fetch-stats', [UserReportController::class, 'fetchStats'])->name('admin.users.fetch-stats');
     Route::post('/users/delete', [AdminUserController::class, 'delete'])->name('admin.users.delete');
     Route::post('/users/{user}/suspend', [AdminUserController::class, 'suspend'])->name('admin.users.suspend');
-     //Route::get('/admin/users', [UserReportController::class, 'showUserManagementPage'])->name('admin.users.index');
-    // Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index'); // For AJAX loading
      Route::get('/admin/users', [UserReportController::class, 'showUserManagementPage'])->name('admin.users.management'); // For user management page
      Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('admin.users.show'); // Add this route
 });
@@ -335,7 +368,6 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|consultant'])->group(fun
     //admin booking report routes 
     Route::get('/bookings/report', [AdminBookingReportController::class, 'index'])->name('admin.bookings.report');
     Route::post('/bookings/report/pdf', [AdminBookingReportController::class, 'generatePdf'])->name('admin.bookings.report.pdf');
-    // Route::get('/bookings/report-data/{range}', [AdminBookingReportController::class, 'getReportData']);
     Route::get('/bookings/report-data/{range}', [AdminBookingReportController::class, 'getReportData'])->name('admin.bookings.report.data');
     Route::post('/admin/bookings/report/pdf', [AdminBookingReportController::class, 'generatePdf'])->name('admin.bookings.report.pdf');
 
@@ -432,15 +464,13 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|consultant'])->group(fun
     Route::get('/message/{id}/view', [BroadcastController::class, 'viewMessage'])->name('admin.message.view');
 
 
+    // Route to open the driver assignment search page
+    Route::get('/bookings/assign-driver', [BookingController::class, 'showAssignDriverPage'])->name('admin.bookings.assign-driver');
+    Route::get('/bookings/assign-driver-search', [BookingController::class, 'searchBookingByReference'])->name('admin.bookings.assign-driver-search');
 
-
-// Route to open the driver assignment search page
-Route::get('/bookings/assign-driver', [BookingController::class, 'showAssignDriverPage'])->name('admin.bookings.assign-driver');
-Route::get('/bookings/assign-driver-search', [BookingController::class, 'searchBookingByReference'])->name('admin.bookings.assign-driver-search');
-
-// In web.php
-Route::get('/bookings/assign-driver', [BookingController::class, 'showAssignDriverPage'])->name('admin.bookings.assign-driver');
-Route::post('/bookings/assign-driver/{id}', [BookingController::class, 'assignDriver'])->name('admin.bookings.assign-driver.update');
+    // In web.php
+    Route::get('/bookings/assign-driver', [BookingController::class, 'showAssignDriverPage'])->name('admin.bookings.assign-driver');
+    Route::post('/bookings/assign-driver/{id}', [BookingController::class, 'assignDriver'])->name('admin.bookings.assign-driver.update');
 
 });
 
@@ -451,41 +481,8 @@ Route::get('/email/tracking/pixel', [BroadcastController::class, 'trackEmailOpen
 // Booking and Payment Routes (Both for Admins and Passengers)
 Route::post('/book-airport-transfer', [BookingController::class, 'store'])->name('booking.store');
 
-Route::prefix('passenger')->middleware(['auth', 'role:passenger'])->group(function () {
 
-// Route::middleware(['auth', 'role:passenger'])->group(function () {
-    Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-bookings');
-    // Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking'])->middleware('auth');
 
-    Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking']);
-
-    Route::get('/booking/{id}/edit', [BookingEditController::class, 'edit'])->name('booking.edit');
-    Route::put('/booking/{id}', [BookingEditController::class, 'update'])->name('booking.update');
-    Route::get('/booking/{id}/view', [BookingEditController::class, 'show'])->name('booking.view');
-
-    // Payment Routes
-    Route::post('/pay', [PaymentController::class, 'pay'])->name('pay');
-    // Route::get('/payment/callback', [PaymentController::class, 'handleGatewayCallback'])->name('payment.callback');
-    Route::get('/invoice/failed', [PaymentController::class, 'failedInvoice'])->name('invoice.failed');
-    Route::get('/invoice/paid/{invoice}', [PaymentController::class, 'paidInvoice'])->name('invoice.paid');
-    Route::get('/payments/history', [PaymentController::class, 'paymentHistory'])->name('payment.history');
-    Route::post('/payments/refund', [PaymentController::class, 'requestRefund'])->name('payment.refund');
-
-    // Invoice Routes
-    Route::get('/invoice/view/{id}', [InvoiceController::class, 'view'])->name('invoice.view');
-    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-    Route::get('/invoice/pay/{id}', [InvoiceController::class, 'pay'])->name('invoice.pay');
-    Route::post('/invoice/pay', [PaymentController::class, 'pay'])->name('invoice.pay');
-});
-
-// Clear Cache Route (for Admin Use)
-Route::get('/clear-cache', function () {
-    Artisan::call('config:clear');
-    Artisan::call('cache:clear');
-    Artisan::call('route:clear');
-    Artisan::call('view:clear');
-    return "Caches cleared";
-});
 
 
 Route::get('/pay', [WalkinPayController::class, 'search'])->name('payment.search');
@@ -498,3 +495,13 @@ Route::get('/payment/success', function () {
 Route::get('/payment/failed', function () {
     return view('walkinpay.failed');
 })->name('payment.failed');
+
+
+// Clear Cache Route (for Admin Use)
+Route::get('/clear-cache', function () {
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('route:clear');
+    Artisan::call('view:clear');
+    return "Caches cleared";
+});

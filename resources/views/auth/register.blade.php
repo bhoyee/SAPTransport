@@ -177,7 +177,9 @@
 
             <label class="form-check-label" for="termsCheck">
 
-                By Signing Up, I agree to <a href="{{ url('terms') }}" class="text-primary" target="_blank">Terms and Conditions</a>
+
+
+                By Signing Up, I agree to <a href="{{ url('/terms-and-conditions') }}" class="text-primary" target="_blank">Terms and Conditions</a>
 
                 and <a href="{{ url('privacy-policy') }}" class="text-primary" target="_blank">Privacy Policy</a>.
 

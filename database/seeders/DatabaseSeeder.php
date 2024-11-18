@@ -21,6 +21,10 @@ class DatabaseSeeder extends Seeder
         // ]);
         
         // Call the UsersTableSeeder to seed the admin and staff users
-        $this->call(UsersTableSeeder::class);
+        $this->call([
+            MigrateUserRolesSeeder::class,
+            SettingsTableSeeder::class,
+            UsersTableSeeder::class,
+        ]);
     }
 }

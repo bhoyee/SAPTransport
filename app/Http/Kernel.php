@@ -27,10 +27,16 @@ class Kernel extends HttpKernel
      */
     protected $middlewareGroups = [
         'web' => [
-            \App\Http\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \App\Http\Middleware\SessionTimeout::class, // Ensure this runs early
             \Illuminate\Session\Middleware\StartSession::class,
+
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+  
+
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+  
+            \Illuminate\Auth\Middleware\Authenticate::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\TrackLastUrl::class,
@@ -38,7 +44,7 @@ class Kernel extends HttpKernel
             // Additional middleware for the web routes
             \App\Http\Middleware\CheckIfLocked::class,  // Custom lock screen middleware
             \App\Http\Middleware\CheckRole::class, // Add this line
-            \App\Http\Middleware\SessionTimeout::class, // Add this line
+           
             \App\Http\Middleware\TrackLastUrl::class, // Add this line
 
 
@@ -57,9 +63,10 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $routeMiddleware = [
-        'auth' => \Illuminate\Auth\Middleware\Authenticate::class, // Laravel-provided Authenticate middleware
-        'lock' => \App\Http\Middleware\CheckIfLocked::class, // Custom lock middleware
         'session.timeout' => \App\Http\Middleware\SessionTimeout::class, // Custom session timeout middleware
+
+        'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
+        'lock' => \App\Http\Middleware\CheckIfLocked::class, // Custom lock middleware
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class, // Laravel provided middleware
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class, // Laravel provided middleware
         'can' => \Illuminate\Auth\Middleware\Authorize::class, // Laravel provided middleware
