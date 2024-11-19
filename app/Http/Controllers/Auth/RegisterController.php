@@ -106,9 +106,15 @@ class RegisterController extends Controller
             // Log the registration failure
             ActivityLogger::log('Registration Failed', 'Error during registration for email: ' . $request->email);
 
-            // Flash an error message and redirect back
-            return redirect()->back()->with('error', 'Something went wrong during registration. Please try again.');
+
+                // Debug the route
+           // dd(route('register.thankyou')); 
+           // dd('Before redirect'); // Check if this point is reached
+
+        // Flash an error message and redirect to the "thank you" page with an error message
+        return redirect()->route('register.thankyou')->with('error', 'Something went wrong during registration. Please try again.'); 
         }
+    
     }
 
     // Thank you page after successful registration
