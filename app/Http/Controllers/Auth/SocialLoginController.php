@@ -17,23 +17,56 @@ class SocialLoginController extends Controller
     // Redirect to Google
     public function redirectToGoogle()
     {
-        ActivityLogger::log('Login Attempt', 'User attempting to login via Google');
         return Socialite::driver('google')->redirect();
     }
 
-    // Handle Google callback
     public function handleGoogleCallback()
     {
         try {
             $socialUser = Socialite::driver('google')->stateless()->user();
-            return $this->_registerOrLoginUser($socialUser, 'google');
+    
+            Log::info('Social user retrieved', ['email' => $socialUser->email]);
+    
+            $user = User::where('email', $socialUser->email)->first();
+    
+            if ($user) {
+                Log::info('Existing user found', ['email' => $user->email]);
+    
+                if ($user->status === 'suspend') {
+                    Log::warning('Suspended account attempted login', ['email' => $user->email]);
+                    return redirect()->route('login')->with('error', 'Your account has been suspended, please contact support.');
+                }
+    
+                if ($user->status === 'deleted') {
+                    Log::warning('Deleted account attempted login', ['email' => $user->email]);
+                    return redirect()->route('login')->with('error', 'Your account has been removed from our system, contact support for further clarification.');
+                }
+    
+                Auth::login($user);
+                Log::info('User logged in', ['email' => $user->email]);
+    
+                return redirect()->route('passenger.dashboard');
+            } else {
+                Log::info('Registering new user', ['email' => $socialUser->email]);
+    
+                $newUser = User::create([
+                    'name' => $socialUser->name,
+                    'email' => $socialUser->email,
+                    'password' => bcrypt('social-login-password'),
+                ]);
+    
+                Auth::login($newUser);
+                Log::info('New user logged in', ['email' => $socialUser->email]);
+    
+                return redirect()->route('complete.profile');
+            }
         } catch (\Exception $e) {
-            Log::error('Google login failed: ' . $e->getMessage());
-            ActivityLogger::log('Login Failed', 'Google login failed: ' . $e->getMessage());
-            return redirect()->route('login')->with('error', 'Google login failed. Please try again.');
+            Log::error('Social login failed', ['error' => $e->getMessage()]);
+            return redirect()->route('login')->with('error', 'Unable to authenticate with Google. Please try again.');
         }
     }
-
+    
+    
     // Redirect to Facebook
     public function redirectToFacebook()
     {
