@@ -46,39 +46,34 @@ class VerificationController extends Controller
 
     public function verify(Request $request)
     {
-        // Find the user by the ID passed in the URL route
+        // Find the user by ID
         $user = User::findOrFail($request->route('id'));
     
-        // Check if the verification hash matches
-        if (! hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
+        // Check if the hash matches
+        if (!hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
             return redirect()->route('verification.notice')->with('error', 'Invalid verification link.');
         }
     
-        // Check if the user's email is already verified
+        // If email is not verified, mark it as verified
         if (!$user->hasVerifiedEmail()) {
-            // Mark the user's email as verified
             $user->markEmailAsVerified();
     
-            // Update the user's status to active if they are inactive
+            // Update status to 'active' if 'inactive'
             if ($user->status === 'inactive') {
                 $user->update(['status' => 'active']);
-                Log::info('User status updated to active', ['user_id' => $user->id]);
             }
     
-            Log::info('Email verification successful', ['user_id' => $user->id]);
+            // Log activity
+            Log::info('User email verified successfully', ['user_id' => $user->id]);
+            ActivityLogger::log('Email Verified', 'User email verified: ' . $user->email);
     
-            // Send welcome email after email verification
-            Mail::to($user->email)->send(new UserRegistered($user));
-    
-            // Log the activity
-            ActivityLogger::log('Email Verified', 'User email verified and status updated: ' . $user->email);
+            return redirect()->route('verification.success')->with('success', 'Email verified successfully!');
         }
     
-        // Redirect to the custom verification success page
-        return redirect()->route('verification.success')->with('success', 'Email verified successfully!');
+        // Redirect if already verified
+        return redirect()->route('verification.notice')->with('success', 'Email is already verified.');
     }
     
-
 
 
     // Resend the email verification link
