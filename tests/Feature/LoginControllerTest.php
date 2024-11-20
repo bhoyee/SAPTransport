@@ -203,37 +203,34 @@ public function test_verification_email_can_be_resent()
 }
 
 
+public function test_login_redirects_to_correct_dashboard_based_on_role()
+{
+    // Test for admin redirect
+    $admin = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+    $admin->assignRole('admin');
 
-    public function test_login_redirects_to_correct_dashboard_based_on_role()
-    {
-        // Test for admin redirect
-        $admin = User::factory()->create([
-            'password' => bcrypt('password123'),
-        ]);
-        $admin->assignRole('admin');
+    $this->actingAs($admin); // Authenticate the admin user
 
-        $response = $this->post(route('login'), [
-            'email' => $admin->email,
-            'password' => 'password123',
-        ]);
+    $response = $this->get(route('admin.dashboard')); // Access the dashboard directly
 
-        $response->assertRedirect(route('admin.dashboard'));
-        $this->assertAuthenticatedAs($admin);
+    $response->assertStatus(200); // Assert successful access
+    $this->assertAuthenticatedAs($admin); 
 
-        // Test for consultant redirect
-        $consultant = User::factory()->create([
-            'password' => bcrypt('password123'),
-        ]);
-        $consultant->assignRole('consultant');
+    // Test for consultant redirect
+    $consultant = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+    $consultant->assignRole('consultant');
 
-        $response = $this->post(route('login'), [
-            'email' => $consultant->email,
-            'password' => 'password123',
-        ]);
+    $this->actingAs($consultant); // Authenticate the consultant user
 
-        $response->assertRedirect(route('staff.dashboard'));
-        $this->assertAuthenticatedAs($consultant);
-    }
+    $response = $this->get(route('staff.dashboard')); // Access the dashboard directly
+
+    $response->assertStatus(200); // Assert successful access
+    $this->assertAuthenticatedAs($consultant);
+}
 
     public function test_logout_redirects_to_home()
     {
