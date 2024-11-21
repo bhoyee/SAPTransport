@@ -16,7 +16,7 @@ class ProfileController extends Controller
         return view('auth.complete-profile', compact('user'));
     }
 
-    public function saveProfile(Request $request)
+        public function saveProfile(Request $request)
     {
         // Validate the form input
         $request->validate([
@@ -33,16 +33,20 @@ class ProfileController extends Controller
             'gender' => $request->gender,
         ]);
 
-        // Check if the user's email is not verified and send the verification link
+        // If the user's email is not verified, send the verification link
         if ($user->email_verified_at === null) {
             // Log that the verification email is being sent
             Log::info('Sending verification email after profile update', ['user_id' => $user->id]);
 
             // Send the email verification notification
             $user->sendEmailVerificationNotification();
+
+            // Redirect to the verification notice page
+            return redirect()->route('verification.notice')->with('resent', true);
         }
 
-        // Redirect to the thank you page after saving the profile and sending the email
-        return redirect()->route('verification.notice')->with('resent', true);
+        // If the user's email is already verified, redirect to the dashboard
+        return redirect()->route('passenger.dashboard');
     }
+
 }

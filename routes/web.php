@@ -143,6 +143,7 @@ Route::get('/auth/facebook/callback', [SocialLoginController::class, 'handleFace
 Route::get('/complete-profile', [ProfileController::class, 'showCompleteProfileForm'])->name('complete.profile');
 Route::post('/complete-profile', [ProfileController::class, 'saveProfile']);
 
+
 // Password Reset Routes
 Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
@@ -178,7 +179,6 @@ Route::middleware(['auth', 'role:passenger', 'session.timeout'])->prefix('passen
     Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-bookings');
     
     Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking']);
-
     Route::get('/booking/{id}/edit', [BookingEditController::class, 'edit'])->name('booking.edit');
     Route::put('/booking/{id}', [BookingEditController::class, 'update'])->name('booking.update');
     Route::get('/booking/{id}/view', [BookingEditController::class, 'show'])->name('booking.view');

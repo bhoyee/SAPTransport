@@ -34,9 +34,12 @@ class UserFactory extends Factory
             'name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => Hash::make('password123'),
-            'remember_token' => Str::random(10),
-            'status' => $this->faker->randomElement(['active', 'inactive', 'suspend', 'deleted']),
+            'password' => bcrypt('password'), // Default password
+            'phone' => $this->faker->phoneNumber(),
+            'gender' => $this->faker->randomElement(['male', 'female']), // Valid values
+            'status' => $this->faker->randomElement(['active', 'inactive', 'suspend']),
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
     }
 
