@@ -19,24 +19,21 @@ class LockScreenController extends Controller
     public function unlock(Request $request)
     {
         \Log::info('Unlock process initiated by user ID: ' . auth()->id());
-    
-        // Get the currently authenticated user
+
         $user = Auth::user();
-        
-        // Check if the user exists and password was entered
+    
         if (is_null($request->password)) {
             \Log::info('Password was not provided');
             return redirect()->route('lockscreen.show')->withErrors(['password' => 'Please enter a password.']);
         }
     
-        // Check if the password matches the user's password
         if (!Hash::check($request->password, $user->password)) {
             \Log::info('Invalid password provided by user ID: ' . $user->id);
             return redirect()->route('lockscreen.show')->withErrors(['password' => 'Invalid password.']);
         }
     
-        // Check user status before unlocking
-        if ($user->status === 'suspend') {
+        // Check user status BEFORE logging the unlock attempt
+        if ($user->status === 'suspend') { 
             \Log::info('Attempt to unlock by suspended user', ['user_id' => $user->id]);
             return redirect()->route('login')->withErrors(['error' => 'Your account has been suspended, please contact support.']);
         }
@@ -46,6 +43,7 @@ class LockScreenController extends Controller
             return redirect()->route('login')->withErrors(['error' => 'Your account has been removed from the system, please contact support.']);
         }
     
+   
         // Log successful unlock
         \Log::info('Unlocking session for user ID: ' . $user->id);
         session()->forget('is_locked'); // Clear the lock session variable
