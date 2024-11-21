@@ -160,7 +160,9 @@ Route::fallback(function () {
 
 // Passenger Dashboard Routes (Protected by Role)
 
-Route::middleware(['auth', 'role:passenger', 'session.timeout'])->prefix('passenger')->group(function () {
+
+
+Route::middleware(['auth', 'verified', 'role:passenger', 'session.timeout'])->prefix('passenger')->group(function () {
     Route::get('/dashboard', [PassengerController::class, 'dashboard'])->name('passenger.dashboard');
     Route::get('/recent-bookings', [PassengerHomeController::class, 'getRecentBookings'])->name('passenger.recent.bookings');
     Route::get('/payment-history', [PassengerHomeController::class, 'getPaymentHistory']);

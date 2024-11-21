@@ -35,7 +35,9 @@ class UserFactory extends Factory
             'email' => $this->faker->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => bcrypt('password'), // Default password
-            'phone' => $this->faker->phoneNumber(),
+            // 'phone' => $this->faker->phoneNumber(),
+            'phone' => fake()->numerify('###########'), // Generate 11-digit number 
+
             'gender' => $this->faker->randomElement(['male', 'female']), // Valid values
             'status' => $this->faker->randomElement(['active', 'inactive', 'suspend']),
             'created_at' => now(),
