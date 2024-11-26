@@ -3,6 +3,7 @@
 namespace Tests\Feature\Controllers;
 
 use App\Models\User;
+use Mockery;
 use App\Models\Booking;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -11,9 +12,16 @@ use Tests\TestCase;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 
+use Illuminate\Support\Facades\DB;
+
+
+
 class BookingControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+
+
 
     // Mock the configurations
     public function setUp(): void
@@ -22,6 +30,7 @@ class BookingControllerTest extends TestCase
 
         config(['app.faker_locale' => 'en_US']); // Mock the faker locale config
         config(['mail.admin_email' => 'admin@saptransport.com']); // Mock admin email
+        Role::firstOrCreate(['name' => 'passenger']); // Create the 'passenger' role
     }
 
     public function test_store_booking_creates_booking_for_authenticated_user()
@@ -128,6 +137,38 @@ class BookingControllerTest extends TestCase
 
         // Assert that the user is redirected to the email verification page
         $response->assertRedirect(route('verification.notice')); 
+    }
+
+
+    
+    public function test_check_status_with_invalid_reference()
+    {
+        // Make a POST request with an invalid booking reference
+        $response = $this->postJson(route('booking.checkStatus'), ['booking_reference' => 'INVALIDREF']);
+
+        // Assert a successful response (200) even for an invalid reference
+        $response->assertStatus(200); 
+
+        // Assert that the response JSON indicates an error
+        $response->assertJson([
+            'status' => 'error',
+            'message' => 'No booking found with that reference number.'
+        ]);
+    }
+
+    public function test_check_status_with_missing_reference()
+    {
+        // Make a POST request without a booking reference
+        $response = $this->postJson(route('booking.checkStatus'), []); // Empty array for request body
+
+        // Assert a successful response (200) even for a missing reference
+        $response->assertStatus(200); 
+
+        // Assert that the response JSON indicates an error
+        $response->assertJson([
+            'status' => 'error',
+            'message' => 'Booking reference is required.' 
+        ]);
     }
 
 }
