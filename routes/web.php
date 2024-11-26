@@ -105,7 +105,9 @@ Route::get('/check-session', function () {
 
 
 // Route for checking booking reference status
-Route::post('/check-booking-status', [BookingController::class, 'checkStatus']);
+//Route::post('/check-booking-status', [BookingController::class, 'checkStatus']);
+Route::post('/check-booking-status', [BookingController::class, 'checkStatus'])->name('booking.checkStatus');
+
 
 // Route::get('/get-booking-status', [BookingController::class, 'checkStatus'])->name('booking.status');
 
@@ -178,9 +180,13 @@ Route::middleware(['auth', 'verified', 'role:passenger', 'session.timeout'])->pr
     Route::get('/my-tickets/{id}', [ContactController::class, 'viewTicket'])->name('viewTicket');
     Route::post('/my-tickets/{id}/reply', [ContactController::class, 'replyToTicket'])->name('replyTicket');
 
-    Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-bookings');
+    //Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-bookings');
+    Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('booking.myBookings');
+
     
-    Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking']);
+    //Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking']);
+    Route::delete('/booking/cancel/{id}', [BookingController::class, 'cancelBooking'])->name('booking.cancel');
+
     Route::get('/booking/{id}/edit', [BookingEditController::class, 'edit'])->name('booking.edit');
     Route::put('/booking/{id}', [BookingEditController::class, 'update'])->name('booking.update');
     Route::get('/booking/{id}/view', [BookingEditController::class, 'show'])->name('booking.view');
@@ -476,6 +482,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin|consultant'])->group(fun
     // In web.php
     Route::get('/bookings/assign-driver', [BookingController::class, 'showAssignDriverPage'])->name('admin.bookings.assign-driver');
     Route::post('/bookings/assign-driver/{id}', [BookingController::class, 'assignDriver'])->name('admin.bookings.assign-driver.update');
+
 
 });
 
