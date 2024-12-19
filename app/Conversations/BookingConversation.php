@@ -14,6 +14,9 @@ use App\Services\ActivityLogger;
 use App\Models\Notification;
 use App\Mail\BookingCancellationAdminNotification;
 use App\Mail\BookingCancellation;
+use App\Models\Payment;
+use App\Mail\AdminRefundRequestNotification;
+use App\Mail\UserRefundRequestNotification;
 
 
 class BookingConversation extends Conversation
@@ -57,8 +60,8 @@ class BookingConversation extends Conversation
                     $this->askBookingReferenceForCancellation();
                     break;
                 case 'request_refund':
-                    $this->say("For refunds, please visit our refund page or contact support for further assistance.");
-                    $this->askFollowUp();
+                    $this->askBookingReferenceForRefund();
+                   
                     break;
                 case 'speak_support':
                     $this->say("You can speak to support by calling our hotline or sending an email to support@saptransportation.com.");
@@ -301,6 +304,150 @@ class BookingConversation extends Conversation
 
     $this->askFollowUp();
 }
+
+public function askBookingReferenceForRefund()
+{
+    $this->ask("Please provide the booking reference for your refund request:", function ($answer) {
+        $bookingReference = trim(str_replace(' ', '', $answer->getText())); // Remove spaces from user input
+
+        // Find the booking by reference
+        $booking = Booking::where('booking_reference', $bookingReference)->first();
+
+        if ($booking) {
+            $this->bookingData['booking'] = $booking;
+
+            // Ask for the associated email
+            $this->askAssociatedEmailForRefund();
+        } else {
+            $this->say("No booking found with the reference number: {$bookingReference}. Please check and try again.");
+            $this->askBookingReferenceForRefund(); // Re-ask for the booking reference
+        }
+    });
+}
+
+public function askAssociatedEmailForRefund()
+{
+    $this->ask("Please provide the email address associated with the booking:", function ($answer) {
+        $email = trim(strtolower($answer->getText())); // Normalize input
+        $booking = $this->bookingData['booking'];
+
+        $user = User::find($booking->user_id);
+
+        if ($user && strtolower($user->email) === $email) {
+            $this->bookingData['user'] = $user;
+            $this->askAssociatedPhoneForRefund();
+        } else {
+            $this->say("The email address provided does not match our records for this booking.");
+            $this->askAssociatedEmailForRefund(); // Re-ask for the email
+        }
+    });
+}
+
+public function askAssociatedPhoneForRefund()
+{
+    $this->ask("Please provide the phone number associated with the booking:", function ($answer) {
+        $phone = trim(str_replace(' ', '', $answer->getText())); // Remove spaces from user input
+        $user = $this->bookingData['user'];
+
+        if ($user && $user->phone === $phone) {
+            $this->checkPaymentForRefund();
+        } else {
+            $this->say("The phone number provided does not match our records for this booking.");
+            $this->askAssociatedPhoneForRefund(); // Re-ask for the phone number
+        }
+    });
+}
+
+public function checkPaymentForRefund()
+{
+    $booking = $this->bookingData['booking'];
+
+    // Check if a payment is linked to the booking
+    $payment = Payment::where('booking_id', $booking->id)->where('status', 'paid')->first();
+
+    if ($payment) {
+        $this->bookingData['payment'] = $payment;
+        $this->confirmRefundRequest();
+    } else {
+        $this->say("No eligible payment found for this booking reference. Only paid bookings can request a refund.");
+        $this->askFollowUp(); // End the flow or ask for another service
+    }
+}
+
+public function confirmRefundRequest()
+{
+    $payment = $this->bookingData['payment'];
+    $booking = $this->bookingData['booking'];
+
+    try {
+        // Update payment status to refund pending
+        $payment->status = 'refund-pending';
+        $payment->save();
+
+        // Log the refund request
+        Log::info("Refund requested for payment ID: {$payment->id}, Booking Reference: {$booking->booking_reference}");
+
+        // Notify the user of the successful refund request
+        $this->say("Your refund request for booking reference {$booking->booking_reference} has been submitted successfully. Our team will process it shortly.");
+
+        // Process notifications and emails
+        $this->processRefundNotificationsAndEmails($payment);
+
+        $this->askFollowUp(); // Ask for further assistance
+    } catch (\Exception $e) {
+        // Handle errors
+        Log::error("Error occurred while processing refund request", ['error' => $e->getMessage()]);
+        $this->say("An error occurred while requesting the refund. Please try again later.");
+        $this->askFollowUp(); // End the flow
+    }
+}
+
+protected function processRefundNotificationsAndEmails($payment)
+{
+    $booking = $this->bookingData['booking'];
+    $user = $this->bookingData['user'];
+
+    try {
+        // Notify admin and consultant users
+        $adminConsultantUsers = User::role(['admin', 'consultant'])->get();
+        foreach ($adminConsultantUsers as $adminConsultant) {
+            Notification::create([
+                'user_id' => $adminConsultant->id,
+                'message' => 'Refund requested for Booking Ref: ' . $booking->booking_reference . ' with Invoice No: ' . $payment->invoice->invoice_number,
+                'type' => 'payment',
+                'status' => 'unread',
+                'related_user_name' => $user->name,
+            ]);
+
+            Log::info("Push notification sent to {$adminConsultant->name} for payment ID: {$payment->id}");
+        }
+
+        // Notify the user who initiated the refund request
+        Notification::create([
+            'user_id' => $user->id,
+            'message' => 'Your refund request has been initiated for Booking Ref: ' . $booking->booking_reference . ' with Invoice No: ' . $payment->invoice->invoice_number,
+            'type' => 'payment',
+            'status' => 'unread',
+            'related_user_name' => $user->name,
+        ]);
+
+        Log::info("Push notification sent to user {$user->name} for payment ID: {$payment->id}");
+
+        // Send email to admin
+        $adminEmail = config('mail.admin_email');
+        Mail::to($adminEmail)->send(new AdminRefundRequestNotification($booking, $payment->payment_reference, $payment->invoice->invoice_number));
+        Log::info("Email notification sent to admin for payment ID: {$payment->id}");
+
+        // Send email to user
+        Mail::to($user->email)->send(new UserRefundRequestNotification($booking, $payment->payment_reference, $payment->invoice->invoice_number));
+        Log::info("Email notification sent to user {$user->email} for payment ID: {$payment->id}");
+    } catch (\Exception $e) {
+        Log::error("Error occurred while sending notifications or emails for payment ID: {$payment->id}", ['error' => $e->getMessage()]);
+    }
+}
+
+
+
 
 
     public function askFollowUp()
