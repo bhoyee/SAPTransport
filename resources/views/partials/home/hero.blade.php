@@ -258,11 +258,32 @@
 
                             </div>
 
-                            <!-- <button type="submit" class="btn btn-primary" id="submit-btn">Proceed</button> -->
-             
-<button type="submit" id="submit-btn" class="btn btn-primary" {{ $bookingStatus === 'closed' ? 'disabled' : '' }}>
-    {{ $bookingStatus === 'closed' ? 'No booking at the moment' : 'Proceed' }}
-</button>
+                                <!-- New Field: Do you need security coverage? -->
+                                <div class="form-group">
+                                    <label for="security-coverage-tab1">Do you need security coverage?</label>
+                                    <select id="security-coverage-tab1" name="security_coverage" class="form-control" onchange="toggleSecurityOptions(this, 'tab1')">
+                                        <option value="no">No</option>
+                                        <option value="yes">Yes</option>
+                                    </select>
+                                </div>
+
+                                <!-- Dynamic Mobile Police and Van Options -->
+                                <div id="security-options-tab1" style="display:none;">
+                                    <div class="form-group">
+                                        <label for="mobile-police-tab1">Select number of mobile police (minimum 2)</label>
+                                        <select id="mobile-police-tab1" name="mobile_police_count" class="form-control" disabled>
+                                            <!-- Options will be populated dynamically -->
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>With Van or Without Van</label><br>
+                                        <input type="checkbox" id="with-van-tab1" name="with_van" value="yes"> With Van
+                                        <input type="checkbox" id="without-van-tab1" name="with_van" value="no"> Without Van
+                                    </div>
+                                </div>
+                            <button type="submit" id="submit-btn" class="btn btn-primary" {{ $bookingStatus === 'closed' ? 'disabled' : '' }}>
+                                {{ $bookingStatus === 'closed' ? 'No booking at the moment' : 'Proceed' }}
+                            </button>
 
 
 
@@ -394,12 +415,37 @@
 
                             </div>
 
+                                   <!-- New Field: Do you need security coverage? -->
+                                <div class="form-group">
+                                    <label for="security-coverage-tab2">Do you need security coverage?</label>
+                                    <select id="security-coverage-tab2" name="security_coverage" class="form-control" onchange="toggleSecurityOptions(this, 'tab2')">
+                                        <option value="no">No</option>
+                                        <option value="yes">Yes</option>
+                                    </select>
+                                </div>
+
+                                <!-- Dynamic Mobile Police and Van Options -->
+                                <div id="security-options-tab2" style="display:none;">
+                                    <div class="form-group">
+                                        <label for="mobile-police-tab2">Select number of mobile police (minimum 2)</label>
+                                        <select id="mobile-police-tab2" name="mobile_police_count" class="form-control" disabled>
+                                            <!-- Options will be populated dynamically -->
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>With Van or Without Van</label><br>
+                                        <input type="checkbox" id="with-van-tab2" name="with_van" value="yes"> With Van
+                                        <input type="checkbox" id="without-van-tab2" name="with_van" value="no"> Without Van
+                                    </div>
+                                </div>
+
+
                             <!-- <button type="submit" id="ch-submit-btn" class="btn btn-primary">Proceed</button> -->
 
          
-<button type="submit" id="ch-submit-btn" class="btn btn-primary" {{ $bookingStatus === 'closed' ? 'disabled' : '' }}>
-    {{ $bookingStatus === 'closed' ? 'No booking at the moment' : 'Proceed' }}
-</button>
+                    <button type="submit" id="ch-submit-btn" class="btn btn-primary" {{ $bookingStatus === 'closed' ? 'disabled' : '' }}>
+                        {{ $bookingStatus === 'closed' ? 'No booking at the moment' : 'Proceed' }}
+                    </button>
 
 
 
@@ -555,6 +601,62 @@
 
 
 @push('scripts')
+<script>
+function toggleSecurityOptions(selectElement, tabId) {
+    // Get the elements by using the tab-specific ID
+    const securityOptionsDiv = document.getElementById('security-options-' + tabId);
+    const mobilePoliceSelect = document.getElementById('mobile-police-' + tabId);
+    const withVanCheckbox = document.getElementById('with-van-' + tabId);
+    const withoutVanCheckbox = document.getElementById('without-van-' + tabId);
+
+    if (selectElement.value === 'yes') {
+        securityOptionsDiv.style.display = 'block'; // Show security options
+        mobilePoliceSelect.disabled = false; // Enable mobile police dropdown
+
+        // Populate mobile police dropdown dynamically (2 to 10 options)
+        mobilePoliceSelect.innerHTML = ''; // Clear any previous options
+        for (let i = 2; i <= 10; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.text = i;
+            mobilePoliceSelect.appendChild(option);
+        }
+
+        // Make one of the checkboxes required
+        withVanCheckbox.required = true;
+        withoutVanCheckbox.required = false;
+
+        // Add an event listener to ensure only one checkbox can be checked at a time
+        withVanCheckbox.addEventListener('change', function () {
+            if (withVanCheckbox.checked) {
+                withoutVanCheckbox.required = false;
+                withoutVanCheckbox.checked = false; // Uncheck the "Without Van" checkbox
+            } else {
+                withoutVanCheckbox.required = true;
+            }
+        });
+
+        withoutVanCheckbox.addEventListener('change', function () {
+            if (withoutVanCheckbox.checked) {
+                withVanCheckbox.required = false;
+                withVanCheckbox.checked = false; // Uncheck the "With Van" checkbox
+            } else {
+                withVanCheckbox.required = true;
+            }
+        });
+
+    } else {
+        securityOptionsDiv.style.display = 'none'; // Hide security options
+        mobilePoliceSelect.disabled = true; // Disable mobile police dropdown
+
+        // Remove the required attribute from checkboxes
+        withVanCheckbox.required = false;
+        withoutVanCheckbox.required = false;
+    }
+}
+
+
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 

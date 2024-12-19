@@ -57,12 +57,12 @@ class BookingEditController extends Controller
     {
         try {
             $booking = Booking::findOrFail($id);
-
+    
             // Check if the authenticated user is the owner of the booking
             if ($booking->user_id !== Auth::id()) {
                 return redirect()->route('passenger.dashboard')->with('error', 'Unauthorized access.');
             }
-
+    
             // Validate the form inputs
             $request->validate([
                 'service_type' => 'required',
@@ -76,13 +76,18 @@ class BookingEditController extends Controller
                 'number_adults' => 'required|integer|min:1',
                 'number_children' => 'nullable|integer',
                 'return_pickup_date' => 'nullable|date',  // Only for round trip
-                'return_pickup_time' => 'nullable'        // Only for round trip
+                'return_pickup_time' => 'nullable',        // Only for round trip
+    
+                // New fields validation
+                'security_coverage' => 'required|in:yes,no',
+                'mobile_police_count' => 'nullable|integer|min:2|max:10',
+                'with_van' => 'nullable|in:yes,no',
             ]);
-
+    
             // Handle nullification of pickup and dropoff address based on trip type
             $pickup_address = $request->input('pickup_address');
             $dropoff_address = $request->input('dropoff_address');
-
+    
             if ($request->input('service_type') === 'AirportTransfer') {
                 if ($request->input('trip_type') === 'airport_pickup') {
                     // Nullify pickup address when trip type is "Airport Pickup"
@@ -92,7 +97,14 @@ class BookingEditController extends Controller
                     $dropoff_address = null;
                 }
             }
-
+    
+            // Check if the security coverage is being changed to 'no'
+            $securityCoverageChangedToNo = $booking->security_coverage === 'yes' && $request->input('security_coverage') === 'no';
+    
+            // If security_coverage is being set to 'no', reset mobile_police_count and with_van to null
+            $mobile_police_count = $securityCoverageChangedToNo ? null : $request->input('mobile_police_count');
+            $with_van = $securityCoverageChangedToNo ? null : $request->input('with_van');
+    
             // Update the booking with the new values
             $booking->update([
                 'service_type' => $request->input('service_type'),
@@ -107,22 +119,25 @@ class BookingEditController extends Controller
                 'number_children' => $request->input('number_children'),
                 'return_pickup_date' => $request->input('return_pickup_date'),
                 'return_pickup_time' => $request->input('return_pickup_time'),
+                'security_coverage' => $request->input('security_coverage'),
+                'mobile_police_count' => $mobile_police_count,
+                'with_van' => $with_van,
                 'updated_by' => auth()->user()->email, // Track who updated the booking
-
             ]);
-
+    
             // Log the user activity after successful update
             ActivityLogger::log('Booking Updated', 'Booking ID ' . $booking->id . ' updated by user: ' . auth()->user()->email);
-
+    
             // Flash success message
             return redirect()->route('booking.edit', $booking->id)->with('success', 'Booking updated successfully.');
         } catch (\Exception $e) {
             Log::error('Error updating booking: ' . $e->getMessage());
-
+    
             // Flash error message if something goes wrong
             return redirect()->route('booking.edit', $id)->with('error', 'Failed to update booking. Please try again.');
         }
     }
+    
 
     // Show booking details
     public function show($id, Request $request)

@@ -110,6 +110,32 @@
                     <input type="number" id="number-children" name="number_children" class="form-control" value="{{ old('number_children', $booking->number_children) }}">
                 </div>
 
+                <!-- Security Coverage -->
+                <div class="form-group">
+                    <label for="security-coverage">Do you need security coverage?</label>
+                    <select id="security-coverage" name="security_coverage" class="form-control" required>
+                        <option value="no" {{ old('security_coverage', $booking->security_coverage) == 'no' ? 'selected' : '' }}>No</option>
+                        <option value="yes" {{ old('security_coverage', $booking->security_coverage) == 'yes' ? 'selected' : '' }}>Yes</option>
+                    </select>
+                </div>
+
+                <!-- Mobile Police Count (only visible if security coverage is 'yes') -->
+                <div class="form-group" id="mobile-police-group" style="{{ old('security_coverage', $booking->security_coverage) == 'yes' ? '' : 'display:none;' }}">
+                    <label for="mobile-police">Select number of mobile police (minimum 2)</label>
+                    <select id="mobile-police" name="mobile_police_count" class="form-control" required>
+                        @for ($i = 2; $i <= 10; $i++)
+                            <option value="{{ $i }}" {{ old('mobile_police_count', $booking->mobile_police_count) == $i ? 'selected' : '' }}>{{ $i }}</option>
+                        @endfor
+                    </select>
+                </div>
+
+                <!-- With Van or Without Van (only visible if security coverage is 'yes') -->
+                <div class="form-group" id="with-van-group" style="{{ old('security_coverage', $booking->security_coverage) == 'yes' ? '' : 'display:none;' }}">
+                    <label>With Van or Without Van</label><br>
+                    <input type="checkbox" id="with-van" name="with_van" value="yes" {{ old('with_van', $booking->with_van) == 'yes' ? 'checked' : '' }}> With Van
+                    <input type="checkbox" id="without-van" name="with_van" value="no" {{ old('with_van', $booking->with_van) == 'no' ? 'checked' : '' }}> Without Van
+                </div>
+
                 <!-- Return Trip Fields (if Round Trip is selected) -->
                 <div class="form-group" id="return-group" style="{{ old('trip_type', $booking->trip_type) === 'round_trip' ? '' : 'display:none;' }}">
                     <label for="return-pickup-date">Return Pickup Date</label>
@@ -165,6 +191,50 @@
         margin-left: 10px;
     }
 </style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const securityCoverageSelect = document.getElementById('security-coverage');
+    const mobilePoliceGroup = document.getElementById('mobile-police-group');
+    const withVanGroup = document.getElementById('with-van-group');
+
+    // Toggle visibility of Mobile Police and Van options based on security coverage
+    securityCoverageSelect.addEventListener('change', function () {
+        if (this.value === 'yes') {
+            mobilePoliceGroup.style.display = '';
+            withVanGroup.style.display = '';
+        } else {
+            mobilePoliceGroup.style.display = 'none';
+            withVanGroup.style.display = 'none';
+        }
+    });
+
+    // Initialize the visibility based on the current value of security coverage
+    if (securityCoverageSelect.value === 'yes') {
+        mobilePoliceGroup.style.display = '';
+        withVanGroup.style.display = '';
+    } else {
+        mobilePoliceGroup.style.display = 'none';
+        withVanGroup.style.display = 'none';
+    }
+
+    // Handle checkbox validation: only one checkbox (With Van or Without Van) should be selected at a time
+    const withVanCheckbox = document.getElementById('with-van');
+    const withoutVanCheckbox = document.getElementById('without-van');
+
+    withVanCheckbox.addEventListener('change', function () {
+        if (withVanCheckbox.checked) {
+            withoutVanCheckbox.checked = false;
+        }
+    });
+
+    withoutVanCheckbox.addEventListener('change', function () {
+        if (withoutVanCheckbox.checked) {
+            withVanCheckbox.checked = false;
+        }
+    });
+});
+</script>
 <script>
 
 

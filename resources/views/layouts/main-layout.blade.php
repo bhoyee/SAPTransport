@@ -177,15 +177,16 @@
     </div>
 </div>
 
+
         </div>
     </footer>
 
     <!-- WhatsApp Widget -->
-    <div class="whatsapp-widget">
+    <!-- <div class="whatsapp-widget">
         <div class="whatsapp-header">
             <img src="{{ asset('img/sup.png') }}" alt="User Image" class="user-img">
             <div class="user-info">
-                <h4>Bob</h4>
+                <h4>Teresa</h4>
                 <p>Manager</p>
             </div>
             <span class="close-widget">&times;</span>
@@ -199,7 +200,8 @@
     </div>
     <div class="whatsapp-launcher">
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
-    </div>
+    </div> -->
+
 
 
 
@@ -212,6 +214,29 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{ asset('js/scripts.js') }}"></script>
+
+<!-- BotMan Widget Configuration -->
+<script>
+        var botmanWidget = {
+            title: "SAP Transport Assistant",
+            introMessage: "Hi! How can I assist you today?",
+            mainColor: "#007bff",
+            bubbleBackground: "#007bff",
+            aboutText: "Chat with SAP Transport",
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/botman-web-widget@0/build/js/widget.js"></script>
+
+
+
+
+
+
+
+
+
+
+
     <script>
     function moveToNextSlide() {
     // Your slide logic here

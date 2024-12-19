@@ -57,6 +57,10 @@ class Booking extends Model
 
          'updated_by',
 
+        'security_coverage', // For security coverage (Yes/No)
+        'mobile_police_count', // For the number of mobile police
+        'with_van', // For the with van or without van choice
+
 
 
     ];

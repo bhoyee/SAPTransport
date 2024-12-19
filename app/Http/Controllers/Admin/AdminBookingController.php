@@ -66,22 +66,23 @@ class AdminBookingController extends Controller
               'email' => 'nullable|email', // For new user registration
               'phone' => 'nullable|string', // For new user registration
               'gender' => 'nullable|in:male,female', // For new user registration
-
+              'security_coverage' => 'nullable|in:yes,no',
+              'mobile_police_count' => 'nullable|integer|min:2|max:10',
+              'with_van' => 'nullable|in:yes,no',
           ]);
-
-            // Retrieve the currently authenticated user
-            $loggedInUser = Auth::user();
-            $loggedInUserEmail = $loggedInUser ? $loggedInUser->email : 'unknown';  // Fallback to 'unknown' if no user is authenticated
-
-            // Log the authenticated user information
-            Log::info('Authenticated user:', ['user' => $loggedInUser]);
-            
+      
+          // Retrieve the currently authenticated user
+          $loggedInUser = Auth::user();
+          $loggedInUserEmail = $loggedInUser ? $loggedInUser->email : 'unknown';  // Fallback to 'unknown' if no user is authenticated
+      
+          // Log the authenticated user information
+          Log::info('Authenticated user:', ['user' => $loggedInUser]);
+      
           // Retrieve or create the user
           if ($request->user_id == null) {
-
-                // Generate a random password
-                $generatedPassword = Str::random(10);  // 10 character long random password
-
+              // Generate a random password
+              $generatedPassword = Str::random(10);  // 10 character long random password
+      
               // Create a new user if the user doesn't exist
               $user = User::create([
                   'name' => $request->name,
@@ -91,31 +92,28 @@ class AdminBookingController extends Controller
                   'password' => Hash::make($generatedPassword),  // Use the generated password for Default password for walk-in users
                   'status' => 'active',
                   'created_by' => $loggedInUserEmail, // Track who created the user
-
               ]);
       
               // Assign the 'passenger' role to the user
               $user->assignRole('passenger');
-
-             // Send the email with login credentials
-             Mail::to($user->email)->send(new \App\Mail\UserCreatedNotification($user, $generatedPassword));
-
-
+      
+              // Send the email with login credentials
+              Mail::to($user->email)->send(new \App\Mail\UserCreatedNotification($user, $generatedPassword));
+      
               // Send the email verification link
               $user->sendEmailVerificationNotification();
-
           } else {
               // Retrieve the existing user by ID
               $user = User::find($request->user_id);
           }
       
           // Log booking creation
-          \Log::info('Booking creation initiated by admin for user:', ['user_email' => $user->email]);
+          Log::info('Booking creation initiated by admin for user:', ['user_email' => $user->email]);
       
           // Determine the trip type
           $trip_type = $request->trip_type;
       
-          // Create the booking for the user
+          // Create the booking for the user, including the new fields for security coverage, mobile police, and van option
           $booking = Booking::create([
               'user_id' => $user->id,
               'service_type' => $request->service_type,
@@ -130,25 +128,28 @@ class AdminBookingController extends Controller
               'return_pickup_time' => $request->return_pickup_time,
               'number_adults' => $request->number_adults,
               'number_children' => $request->number_children,
+              'security_coverage' => $request->security_coverage, // New field
+              'mobile_police_count' => $request->mobile_police_count, // New field
+              'with_van' => $request->with_van, // New field
               'status' => 'pending',  // Default status is pending
               'created_by' => $loggedInUserEmail,  // This is where the email of the logged-in user is stored
-
           ]);
       
           // Log the booking activity
-          \Log::info('Booking created successfully for user', ['user_email' => $user->email, 'booking_id' => $booking->id]);
+          Log::info('Booking created successfully for user', ['user_email' => $user->email, 'booking_id' => $booking->id]);
       
           // Send booking confirmation email
           try {
               Mail::to($user->email)->send(new BookingConfirmation($booking, $user, 'pending'));
-              \Log::info('Booking confirmation email sent to user', ['user_email' => $user->email]);
+              Log::info('Booking confirmation email sent to user', ['user_email' => $user->email]);
           } catch (\Exception $e) {
-              \Log::error('Failed to send booking confirmation email', ['error' => $e->getMessage()]);
+              Log::error('Failed to send booking confirmation email', ['error' => $e->getMessage()]);
           }
       
           // Return the response back to the frontend
           return response()->json(['success' => true, 'booking_reference' => $booking->booking_reference]);
       }
+      
 
       public function manageBookings()
       {
@@ -300,6 +301,9 @@ class AdminBookingController extends Controller
                     'status' => 'nullable|string|in:pending,expired,confirmed,cancelled,completed',
                     'driver_name' => 'nullable|string|max:255', // Optional driver name
                     'vehicle_details' => 'nullable|string|max:255', // Optional vehicle details
+                    'security_coverage' => 'nullable|in:yes,no',
+                    'mobile_police_count' => 'nullable|integer|min:2|max:10',
+                    'with_van' => 'nullable|in:yes,no',
                 ]);
         
                 // Handle nullification of pickup and dropoff address based on trip type
@@ -311,6 +315,13 @@ class AdminBookingController extends Controller
                 } elseif ($request->input('trip_type') === 'airport_dropoff') {
                     $dropoff_address = null; // Clear dropoff address for airport drop-off
                 }
+
+                       // Check if the security coverage is being changed to 'no'
+            $securityCoverageChangedToNo = $booking->security_coverage === 'yes' && $request->input('security_coverage') === 'no';
+    
+            // If security_coverage is being set to 'no', reset mobile_police_count and with_van to null
+            $mobile_police_count = $securityCoverageChangedToNo ? null : $request->input('mobile_police_count');
+            $with_van = $securityCoverageChangedToNo ? null : $request->input('with_van');
         
                 // Prepare the data to be updated
                 $updateData = [
@@ -328,6 +339,9 @@ class AdminBookingController extends Controller
                     'return_pickup_time' => $request->input('return_pickup_time'),
                     'updated_by' => auth()->user()->email,
                     'status' => $request->input('status'),
+                    'security_coverage' => $request->input('security_coverage'),
+                    'mobile_police_count' => $mobile_police_count,
+                    'with_van' => $with_van,
                 ];
         
                 // Conditionally add driver_name and vehicle_details if present in the request
@@ -337,6 +351,8 @@ class AdminBookingController extends Controller
                 if ($request->filled('vehicle_details')) {
                     $updateData['vehicle_details'] = $request->input('vehicle_details');
                 }
+
+                
         
                 // Update the booking with the new values
                 $booking->update($updateData);

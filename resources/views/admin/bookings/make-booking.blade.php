@@ -133,6 +133,45 @@
 
                             <!-- <input type="number" id="number_children" name="number_children" class="form-control" placeholder="Enter number of children"> -->
                         </div>
+                        <!-- Security Coverage -->
+<div class="form-group mb-3">
+    <label for="security_coverage">Do you need security coverage?</label>
+    <select id="security_coverage" name="security_coverage" class="form-control">
+        <option value="no">No</option>
+        <option value="yes">Yes</option>
+    </select>
+</div>
+
+<!-- Mobile Police Count (only shown if security coverage is Yes) -->
+<div class="form-group mb-3" id="mobile-police-group" style="display: none;">
+    <label for="mobile_police_count">Number of Mobile Police</label>
+    <select id="mobile_police_count" name="mobile_police_count" class="form-control">
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+
+        <!-- Add more options as needed -->
+    </select>
+</div>
+
+<!-- Van Option (only shown if security coverage is Yes) -->
+<div class="form-group mb-3" id="van-options-group" style="display: none;">
+    <label>Do you need a van?</label>
+    <div>
+        <label for="with_van">With Van</label>
+        <input type="radio" id="with_van" name="with_van" value="yes">
+        <label for="without_van">Without Van</label>
+        <input type="radio" id="without_van" name="with_van" value="no">
+    </div>
+</div>
+
+
 
                         <!-- Return Trip Fields for Roundtrip (Charter only) -->
                         <div id="roundtrip-fields" style="display:none;">
@@ -358,7 +397,26 @@
             });
         }
 
+        $('#security_coverage').on('change', function() {
+        const securityCoverage = $(this).val();
 
+        if (securityCoverage === 'yes') {
+            $('#mobile-police-group').show(); // Show mobile police count dropdown
+            $('#van-options-group').show(); // Show van options
+        } else {
+            $('#mobile-police-group').hide(); // Hide mobile police count dropdown
+            $('#van-options-group').hide(); // Hide van options
+        }
+    });
+
+    // Initialize the visibility based on the current value of the security_coverage dropdown
+    if ($('#security_coverage').val() === 'yes') {
+        $('#mobile-police-group').show();
+        $('#van-options-group').show();
+    } else {
+        $('#mobile-police-group').hide();
+        $('#van-options-group').hide();
+    }
 
         // Form submission logic
         $('#admin-booking-form').on('submit', function(e) {

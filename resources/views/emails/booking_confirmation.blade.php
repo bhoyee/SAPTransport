@@ -153,6 +153,28 @@
             <td>{{ $bookingDetails->number_children ?? 'None' }}</td>
         </tr>
         @endif
+
+        <!-- New fields for security coverage, mobile police count, and with van -->
+        @if(!empty($bookingDetails->security_coverage))
+        <tr>
+            <th>Security Coverage:</th>
+            <td>{{ ucfirst($bookingDetails->security_coverage) }}</td>
+        </tr>
+        @endif
+
+        @if(!empty($bookingDetails->mobile_police_count))
+        <tr>
+            <th>Mobile Police Count:</th>
+            <td>{{ $bookingDetails->mobile_police_count }}</td>
+        </tr>
+        @endif
+
+        @if(!empty($bookingDetails->with_van))
+        <tr>
+            <th>With Van:</th>
+            <td>{{ ucfirst($bookingDetails->with_van) }}</td>
+        </tr>
+        @endif
     </table>
 
     <!-- Text and button below the table -->

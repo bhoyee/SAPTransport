@@ -63,6 +63,7 @@
                     <th>S/N</th>
                     <th>Name</th>
                     <th>Email</th>
+                    <th>Role</th>
                     <th>Status</th>
                     <th>Created At</th>
                     <th>Actions</th>
@@ -120,23 +121,35 @@ $(document).ready(function() {
             }
         },
         columns: [
-            { 
-                data: null,
-                orderable: true,
-                searchable: false,
-                render: function (data, type, row, meta) {
-                    return meta.row + 1;
-                }
-            },
-            { data: 'name' },
-            { data: 'email' },
-            { data: 'status', render: function(data) {
-                let badgeClass = data === 'active' ? 'bg-success' : data === 'suspend' ? 'bg-danger' : 'bg-warning';
-                return `<span class="badge ${badgeClass}">${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
-            }},
-            { data: 'created_at' },
-            { data: 'actions', orderable: false, searchable: false }
-        ],
+    { 
+        data: null,
+        orderable: true,
+        searchable: false,
+        render: function (data, type, row, meta) {
+            return meta.row + 1;
+        }
+    },
+    { data: 'name' },
+    { data: 'email' },
+    { 
+        data: 'roles',  // Now we have the roles field in the response
+        render: function(data, type, row) {
+            // Check if the user is a consultant and return 'Staff' instead of 'Consultant'
+            if (data.includes('consultant')) {
+                return 'Staff';
+            }
+            // If not consultant, display the role(s)
+            return data.charAt(0).toUpperCase() + data.slice(1); // Capitalize the role
+        }
+    },
+    { data: 'status', render: function(data) {
+        let badgeClass = data === 'active' ? 'bg-success' : data === 'suspend' ? 'bg-danger' : 'bg-warning';
+        return `<span class="badge ${badgeClass}">${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
+    }},
+    { data: 'created_at' },
+    { data: 'actions', orderable: false, searchable: false }
+],
+
         drawCallback: function(settings) {
             let api = this.api();
             let startIndex = api.page.info().start;

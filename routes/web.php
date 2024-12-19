@@ -41,12 +41,12 @@ use App\Http\Controllers\Admin\TestDashboardController;
 use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\BroadcastController;
+use App\Http\Controllers\BotManController;
+use BotMan\BotMan\BotMan;
 
 
 
-// Public Routes
-
-
+Route::match(['get', 'post'], '/botman', [BotManController::class, 'handle']);
 
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -180,8 +180,9 @@ Route::middleware(['auth', 'verified', 'role:passenger', 'session.timeout'])->pr
     Route::get('/my-tickets/{id}', [ContactController::class, 'viewTicket'])->name('viewTicket');
     Route::post('/my-tickets/{id}/reply', [ContactController::class, 'replyToTicket'])->name('replyTicket');
 
-    //Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-bookings');
-    Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('booking.myBookings');
+    Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('my-bookings');
+   // Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('booking.myBookings');
+    
 
     
     //Route::post('/booking/cancel/{id}', [BookingController::class, 'cancelBooking']);

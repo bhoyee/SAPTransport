@@ -142,6 +142,30 @@
                     </div>
                 @endif
 
+                                <!-- Security Coverage -->
+                                @if (!empty($booking->security_coverage))
+                    <div class="col-md-6">
+                        <strong>Security Coverage:</strong>
+                        <p>{{ ucfirst($booking->security_coverage) }}</p>
+                    </div>
+                @endif
+
+                <!-- Mobile Police Count -->
+                @if (!empty($booking->mobile_police_count))
+                    <div class="col-md-6">
+                        <strong>Mobile Police Count:</strong>
+                        <p>{{ $booking->mobile_police_count }}</p>
+                    </div>
+                @endif
+
+                <!-- With Van -->
+                @if (!empty($booking->with_van))
+                    <div class="col-md-6">
+                        <strong>With Van:</strong>
+                        <p>{{ ucfirst($booking->with_van) }}</p>
+                    </div>
+                @endif
+
                                 <!-- Updated at -->
                                 @if (!empty($booking->updated_at))
                     <div class="col-md-6">

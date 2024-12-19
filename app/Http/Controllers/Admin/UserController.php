@@ -24,16 +24,18 @@ class UserController extends Controller
         if ($request->ajax()) {
             \Log::info('AJAX request received for user data.');
     
-            // Filter users based on role
+            // Fetch users with roles
             if (auth()->user()->hasRole('consultant')) {
                 // If the user is a consultant, only fetch users with the 'passenger' role
                 $users = User::role('passenger')
+                    ->with('roles')  // Eagerly load the roles
                     ->select('id', 'name', 'email', 'phone', 'status', 'created_at')
                     ->where('status', '!=', 'deleted')
                     ->get();
             } else {
                 // If the user is an admin, fetch all users excluding those with 'deleted' status
-                $users = User::select('id', 'name', 'email', 'phone', 'status', 'created_at')
+                $users = User::with('roles')  // Eagerly load the roles
+                    ->select('id', 'name', 'email', 'phone', 'status', 'created_at')
                     ->where('status', '!=', 'deleted')
                     ->get();
             }
@@ -47,6 +49,7 @@ class UserController extends Controller
                     'email' => $user->email,
                     'status' => $user->status,
                     'created_at' => $user->created_at->format('Y-m-d H:i:s'),
+                    'roles' => $user->roles->pluck('name')->join(', '), // Join role names
                     'actions' => '<a href="' . route('admin.users.show', $user->id) . '" class="btn btn-primary btn-sm">View</a>' .
                                  '<button class="btn btn-danger btn-sm" data-user-id="' . $user->id . '" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>'
                 ];
@@ -66,6 +69,7 @@ class UserController extends Controller
         // Render the view with all required variables
         return view('admin.users.index', compact('totalPassengers', 'inactivePassengers', 'totalStaff', 'suspendedUsers'));
     }
+    
     
     
     public function show(User $user)

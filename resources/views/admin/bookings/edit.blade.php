@@ -114,6 +114,31 @@
                     <input type="number" id="number-children" name="number_children" class="form-control" value="{{ old('number_children', $booking->number_children) }}">
                 </div>
 
+                <!-- Security Coverage -->
+                <div class="form-group">
+                    <label for="security-coverage">Security Coverage</label>
+                    <select id="security-coverage" name="security_coverage" class="form-control">
+                        <option value="yes" {{ old('security_coverage', $booking->security_coverage) == 'yes' ? 'selected' : '' }}>Yes</option>
+                        <option value="no" {{ old('security_coverage', $booking->security_coverage) == 'no' ? 'selected' : '' }}>No</option>
+                    </select>
+                </div>
+
+                <!-- Mobile Police Count -->
+                <div class="form-group" id="mobile-police-count-group">
+                    <label for="mobile-police-count">Mobile Police Count</label>
+                    <input type="number" id="mobile-police-count" name="mobile_police_count" class="form-control" value="{{ old('mobile_police_count', $booking->mobile_police_count) }}">
+                </div>
+
+                <!-- With Van -->
+                <div class="form-group" id="with-van-group">
+                    <label for="with-van">With Van</label>
+                    <select id="with-van" name="with_van" class="form-control">
+                        <option value="yes" {{ old('with_van', $booking->with_van) == 'yes' ? 'selected' : '' }}>Yes</option>
+                        <option value="no" {{ old('with_van', $booking->with_van) == 'no' ? 'selected' : '' }}>No</option>
+                    </select>
+                </div>
+
+
                 <!-- Return Trip Fields (if Round Trip is selected) -->
                 <div class="form-group" id="return-group" style="{{ old('trip_type', $booking->trip_type) === 'round_trip' ? '' : 'display:none;' }}">
                     <label for="return-pickup-date">Return Pickup Date</label>
@@ -198,7 +223,32 @@
         margin-left: 10px;
     }
 </style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check the initial value of security coverage and hide the fields accordingly
+        toggleFieldsBasedOnSecurityCoverage();
 
+        // Event listener for security coverage change
+        document.getElementById('security-coverage').addEventListener('change', function() {
+            toggleFieldsBasedOnSecurityCoverage();
+        });
+
+        // Toggle visibility of Mobile Police Count and With Van based on Security Coverage
+        function toggleFieldsBasedOnSecurityCoverage() {
+            const securityCoverage = document.getElementById('security-coverage').value;
+            const mobilePoliceCountGroup = document.getElementById('mobile-police-count-group');
+            const withVanGroup = document.getElementById('with-van-group');
+
+            if (securityCoverage === 'no') {
+                mobilePoliceCountGroup.style.display = 'none';
+                withVanGroup.style.display = 'none';
+            } else {
+                mobilePoliceCountGroup.style.display = '';
+                withVanGroup.style.display = '';
+            }
+        }
+    });
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 

@@ -54,14 +54,21 @@ class LoginController extends Controller
                 if ($user->hasRole('passenger')) {
                     \Log::info(Auth::user()->roles);
 
-                    if ($user->email_verified_at === null) {
-                        Log::info('Redirecting to verification.notice', ['email' => $user->email]);
-                        ActivityLogger::log('Login Attempt', 'Email not verified: ' . $request->email);
+                    // if ($user->email_verified_at === null) {
+                    //     Log::info('Redirecting to verification.notice', ['email' => $user->email]);
+                    //     ActivityLogger::log('Login Attempt', 'Email not verified: ' . $request->email);
 
-                        // Ensure Auth::logout() is called BEFORE the redirect
-                        Auth::logout();  
-                        return redirect()->route('verification.notice')->with('error', 'You need to verify your email before logging in.');
-                    }
+                    //     // Ensure Auth::logout() is called BEFORE the redirect
+                    //     Auth::logout();  
+                    //     return redirect()->route('verification.notice')->with('error', 'You need to verify your email before logging in.');
+                    // }
+
+                                // If the user is inactive or their email is not verified, redirect to email verification notice
+                        if ($user->status === 'inactive' || $user->email_verified_at === null) {
+                            Log::info('Redirecting to verification.notice', ['email' => $user->email]);
+                            ActivityLogger::log('Login Attempt', 'Inactive account or email not verified: ' . $request->email);
+                            return redirect()->route('verification.notice')->with('error', 'You need to verify your email before logging in.');
+                        }
 
                     Log::info('Passenger logged in', ['email' => $user->email]);
                     ActivityLogger::customLog('Login Success', 'Passenger logged in: ' . $request->email, $user->id);
