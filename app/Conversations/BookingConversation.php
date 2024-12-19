@@ -17,6 +17,7 @@ use App\Mail\BookingCancellation;
 use App\Models\Payment;
 use App\Mail\AdminRefundRequestNotification;
 use App\Mail\UserRefundRequestNotification;
+use App\Mail\VerificationCodeEmail;
 
 
 class BookingConversation extends Conversation
@@ -64,8 +65,8 @@ class BookingConversation extends Conversation
                    
                     break;
                 case 'speak_support':
-                    $this->say("You can speak to support by calling our hotline or sending an email to support@saptransportation.com.");
-                    $this->askFollowUp();
+                    $this->speakWithSupport();
+                    
                     break;
                 default:
                     $this->say("I'm sorry, I didn't understand that. Please select one of the options from the menu.");
@@ -185,7 +186,6 @@ class BookingConversation extends Conversation
         $this->askFollowUp();
     }
 
- 
     public function askBookingReferenceForCancellation()
     {
         $this->ask("Please provide your booking reference to proceed:", function ($answer) {
@@ -203,7 +203,7 @@ class BookingConversation extends Conversation
                     $this->askFollowUp();
                 } else {
                     $this->bookingData['booking'] = $booking;
-                    $this->askAssociatedEmail();
+                    $this->sendVerificationCodeToEmailForCancellation();
                 }
             } else {
                 $this->say("Sorry, no booking found with the reference number: {$bookingReference}. Please check and try again.");
@@ -212,148 +212,168 @@ class BookingConversation extends Conversation
         });
     }
     
-
-
-    public function askAssociatedEmail()
+    public function sendVerificationCodeToEmailForCancellation()
     {
-        $this->ask("Please provide the email address associated with the booking:", function ($answer) {
-            $email = trim($answer->getText());
-            $booking = $this->bookingData['booking'];
+        $booking = $this->bookingData['booking'];
+        $user = User::find($booking->user_id);
     
-            // Check if the email matches the user associated with the booking
-            $user = $booking->user; // Assuming a relationship exists between Booking and User
+        if ($user) {
+            $this->bookingData['user'] = $user;
     
-            if ($user && $email === $user->email) {
-                $this->bookingData['email'] = $email;
-                $this->askAssociatedPhone();
-            } else {
-                $this->say("The email address provided does not match our records for this booking.");
-                $this->askAssociatedEmail();
+            // Generate a random 6-digit verification code
+            $verificationCode = rand(100000, 999999);
+    
+            // Store the verification code and timestamp in the session
+            session(['verification_code' => $verificationCode, 'code_generated_at' => now()]);
+    
+            try {
+                // Send the verification code via email
+                Mail::to($user->email)->send(new VerificationCodeEmail($verificationCode));
+                Log::info("Verification code sent to email: {$user->email}");
+                $this->askVerificationCodeForCancellation();
+            } catch (\Exception $e) {
+                Log::error("Failed to send verification code email", ['error' => $e->getMessage()]);
+                $this->say("An error occurred while sending the verification code. Please try again later.");
+                $this->askFollowUp();
             }
-        });
+        } else {
+            $this->say("Unable to find the user associated with this booking. Please contact support.");
+            $this->askFollowUp();
+        }
     }
     
-    public function askAssociatedPhone()
+    public function askVerificationCodeForCancellation()
     {
-        $this->ask("Please provide the phone number associated with the booking:", function ($answer) {
-            $phone = trim($answer->getText());
-            $booking = $this->bookingData['booking'];
+        $this->ask("A verification code has been sent to your email. Please enter the code to proceed:", function ($answer) {
+            $userCode = trim(str_replace(' ', '', $answer->getText())); // Remove spaces from user input
+            $sessionCode = session('verification_code');
+            $codeGeneratedAt = session('code_generated_at');
     
-            // Check if the phone matches the user associated with the booking
-            $user = $booking->user; // Assuming the relationship exists between Booking and User
-    
-            if ($user && $phone === $user->phone) {
-                $this->bookingData['phone'] = $phone;
+            // Validate the code and expiration time (5 minutes)
+            if ($sessionCode && $userCode == $sessionCode && now()->diffInMinutes($codeGeneratedAt) <= 5) {
+                session()->forget(['verification_code', 'code_generated_at']); // Clear the session
                 $this->cancelBooking();
             } else {
-                $this->say("The phone number provided does not match our records for this booking.");
-                $this->askAssociatedPhone();
+                $this->say("The verification code is invalid or has expired. Please request a new one.");
+                $this->askFollowUp();
             }
         });
     }
     
-
     public function cancelBooking()
-{
-    try {
-        $booking = $this->bookingData['booking'];
-        $user = $booking->user; // Fetch the user associated with the booking
-
-        // Update the booking status to cancelled
-        $booking->update(['status' => 'cancelled']);
-        \Log::info("Booking ID: {$booking->id} status updated to cancelled");
-
-        // Send cancellation email to the user
+    {
         try {
-            Mail::to($user->email)->send(new BookingCancellation($booking, $user));
-            \Log::info("Cancellation email sent to user: {$user->email}");
+            $booking = $this->bookingData['booking'];
+            $user = $this->bookingData['user'];
+    
+            // Update the booking status to cancelled
+            $booking->update(['status' => 'cancelled']);
+            Log::info("Booking ID: {$booking->id} status updated to cancelled");
+    
+            // Send cancellation email to the user
+            try {
+                Mail::to($user->email)->send(new BookingCancellation($booking, $user));
+                Log::info("Cancellation email sent to user: {$user->email}");
+            } catch (\Exception $e) {
+                Log::error('Failed to send cancellation email to user: ' . $e->getMessage());
+            }
+    
+            // Notify admin and consultants about the cancellation
+            $adminConsultantUsers = User::role(['admin', 'consultant'])->get();
+            foreach ($adminConsultantUsers as $adminConsultant) {
+                Notification::create([
+                    'user_id' => $adminConsultant->id,
+                    'message' => 'Booking cancelled by ' . $user->name . '. Booking Reference: ' . $booking->booking_reference,
+                    'type' => 'booking',
+                    'status' => 'unread',
+                    'related_user_name' => $user->name,
+                ]);
+                Log::info("Notification sent to admin/consultant ID: {$adminConsultant->id}");
+            }
+    
+            // Send cancellation email to admin using config-based admin email
+            try {
+                $adminEmail = config('mail.admin_email');  // Fetch email from config
+                Mail::to($adminEmail)->send(new BookingCancellationAdminNotification($booking, $adminConsultantUsers));
+                Log::info("Cancellation email sent to admin: {$adminEmail}");
+            } catch (\Exception $e) {
+                Log::error('Failed to send cancellation email to admin: ' . $e->getMessage());
+            }
+    
+            // Log the activity for the cancellation
+            ActivityLogger::log('Booking Cancelled', 'Booking cancelled by user: ' . $user->email . ', Booking Reference: ' . $booking->booking_reference);
+    
+            $this->say("Your booking with reference number {$booking->booking_reference} has been successfully cancelled.");
         } catch (\Exception $e) {
-            \Log::error('Failed to send cancellation email to user: ' . $e->getMessage());
+            Log::error("Failed to cancel booking: " . $e->getMessage());
+            $this->say("An error occurred while cancelling your booking. Please try again later.");
         }
-
-        // Notify admin and consultants about the cancellation
-        $adminConsultantUsers = User::role(['admin', 'consultant'])->get();
-        foreach ($adminConsultantUsers as $adminConsultant) {
-            Notification::create([
-                'user_id' => $adminConsultant->id,
-                'message' => 'Booking cancelled by ' . $user->name . '. Booking Reference: ' . $booking->booking_reference,
-                'type' => 'booking',
-                'status' => 'unread',
-                'related_user_name' => $user->name,
-            ]);
-            \Log::info("Notification sent to admin/consultant ID: {$adminConsultant->id}");
-        }
-
-        // Send cancellation email to admin using config-based admin email
-        try {
-            $adminEmail = config('mail.admin_email');  // Fetch email from config
-            Mail::to($adminEmail)->send(new BookingCancellationAdminNotification($booking, $adminConsultantUsers));
-            \Log::info("Cancellation email sent to admin: {$adminEmail}");
-        } catch (\Exception $e) {
-            \Log::error('Failed to send cancellation email to admin: ' . $e->getMessage());
-        }
-
-        // Log the activity for the cancellation
-        ActivityLogger::log('Booking Cancelled', 'Booking cancelled by user: ' . $user->email . ', Booking Reference: ' . $booking->booking_reference);
-
-        $this->say("Your booking with reference number {$booking->booking_reference} has been successfully cancelled.");
-    } catch (\Exception $e) {
-        \Log::error("Failed to cancel booking: " . $e->getMessage());
-        $this->say("An error occurred while cancelling your booking. Please try again later.");
+    
+        $this->askFollowUp();
     }
-
-    $this->askFollowUp();
-}
+    
 
 public function askBookingReferenceForRefund()
 {
     $this->ask("Please provide the booking reference for your refund request:", function ($answer) {
-        $bookingReference = trim(str_replace(' ', '', $answer->getText())); // Remove spaces from user input
+        $bookingReference = trim(str_replace(' ', '', $answer->getText())); // Remove spaces
 
-        // Find the booking by reference
         $booking = Booking::where('booking_reference', $bookingReference)->first();
 
         if ($booking) {
             $this->bookingData['booking'] = $booking;
-
-            // Ask for the associated email
-            $this->askAssociatedEmailForRefund();
+            $this->sendVerificationCodeToEmail();
         } else {
             $this->say("No booking found with the reference number: {$bookingReference}. Please check and try again.");
-            $this->askBookingReferenceForRefund(); // Re-ask for the booking reference
+            $this->askBookingReferenceForRefund();
         }
     });
 }
 
-public function askAssociatedEmailForRefund()
+public function sendVerificationCodeToEmail()
 {
-    $this->ask("Please provide the email address associated with the booking:", function ($answer) {
-        $email = trim(strtolower($answer->getText())); // Normalize input
-        $booking = $this->bookingData['booking'];
+    $booking = $this->bookingData['booking'];
+    $user = User::find($booking->user_id);
 
-        $user = User::find($booking->user_id);
+    if ($user) {
+        $this->bookingData['user'] = $user;
 
-        if ($user && strtolower($user->email) === $email) {
-            $this->bookingData['user'] = $user;
-            $this->askAssociatedPhoneForRefund();
-        } else {
-            $this->say("The email address provided does not match our records for this booking.");
-            $this->askAssociatedEmailForRefund(); // Re-ask for the email
+        // Generate a random 6-digit verification code
+        $verificationCode = rand(100000, 999999);
+
+        // Store the verification code and timestamp in the session
+        session(['verification_code' => $verificationCode, 'code_generated_at' => now()]);
+
+        try {
+            // Send the verification code via email
+            Mail::to($user->email)->send(new VerificationCodeEmail($verificationCode));
+            Log::info("Verification code sent to email: {$user->email}");
+            $this->askVerificationCode();
+        } catch (\Exception $e) {
+            Log::error("Failed to send verification code email", ['error' => $e->getMessage()]);
+            $this->say("An error occurred while sending the verification code. Please try again later.");
+            $this->askFollowUp();
         }
-    });
+    } else {
+        $this->say("Unable to find the user associated with this booking. Please contact support.");
+        $this->askFollowUp();
+    }
 }
 
-public function askAssociatedPhoneForRefund()
+public function askVerificationCode()
 {
-    $this->ask("Please provide the phone number associated with the booking:", function ($answer) {
-        $phone = trim(str_replace(' ', '', $answer->getText())); // Remove spaces from user input
-        $user = $this->bookingData['user'];
+    $this->ask("A verification code has been sent to your email. Please enter the code to proceed:", function ($answer) {
+        $userCode = str_replace(' ', '', trim($answer->getText())); // Trim and remove spaces
+        $sessionCode = session('verification_code');
+        $codeGeneratedAt = session('code_generated_at');
 
-        if ($user && $user->phone === $phone) {
+        // Validate the code and expiration time (5 minutes)
+        if ($sessionCode && $userCode == $sessionCode && now()->diffInMinutes($codeGeneratedAt) <= 5) {
+            session()->forget(['verification_code', 'code_generated_at']); // Clear the session
             $this->checkPaymentForRefund();
         } else {
-            $this->say("The phone number provided does not match our records for this booking.");
-            $this->askAssociatedPhoneForRefund(); // Re-ask for the phone number
+            $this->say("The verification code is invalid or has expired. Please request a new one.");
+            $this->askFollowUp();
         }
     });
 }
@@ -362,7 +382,6 @@ public function checkPaymentForRefund()
 {
     $booking = $this->bookingData['booking'];
 
-    // Check if a payment is linked to the booking
     $payment = Payment::where('booking_id', $booking->id)->where('status', 'paid')->first();
 
     if ($payment) {
@@ -370,9 +389,10 @@ public function checkPaymentForRefund()
         $this->confirmRefundRequest();
     } else {
         $this->say("No eligible payment found for this booking reference. Only paid bookings can request a refund.");
-        $this->askFollowUp(); // End the flow or ask for another service
+        $this->askFollowUp();
     }
 }
+
 
 public function confirmRefundRequest()
 {
@@ -446,7 +466,17 @@ protected function processRefundNotificationsAndEmails($payment)
     }
 }
 
+public function speakWithSupport()
+{
+    $supportNumber = '+2348070419826'; // Support phone number
+    $whatsAppLink = "https://wa.me/".str_replace('+', '', $supportNumber)."?text=Hi%20Support,%20I%20need%20assistance.";
 
+    $this->say("To connect with support, please use the link below:");
+    $this->say("<a href='{$whatsAppLink}' target='_blank'>Click here to chat with support on WhatsApp</a>", ['parse_mode' => 'HTML']);
+
+    // Ask for further assistance
+    $this->askFollowUp();
+}
 
 
 
