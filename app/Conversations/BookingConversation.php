@@ -3,16 +3,23 @@
 namespace App\Conversations;
 
 use App\Models\User;
+use App\Models\Booking;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use BotMan\BotMan\Messages\Conversations\Conversation;
 use BotMan\BotMan\Messages\Outgoing\Actions\Button;
 use BotMan\BotMan\Messages\Outgoing\Question;
+use App\Services\ActivityLogger;
+use App\Models\Notification;
+use App\Mail\BookingCancellationAdminNotification;
+use App\Mail\BookingCancellation;
+
 
 class BookingConversation extends Conversation
 {
     protected $userData = [];
+    protected $bookingData = [];
 
     public function run()
     {
@@ -47,7 +54,7 @@ class BookingConversation extends Conversation
                     $this->askBookingReference();
                     break;
                 case 'cancel_booking':
-                    $this->askCancelBooking();
+                    $this->askBookingReferenceForCancellation();
                     break;
                 case 'request_refund':
                     $this->say("For refunds, please visit our refund page or contact support for further assistance.");
@@ -129,23 +136,18 @@ class BookingConversation extends Conversation
 
     public function askPassword()
     {
-        $this->ask("Please enter your password (Pls note your password will not be masked):", function ($answer) {
+        $this->ask("Please enter your password (it will not be displayed):", function ($answer) {
             $this->userData['password'] = trim($answer->getText());
             $this->askConfirmPassword();
         }, ['inputType' => 'password']);
     }
-    
+
     public function askConfirmPassword()
     {
-        $this->ask("Please confirm your password (Pls note your password will not be masked):", function ($answer) {
+        $this->ask("Please confirm your password (it will not be displayed):", function ($answer) {
             if (trim($answer->getText()) === $this->userData['password']) {
-                // Show waiting message immediately after confirming the password
                 $this->say("Please wait while we process your registration...");
-    
-                // Optionally simulate bot typing for user feedback
                 $this->bot->typesAndWaits(2);
-    
-                // Proceed with registration
                 $this->registerUser();
             } else {
                 $this->say("Passwords do not match. Please try again.");
@@ -153,38 +155,153 @@ class BookingConversation extends Conversation
             }
         }, ['inputType' => 'password']);
     }
+
+    public function registerUser()
+    {
+        try {
+            $user = User::create([
+                'name' => $this->userData['name'],
+                'email' => $this->userData['email'],
+                'phone' => $this->userData['phone'],
+                'password' => Hash::make($this->userData['password']),
+                'gender' => $this->userData['gender'],
+                'status' => 'inactive',
+                'created_by' => $this->userData['email'],
+            ]);
+
+            $user->assignRole('passenger');
+            $user->sendEmailVerificationNotification();
+
+            Log::info('User registered via chatbot', ['email' => $user->email]);
+            $this->say("Registration successful! A verification email has been sent to {$this->userData['email']}. Please check your email to verify your account.");
+        } catch (\Exception $e) {
+            Log::error('Registration failed', ['error' => $e->getMessage()]);
+            $this->say("An error occurred during registration. Please try again later.");
+        }
+
+        $this->askFollowUp();
+    }
+
+ 
+    public function askBookingReferenceForCancellation()
+    {
+        $this->ask("Please provide your booking reference to proceed:", function ($answer) {
+            // Remove all whitespace from the input
+            $bookingReference = preg_replace('/\s+/', '', $answer->getText());
+    
+            $booking = Booking::where('booking_reference', $bookingReference)->first();
+    
+            if ($booking) {
+                if ($booking->status === 'cancelled') {
+                    $this->say("The booking with reference number {$bookingReference} is already cancelled. If you want to restore or activate it back, please contact support.");
+                    $this->askFollowUp();
+                } elseif ($booking->status === 'expired') {
+                    $this->say("The booking with reference number {$bookingReference} has already expired. Please make a new booking.");
+                    $this->askFollowUp();
+                } else {
+                    $this->bookingData['booking'] = $booking;
+                    $this->askAssociatedEmail();
+                }
+            } else {
+                $this->say("Sorry, no booking found with the reference number: {$bookingReference}. Please check and try again.");
+                $this->askBookingReferenceForCancellation();
+            }
+        });
+    }
     
 
-public function registerUser()
+
+    public function askAssociatedEmail()
+    {
+        $this->ask("Please provide the email address associated with the booking:", function ($answer) {
+            $email = trim($answer->getText());
+            $booking = $this->bookingData['booking'];
+    
+            // Check if the email matches the user associated with the booking
+            $user = $booking->user; // Assuming a relationship exists between Booking and User
+    
+            if ($user && $email === $user->email) {
+                $this->bookingData['email'] = $email;
+                $this->askAssociatedPhone();
+            } else {
+                $this->say("The email address provided does not match our records for this booking.");
+                $this->askAssociatedEmail();
+            }
+        });
+    }
+    
+    public function askAssociatedPhone()
+    {
+        $this->ask("Please provide the phone number associated with the booking:", function ($answer) {
+            $phone = trim($answer->getText());
+            $booking = $this->bookingData['booking'];
+    
+            // Check if the phone matches the user associated with the booking
+            $user = $booking->user; // Assuming the relationship exists between Booking and User
+    
+            if ($user && $phone === $user->phone) {
+                $this->bookingData['phone'] = $phone;
+                $this->cancelBooking();
+            } else {
+                $this->say("The phone number provided does not match our records for this booking.");
+                $this->askAssociatedPhone();
+            }
+        });
+    }
+    
+
+    public function cancelBooking()
 {
     try {
-        $user = User::create([
-            'name' => $this->userData['name'],
-            'email' => $this->userData['email'],
-            'phone' => $this->userData['phone'],
-            'password' => Hash::make($this->userData['password']),
-            'gender' => $this->userData['gender'],
-            'status' => 'inactive', // Mark as inactive until verified
-            'created_by' => $this->userData['email'], // Set created_by field
-        ]);
+        $booking = $this->bookingData['booking'];
+        $user = $booking->user; // Fetch the user associated with the booking
 
-        // Assign default role
-        $user->assignRole('passenger');
+        // Update the booking status to cancelled
+        $booking->update(['status' => 'cancelled']);
+        \Log::info("Booking ID: {$booking->id} status updated to cancelled");
 
-        // Send verification email
-        $user->sendEmailVerificationNotification();
+        // Send cancellation email to the user
+        try {
+            Mail::to($user->email)->send(new BookingCancellation($booking, $user));
+            \Log::info("Cancellation email sent to user: {$user->email}");
+        } catch (\Exception $e) {
+            \Log::error('Failed to send cancellation email to user: ' . $e->getMessage());
+        }
 
-        Log::info('User registered via chatbot', ['email' => $user->email]);
+        // Notify admin and consultants about the cancellation
+        $adminConsultantUsers = User::role(['admin', 'consultant'])->get();
+        foreach ($adminConsultantUsers as $adminConsultant) {
+            Notification::create([
+                'user_id' => $adminConsultant->id,
+                'message' => 'Booking cancelled by ' . $user->name . '. Booking Reference: ' . $booking->booking_reference,
+                'type' => 'booking',
+                'status' => 'unread',
+                'related_user_name' => $user->name,
+            ]);
+            \Log::info("Notification sent to admin/consultant ID: {$adminConsultant->id}");
+        }
 
-        // Inform the user of successful registration
-        $this->say("Registration successful! A verification email has been sent to {$this->userData['email']}. Please check your email to verify your account.");
+        // Send cancellation email to admin using config-based admin email
+        try {
+            $adminEmail = config('mail.admin_email');  // Fetch email from config
+            Mail::to($adminEmail)->send(new BookingCancellationAdminNotification($booking, $adminConsultantUsers));
+            \Log::info("Cancellation email sent to admin: {$adminEmail}");
+        } catch (\Exception $e) {
+            \Log::error('Failed to send cancellation email to admin: ' . $e->getMessage());
+        }
+
+        // Log the activity for the cancellation
+        ActivityLogger::log('Booking Cancelled', 'Booking cancelled by user: ' . $user->email . ', Booking Reference: ' . $booking->booking_reference);
+
+        $this->say("Your booking with reference number {$booking->booking_reference} has been successfully cancelled.");
     } catch (\Exception $e) {
-        Log::error('Registration failed', ['error' => $e->getMessage()]);
-        $this->say("An error occurred during registration. Please try again later.");
+        \Log::error("Failed to cancel booking: " . $e->getMessage());
+        $this->say("An error occurred while cancelling your booking. Please try again later.");
     }
 
     $this->askFollowUp();
 }
+
 
     public function askFollowUp()
     {
